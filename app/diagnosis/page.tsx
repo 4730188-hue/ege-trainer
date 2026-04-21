@@ -54,7 +54,8 @@ export default function DiagnosisPage() {
 
   function handleNext() {
     if (isLastQuestion) {
-    router.push("/result");
+      router.push("/result");
+      return;
     }
 
     setCurrentIndex((prev) => prev + 1);
