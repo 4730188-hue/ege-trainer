@@ -12,7 +12,7 @@ export default function HomePage() {
           <p className="mt-2 text-base text-slate-600">Сессия на сегодня</p>
 
           <Link
-            href="/diagnosis"
+            href="/session"
             className="mt-6 inline-block rounded-2xl bg-slate-900 px-5 py-4 text-base font-semibold text-white transition hover:opacity-95"
           >
             Начать сессию
