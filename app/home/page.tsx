@@ -42,9 +42,9 @@ export default function HomePage() {
           </p>
           <Link
             href="/session"
-            className="mt-5 block rounded-2xl bg-white px-5 py-4 text-center text-base font-semibold text-slate-900 transition hover:opacity-95"
+            className="mt-5 block rounded-2xl bg-slate-900 px-5 py-4 text-center text-base font-semibold transition hover:opacity-95"
           >
-            Начать сессию
+            <span className="block leading-none text-white">Начать сессию</span>
           </Link>
         </div>
 

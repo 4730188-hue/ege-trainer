@@ -23,21 +23,21 @@ export default function ProfilePage() {
         <div className="space-y-3">
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
-            Настроить уведомления
+            <span className="block leading-none text-white">Настроить уведомления</span>
           </Link>
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
-            Управление подпиской
+            <span className="block leading-none text-white">Управление подпиской</span>
           </Link>
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
-            Написать в поддержку
+            <span className="block leading-none text-white">Написать в поддержку</span>
           </Link>
         </div>
 

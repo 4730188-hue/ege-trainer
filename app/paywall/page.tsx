@@ -114,9 +114,11 @@ export default function PaywallPage() {
         <div className="mt-auto pb-4">
           <Link
             href="/home"
-            className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
-            {selectedPlan === "monthly" ? "Выбрать 28 дней" : "Выбрать 7 дней"}
+            <span className="block leading-none text-white">
+              {selectedPlan === "monthly" ? "Выбрать 28 дней" : "Выбрать 7 дней"}
+            </span>
           </Link>
 
           <p className="mt-3 text-center text-sm text-slate-500">

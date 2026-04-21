@@ -130,13 +130,15 @@ export default function SessionPage() {
                 type="button"
                 onClick={handlePrimaryAction}
                 disabled={!showResult && !selectedAnswer}
-                className={`mt-6 w-full rounded-2xl px-5 py-4 text-base font-semibold text-white transition ${
+                className={`mt-6 w-full rounded-2xl px-5 py-4 text-base font-semibold transition ${
                   !showResult && !selectedAnswer
                     ? "bg-slate-300"
                     : "bg-slate-900 hover:opacity-95"
                 }`}
               >
-                {showResult ? "Следующее задание" : "Проверить ответ"}
+                <span className="block leading-none text-white">
+                  {showResult ? "Следующее задание" : "Проверить ответ"}
+                </span>
               </button>
             </div>
           </>
@@ -159,9 +161,9 @@ export default function SessionPage() {
             <div className="mt-6 space-y-3">
               <Link
                 href="/home"
-                className="block rounded-2xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white transition hover:opacity-95"
+                className="block rounded-2xl bg-slate-900 px-5 py-4 text-center text-base font-semibold transition hover:opacity-95"
               >
-                Вернуться на главную
+                <span className="block leading-none text-white">Вернуться на главную</span>
               </Link>
               <Link
                 href="/progress"
