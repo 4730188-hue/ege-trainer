@@ -86,7 +86,7 @@ export default function HomePage() {
           <div className="grid grid-cols-3 gap-2 text-sm items-center">
             <Link
               href="/home"
-              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white text-center whitespace-nowrap"
+              className="rounded-2xl border border-slate-900 bg-white px-3 py-3 font-semibold text-slate-900 text-center whitespace-nowrap"
             >
               <span className="block leading-none">Главная</span>
             </Link>
