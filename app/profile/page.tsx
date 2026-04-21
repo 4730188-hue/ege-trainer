@@ -41,25 +41,25 @@ export default function ProfilePage() {
           </Link>
         </div>
 
-        <div className="mt-auto border-t border-slate-100 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+        <div className="mt-auto border-t border-slate-100 pt-4 pb-6">
+          <div className="grid grid-cols-3 gap-2 text-sm items-center">
             <Link
               href="/home"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
             >
-              Главная
+              <span className="block leading-none">Главная</span>
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
             >
-              Прогресс
+              <span className="block leading-none">Прогресс</span>
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white text-center"
+              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white text-center whitespace-nowrap"
             >
-              Профиль
+              <span className="block leading-none">Профиль</span>
             </Link>
           </div>
         </div>
