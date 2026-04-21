@@ -19,10 +19,27 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="mt-auto flex items-center justify-between pb-4 text-sm font-medium text-slate-500">
-          <Link href="/home">Главная</Link>
-          <Link href="/progress">Прогресс</Link>
-          <Link href="/profile">Профиль</Link>
+        <div className="mt-auto border-t border-slate-100 pt-4">
+          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+            <Link
+              href="/home"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500"
+            >
+              Главная
+            </Link>
+            <Link
+              href="/progress"
+              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white"
+            >
+              Прогресс
+            </Link>
+            <Link
+              href="/profile"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500"
+            >
+              Профиль
+            </Link>
+          </div>
         </div>
       </div>
     </main>
