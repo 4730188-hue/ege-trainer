@@ -1,6 +1,54 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+
+const questions = [
+  {
+    topic: "Пунктуация",
+    question: "Где нужна запятая?",
+    options: [
+      "Когда наступил вечер мы пошли домой.",
+      "Я люблю читать и рисовать.",
+      "Он быстро встал и вышел.",
+      "На столе лежали книги тетради ручки.",
+    ],
+    correctAnswer: "Когда наступил вечер мы пошли домой.",
+  },
+  {
+    topic: "Орфография",
+    question: "В каком слове пропущена буква А?",
+    options: ["к...саться", "р...стение", "предл...гать", "изл...жение"],
+    correctAnswer: "р...стение",
+  },
+];
 
 export default function SessionPage() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState("");
+  const [showResult, setShowResult] = useState(false);
+
+  const currentQuestion = questions[currentIndex];
+  const isLastQuestion = currentIndex === questions.length - 1;
+  const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+
+  function handlePrimaryAction() {
+    if (!showResult) {
+      if (!selectedAnswer) return;
+      setShowResult(true);
+      return;
+    }
+
+    if (isLastQuestion) {
+      alert("Сессия завершена");
+      return;
+    }
+
+    setCurrentIndex((prev) => prev + 1);
+    setSelectedAnswer("");
+    setShowResult(false);
+  }
+
   return (
     <main className="min-h-screen bg-white px-6 py-8 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col">
@@ -13,28 +61,47 @@ export default function SessionPage() {
           </p>
 
           <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <p className="text-sm font-medium text-slate-500">Пунктуация</p>
+            <p className="text-sm font-medium text-slate-500">{currentQuestion.topic}</p>
             <h2 className="mt-2 text-2xl font-bold leading-tight tracking-tight">
-              Где нужна запятая?
+              {currentQuestion.question}
             </h2>
 
             <div className="mt-6 space-y-3">
-              <button className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-medium text-slate-900">
-                Вариант 1
-              </button>
-              <button className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-medium text-slate-900">
-                Вариант 2
-              </button>
-              <button className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-medium text-slate-900">
-                Вариант 3
-              </button>
-              <button className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-medium text-slate-900">
-                Вариант 4
-              </button>
+              {currentQuestion.options.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSelectedAnswer(option)}
+                  className={`w-full rounded-2xl border px-5 py-4 text-left text-base font-medium transition ${
+                    selectedAnswer === option
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-900"
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
 
-            <button className="mt-6 w-full rounded-2xl bg-slate-900 px-5 py-4 text-base font-semibold text-white transition hover:opacity-95">
-              Проверить ответ
+            {showResult && (
+              <div className="mt-6 rounded-2xl bg-white p-4 text-base font-medium text-slate-900">
+                {isCorrect
+                  ? "Верно. Хорошо идешь."
+                  : "Пока ошибка. Ничего страшного."}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handlePrimaryAction}
+              disabled={!showResult && !selectedAnswer}
+              className={`mt-6 w-full rounded-2xl px-5 py-4 text-base font-semibold text-white transition ${
+                !showResult && !selectedAnswer
+                  ? "bg-slate-300"
+                  : "bg-slate-900 hover:opacity-95"
+              }`}
+            >
+              {showResult ? "Следующее задание" : "Проверить ответ"}
             </button>
           </div>
         </div>
