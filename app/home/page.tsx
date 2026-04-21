@@ -86,19 +86,19 @@ export default function HomePage() {
           <div className="grid grid-cols-3 gap-2 text-center text-sm">
             <Link
               href="/home"
-              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white"
+              className="rounded-2xl bg-slate-900 px-3 py-3 font-semibold text-white text-center"
             >
               Главная
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center"
             >
               Прогресс
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500"
+              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center"
             >
               Профиль
             </Link>
