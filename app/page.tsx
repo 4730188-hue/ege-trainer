@@ -31,9 +31,9 @@ export default function LandingPage() {
           <div className="mt-6 space-y-3">
             <Link
               href="/onboarding"
-              className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+              className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
             >
-              Начать
+              <span className="block leading-none text-white">Начать</span>
             </Link>
             <Link
               href="/home"
