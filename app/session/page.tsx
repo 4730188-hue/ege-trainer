@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { incrementSessionsCompleted } from "@/lib/storage";
 
 const questions = [
   {
@@ -48,6 +49,7 @@ export default function SessionPage() {
     }
 
     if (isLastQuestion) {
+      incrementSessionsCompleted();
       setIsFinished(true);
       return;
     }

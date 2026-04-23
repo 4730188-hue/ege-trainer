@@ -1,6 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  getDiagnosisResult,
+  getSessionProgress,
+  getStudentProfile,
+  getSubjectLabel,
+  type DiagnosisResult,
+  type SessionProgress,
+  type StudentProfile,
+} from "@/lib/storage";
 
 export default function ProgressPage() {
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+  const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setProfile(getStudentProfile());
+    setDiagnosisResult(getDiagnosisResult());
+    setSessionProgress(getSessionProgress());
+  }, []);
+
+  const subjectLabel = getSubjectLabel(profile?.subject);
+  const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
+  const lastSessionCompletedAt = sessionProgress?.lastSessionCompletedAt
+    ? new Date(sessionProgress.lastSessionCompletedAt).toLocaleDateString("ru-RU")
+    : null;
+  const weakTopics = diagnosisResult?.weakTopics ?? [];
+  const levelLabel = diagnosisResult?.levelLabel;
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -28,8 +58,8 @@ export default function ProgressPage() {
             <p className="mt-2 text-2xl font-bold text-slate-900">71%</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Активных дней</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">6</p>
+            <p className="text-sm font-medium text-slate-500">Сессий</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{sessionsCompleted}</p>
           </div>
         </div>
 
@@ -42,15 +72,19 @@ export default function ProgressPage() {
           </div>
           <div className="mt-4 space-y-3 text-base text-slate-700">
             <p>Сильная тема: Орфография</p>
-            <p>Нужно закрепить: Пунктуация</p>
-            <p>Слабая тема: Лексика</p>
+            <p>Нужно закрепить: {weakTopics[0] ?? "Пунктуация"}</p>
+            <p>Слабая тема: {weakTopics[1] ?? weakTopics[0] ?? "Лексика"}</p>
+            {diagnosisResult?.completedDiagnosis && levelLabel && (
+              <p>Уровень: {levelLabel}</p>
+            )}
           </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-base leading-7 text-slate-600">
-            Ты стабильно двигаешься вверх. Сейчас главное, не бросать короткие
-            ежедневные тренировки и добить пунктуацию.
+            {diagnosisResult?.completedDiagnosis
+              ? `Диагностика завершена${subjectLabel ? ` по предмету ${subjectLabel}` : ""}. ${levelLabel ? `Текущий уровень: ${levelLabel}. ` : ""}${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${lastSessionCompletedAt ? `Последняя сессия: ${lastSessionCompletedAt}.` : ""}`
+              : `Ты стабильно двигаешься вверх. Сейчас главное, не бросать короткие ежедневные тренировки${lastSessionCompletedAt ? `. Последняя сессия была ${lastSessionCompletedAt}` : ""}.`}
           </p>
         </div>
 
