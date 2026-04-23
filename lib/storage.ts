@@ -15,6 +15,8 @@ export type DiagnosisResult = {
 export type SessionProgress = {
   sessionsCompleted?: number;
   lastSessionCompletedAt?: string;
+  streakDays?: number;
+  lastActivityDate?: string;
 };
 
 const STORAGE_KEYS = {
@@ -85,11 +87,47 @@ export function clearAppState() {
   }
 }
 
+function getLocalDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getDayDiff(from: string, to: string) {
+  const fromDate = new Date(`${from}T00:00:00`);
+  const toDate = new Date(`${to}T00:00:00`);
+  const diffMs = toDate.getTime() - fromDate.getTime();
+  return Math.round(diffMs / 86400000);
+}
+
 export function incrementSessionsCompleted() {
   const current = getSessionProgress() ?? {};
+  const now = new Date();
+  const today = getLocalDateString(now);
+  const lastActivityDate = current.lastActivityDate;
+
+  let streakDays = current.streakDays ?? 0;
+
+  if (!lastActivityDate) {
+    streakDays = 1;
+  } else {
+    const dayDiff = getDayDiff(lastActivityDate, today);
+
+    if (dayDiff <= 0) {
+      streakDays = Math.max(streakDays, 1);
+    } else if (dayDiff === 1) {
+      streakDays += 1;
+    } else {
+      streakDays = 1;
+    }
+  }
+
   const next: SessionProgress = {
     sessionsCompleted: (current.sessionsCompleted ?? 0) + 1,
-    lastSessionCompletedAt: new Date().toISOString(),
+    lastSessionCompletedAt: now.toISOString(),
+    lastActivityDate: today,
+    streakDays,
   };
 
   saveSessionProgress(next);

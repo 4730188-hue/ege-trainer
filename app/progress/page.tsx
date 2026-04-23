@@ -26,11 +26,16 @@ export default function ProgressPage() {
 
   const subjectLabel = getSubjectLabel(profile?.subject);
   const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
+  const streakDays = sessionProgress?.streakDays ?? 0;
   const lastSessionCompletedAt = sessionProgress?.lastSessionCompletedAt
     ? new Date(sessionProgress.lastSessionCompletedAt).toLocaleDateString("ru-RU")
     : null;
+  const lastActivityDate = sessionProgress?.lastActivityDate
+    ? new Date(`${sessionProgress.lastActivityDate}T00:00:00`).toLocaleDateString("ru-RU")
+    : null;
   const weakTopics = diagnosisResult?.weakTopics ?? [];
   const levelLabel = diagnosisResult?.levelLabel;
+  const diagnosisCompleted = Boolean(diagnosisResult?.completedDiagnosis);
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -48,43 +53,50 @@ export default function ProgressPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Решено</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">48</p>
-          </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Верно</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">71%</p>
+            <p className="text-sm font-medium text-slate-500">Диагностика</p>
+            <p className="mt-2 text-lg font-bold text-slate-900">
+              {diagnosisCompleted ? "Пройдена" : "Не пройдена"}
+            </p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Сессий</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">{sessionsCompleted}</p>
           </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+            <p className="text-sm font-medium text-slate-500">Streak</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{streakDays}</p>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+            <p className="text-sm font-medium text-slate-500">Последняя активность</p>
+            <p className="mt-2 text-lg font-bold text-slate-900">
+              {lastActivityDate ?? "Пока нет"}
+            </p>
+          </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Темы</p>
+            <p className="text-sm font-medium text-slate-500">Темы и уровень</p>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
               текущий срез
             </span>
           </div>
           <div className="mt-4 space-y-3 text-base text-slate-700">
-            <p>Сильная тема: Орфография</p>
-            <p>Нужно закрепить: {weakTopics[0] ?? "Пунктуация"}</p>
-            <p>Слабая тема: {weakTopics[1] ?? weakTopics[0] ?? "Лексика"}</p>
-            {diagnosisResult?.completedDiagnosis && levelLabel && (
-              <p>Уровень: {levelLabel}</p>
-            )}
+            <p>Уровень: {levelLabel ?? "Пока нет"}</p>
+            <p>
+              Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "Пока не определены"}
+            </p>
+            {lastSessionCompletedAt && <p>Последняя завершенная сессия: {lastSessionCompletedAt}</p>}
           </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-base leading-7 text-slate-600">
-            {diagnosisResult?.completedDiagnosis
-              ? `Диагностика завершена${subjectLabel ? ` по предмету ${subjectLabel}` : ""}. ${levelLabel ? `Текущий уровень: ${levelLabel}. ` : ""}${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${lastSessionCompletedAt ? `Последняя сессия: ${lastSessionCompletedAt}.` : ""}`
-              : `Ты стабильно двигаешься вверх. Сейчас главное, не бросать короткие ежедневные тренировки${lastSessionCompletedAt ? `. Последняя сессия была ${lastSessionCompletedAt}` : ""}.`}
+            {diagnosisCompleted
+              ? `Диагностика завершена${subjectLabel ? ` по предмету ${subjectLabel}` : ""}. ${levelLabel ? `Текущий уровень: ${levelLabel}. ` : ""}${weakTopics.length > 0 ? `Слабые темы: ${weakTopics.join(", ")}. ` : ""}${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${streakDays > 0 ? `Текущий streak: ${streakDays}. ` : ""}${lastActivityDate ? `Последняя активность: ${lastActivityDate}.` : ""}`
+              : `Диагностика пока не пройдена. ${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${streakDays > 0 ? `Текущий streak: ${streakDays}. ` : ""}${lastActivityDate ? `Последняя активность: ${lastActivityDate}.` : "Главное, не выпадать из ежедневного ритма."}`}
           </p>
         </div>
 

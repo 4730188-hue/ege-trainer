@@ -5,20 +5,24 @@ import { useEffect, useState } from "react";
 import {
   getDiagnosisResult,
   getExamTimelineLabel,
+  getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   type DiagnosisResult,
+  type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
 
 export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+  const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setProfile(getStudentProfile());
     setDiagnosisResult(getDiagnosisResult());
+    setSessionProgress(getSessionProgress());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject) ?? "Русский язык";
@@ -28,6 +32,13 @@ export default function HomePage() {
   const levelLabel = diagnosisResult?.levelLabel ?? null;
   const weakTopics = diagnosisResult?.weakTopics ?? [];
   const weakTopicsPreview = weakTopics.slice(0, 2).join(", ");
+  const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
+  const streakDays = sessionProgress?.streakDays ?? 0;
+  const diagnosisStatus = diagnosisResult?.completedDiagnosis
+    ? levelLabel
+      ? `Пройдена, уровень ${levelLabel}`
+      : "Пройдена"
+    : "Не пройдена";
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -84,16 +95,14 @@ export default function HomePage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Предмет</p>
-            <p className="mt-2 text-lg font-bold text-slate-900">{subjectLabel}</p>
-            <p className="mt-1 text-sm text-slate-500">текущий профиль</p>
+            <p className="text-sm font-medium text-slate-500">Streak</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{streakDays}</p>
+            <p className="mt-1 text-sm text-slate-500">дней подряд</p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">В день</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">
-              {profile?.dailyMinutes ?? "15"}
-            </p>
-            <p className="mt-1 text-sm text-slate-500">минут на подготовку</p>
+            <p className="text-sm font-medium text-slate-500">Сессий</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{sessionsCompleted}</p>
+            <p className="mt-1 text-sm text-slate-500">завершено</p>
           </div>
         </div>
 
@@ -109,6 +118,10 @@ export default function HomePage() {
                 ? `Двигаемся к цели ${profile.targetScore} баллов спокойным темпом.`
                 : "Повторим сложные случаи с запятыми в сложных предложениях."}
           </p>
+          <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-500">Статус диагностики</p>
+            <p className="mt-2 text-base font-semibold text-slate-900">{diagnosisStatus}</p>
+          </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">

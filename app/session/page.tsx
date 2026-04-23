@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { incrementSessionsCompleted } from "@/lib/storage";
+import { incrementSessionsCompleted, type SessionProgress } from "@/lib/storage";
 
 const questions = [
   {
@@ -35,6 +35,7 @@ export default function SessionPage() {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
 
   const currentQuestion = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -49,7 +50,8 @@ export default function SessionPage() {
     }
 
     if (isLastQuestion) {
-      incrementSessionsCompleted();
+      const nextProgress = incrementSessionsCompleted();
+      setSessionProgress(nextProgress);
       setIsFinished(true);
       return;
     }
@@ -158,6 +160,11 @@ export default function SessionPage() {
 
             <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
               Хороший темп. Можно вернуться на главную или сразу посмотреть прогресс.
+              {sessionProgress && (
+                <span className="mt-2 block">
+                  Всего сессий: {sessionProgress.sessionsCompleted ?? 0}. Текущий streak: {sessionProgress.streakDays ?? 0}.
+                </span>
+              )}
             </div>
 
             <div className="mt-6 space-y-3">
