@@ -195,11 +195,7 @@ export default function MiniVariantPage() {
                 type="button"
                 onClick={handleCheck}
                 disabled={!selectedAnswer}
-                className={`w-full rounded-2xl px-5 py-3.5 text-base font-semibold transition ${
-                  selectedAnswer
-                    ? "bg-slate-900 hover:opacity-95"
-                    : "bg-slate-300"
-                }`}
+                className={`primary-cta ${selectedAnswer ? "" : "is-disabled"}`}
               >
                 <span className={`block leading-none ${selectedAnswer ? "text-white" : "text-slate-400"}`}>
                   Проверить ответ
@@ -209,7 +205,7 @@ export default function MiniVariantPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full rounded-2xl bg-slate-900 px-5 py-3.5 text-base font-semibold transition hover:opacity-95"
+                className="primary-cta"
               >
                 <span className="block leading-none text-white">
                   {isLastQuestion ? "Завершить мини-вариант" : "Следующее задание"}

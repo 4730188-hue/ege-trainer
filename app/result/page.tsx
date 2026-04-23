@@ -117,9 +117,10 @@ export default function ResultPage() {
         </div>
 
         <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/80 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
+          <p className="mb-2 text-center text-xs font-medium text-slate-500">Следующий шаг откроет персональные сессии и маршрут</p>
           <Link
             href="/paywall"
-            className="block w-full rounded-[1.5rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-5 py-4 text-center text-base font-semibold text-white shadow-[0_22px_45px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px] hover:opacity-95"
+            className="primary-cta"
           >
             <span className="block leading-none text-white">Перейти к первой сильной сессии</span>
           </Link>

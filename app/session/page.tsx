@@ -190,11 +190,7 @@ export default function SessionPage() {
                   type="button"
                   onClick={handlePrimaryAction}
                   disabled={!showResult && !selectedAnswer}
-                  className={`w-full rounded-2xl px-5 py-3.5 text-base font-semibold transition ${
-                    !showResult && !selectedAnswer
-                      ? "bg-slate-300"
-                      : "bg-slate-900 hover:opacity-95"
-                  }`}
+                  className={`primary-cta ${!showResult && !selectedAnswer ? "is-disabled" : ""}`}
                 >
                   <span className={`block leading-none ${!showResult && !selectedAnswer ? "text-slate-400" : "text-white"}`}>
                     {showResult ? (isLastQuestion ? "Завершить сессию" : "Следующее задание") : "Проверить ответ"}
@@ -227,7 +223,7 @@ export default function SessionPage() {
             <div className="mt-6 space-y-3">
               <Link
                 href="/home"
-                className="block rounded-2xl bg-slate-900 px-5 py-4 text-center text-base font-semibold transition hover:opacity-95"
+                className="primary-cta"
               >
                 <span className="block leading-none text-white">Вернуться на главную</span>
               </Link>
@@ -241,23 +237,23 @@ export default function SessionPage() {
           </div>
         )}
 
-        <div className="mt-auto border-t border-slate-100 pt-4 pb-6">
-          <div className="grid grid-cols-3 gap-2 text-sm items-center">
+        <div className="bottom-nav">
+          <div className="bottom-nav-grid">
             <Link
               href="/home"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Главная</span>
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Прогресс</span>
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Профиль</span>
             </Link>

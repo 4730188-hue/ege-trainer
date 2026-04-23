@@ -37,7 +37,7 @@ function FirstImpressionScreen({
             <button
               type="button"
               onClick={() => setIsStartScreen(true)}
-              className="relative z-10 mt-8 block w-full rounded-[1.9rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-6 py-5 text-center text-lg font-semibold text-white shadow-[0_22px_50px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px]"
+              className="primary-cta relative z-10 mt-8 text-lg"
             >
               <span className="block leading-none text-white">Начать</span>
             </button>
@@ -106,13 +106,13 @@ function PreviousStartScreen() {
             <div className="mt-6 space-y-3">
               <Link
                 href="/onboarding"
-                className="block rounded-[1.65rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-5 py-4 text-center text-base font-semibold text-white shadow-[0_22px_45px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px] hover:opacity-95"
+                className="primary-cta"
               >
                 <span className="block leading-none text-white">Начать красиво и быстро</span>
               </Link>
               <Link
                 href="/home"
-                className="block rounded-[1.65rem] border border-white/15 bg-white/10 px-5 py-4 text-center text-base font-semibold text-white/92 backdrop-blur transition hover:bg-white/14"
+                className="secondary-cta border-white/15 bg-white/10 text-white backdrop-blur hover:bg-white/14"
               >
                 <span className="block leading-none text-white">Уже внутри? Открыть кабинет</span>
               </Link>

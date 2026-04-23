@@ -241,16 +241,13 @@ export default function OnboardingPage() {
           </div>
 
           <div className="sticky bottom-0 mt-3 -mx-4 border-t border-white/65 bg-white/82 px-4 pt-3 pb-1 backdrop-blur-xl">
+            <p className="mb-2 text-center text-xs font-medium text-slate-500">Ответ можно поменять до следующего шага</p>
             <div className="space-y-2.5">
               <button
                 type="button"
                 onClick={handleNext}
                 disabled={!canGoNext}
-                className={`w-full rounded-[1.7rem] px-5 py-4 text-base font-semibold transition ${
-                  canGoNext
-                    ? "bg-[linear-gradient(135deg,#4338ca_0%,#6366f1_52%,#7c3aed_100%)] text-white shadow-[0_22px_45px_rgba(79,70,229,0.3)] hover:translate-y-[-1px]"
-                    : "bg-slate-200 text-slate-400"
-                }`}
+                className={`primary-cta ${canGoNext ? "" : "is-disabled"}`}
               >
                 <span className={`block leading-none ${canGoNext ? "text-white" : "text-slate-400"}`}>
                   {step === 4 ? "Перейти к диагностике" : "Продолжить"}
@@ -260,9 +257,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className={`w-full rounded-[1.7rem] border border-slate-200/80 bg-white/85 px-5 py-3.5 text-base font-medium transition ${
-                  step === 1 ? "text-slate-300" : "text-slate-600 hover:bg-slate-50"
-                }`}
+                className={`secondary-cta ${step === 1 ? "text-slate-300" : "text-slate-600 hover:bg-slate-50"}`}
               >
                 Назад
               </button>

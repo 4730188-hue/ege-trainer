@@ -67,13 +67,13 @@ export default function MiniVariantResultPage() {
         <div className="mt-auto space-y-3 pb-4">
           <Link
             href="/mini-variant"
-            className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="primary-cta"
           >
             <span className="block leading-none text-white">Попробовать следующий вариант</span>
           </Link>
           <Link
             href="/home"
-            className="block w-full rounded-3xl border border-slate-200 bg-white px-5 py-4 text-center text-base font-medium text-slate-700 transition hover:bg-slate-50"
+            className="secondary-cta text-slate-700"
           >
             Вернуться на главную
           </Link>

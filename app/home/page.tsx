@@ -165,9 +165,10 @@ export default function HomePage() {
             </p>
           </div>
 
+          <p className="mt-4 text-xs font-medium text-indigo-100/70">Короткая сессия займёт всего несколько минут и подтянет слабые места.</p>
           <Link
             href="/session"
-            className="mt-5 block rounded-[1.6rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-5 py-4 text-center text-base font-semibold text-white shadow-[0_22px_45px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px] hover:opacity-95"
+            className="primary-cta mt-5"
           >
             <span className="block leading-none text-white">Начать тренировку</span>
           </Link>
@@ -254,23 +255,23 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-auto border-t border-white/70 pt-4 pb-6">
-          <div className="grid grid-cols-3 items-center gap-2 text-sm">
+        <div className="bottom-nav">
+          <div className="bottom-nav-grid">
             <Link
               href="/home"
-              className="rounded-2xl bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-3 py-3 font-semibold text-white text-center shadow-[0_16px_30px_rgba(79,70,229,0.24)] whitespace-nowrap"
+              className="bottom-nav-link bottom-nav-link-active whitespace-nowrap"
             >
               <span className="block leading-none">Главная</span>
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Прогресс</span>
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Профиль</span>
             </Link>

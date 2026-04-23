@@ -40,7 +40,7 @@ export default function ProfilePage() {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+        <div className="glass-card rounded-3xl p-5">
           <h1 className="text-3xl font-bold leading-tight tracking-tight">Профиль</h1>
           <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-700">
             <p>Предмет: {subjectLabel}</p>
@@ -54,48 +54,48 @@ export default function ProfilePage() {
         <div className="space-y-3">
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="primary-cta"
           >
             <span className="block leading-none text-white">Настроить уведомления</span>
           </Link>
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="primary-cta"
           >
             <span className="block leading-none text-white">Управление подпиской</span>
           </Link>
           <Link
             href="/profile"
-            className="block rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            className="primary-cta"
           >
             <span className="block leading-none text-white">Написать в поддержку</span>
           </Link>
           <button
             type="button"
             onClick={handleReset}
-            className="block w-full rounded-3xl border border-slate-200 bg-white px-5 py-4 text-center text-base font-semibold text-slate-900 shadow-sm shadow-slate-200/40 transition hover:bg-slate-50"
+            className="secondary-cta"
           >
             Начать заново
           </button>
         </div>
 
-        <div className="mt-auto border-t border-slate-100 pt-4 pb-6">
-          <div className="grid grid-cols-3 gap-2 text-sm items-center">
+        <div className="bottom-nav">
+          <div className="bottom-nav-grid">
             <Link
               href="/home"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Главная</span>
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Прогресс</span>
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl border border-slate-900 bg-white px-3 py-3 font-semibold text-slate-900 text-center whitespace-nowrap"
+              className="bottom-nav-link bottom-nav-link-active whitespace-nowrap"
             >
               <span className="block leading-none">Профиль</span>
             </Link>

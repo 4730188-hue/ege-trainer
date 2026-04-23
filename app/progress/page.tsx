@@ -135,10 +135,10 @@ export default function ProgressPage() {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+        <div className="glass-card rounded-3xl p-5">
           <h1 className="text-3xl font-bold leading-tight tracking-tight">Твой прогресс</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            Здесь собраны основные показатели по текущей подготовке.
+          <p className="mt-3 text-sm helper-text">
+            Здесь собраны основные показатели по текущей подготовке. Смотри на тренд, а не на одну цифру.
           </p>
         </div>
 
@@ -241,23 +241,23 @@ export default function ProgressPage() {
           )}
         </div>
 
-        <div className="mt-auto border-t border-slate-100 pt-4 pb-6">
-          <div className="grid grid-cols-3 gap-2 text-sm items-center">
+        <div className="bottom-nav">
+          <div className="bottom-nav-grid">
             <Link
               href="/home"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Главная</span>
             </Link>
             <Link
               href="/progress"
-              className="rounded-2xl border border-slate-900 bg-white px-3 py-3 font-semibold text-slate-900 text-center whitespace-nowrap"
+              className="bottom-nav-link bottom-nav-link-active whitespace-nowrap"
             >
               <span className="block leading-none">Прогресс</span>
             </Link>
             <Link
               href="/profile"
-              className="rounded-2xl px-3 py-3 font-medium text-slate-500 text-center whitespace-nowrap"
+              className="bottom-nav-link whitespace-nowrap"
             >
               <span className="block leading-none">Профиль</span>
             </Link>

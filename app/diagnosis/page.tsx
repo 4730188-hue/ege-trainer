@@ -194,11 +194,7 @@ export default function DiagnosisPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!selectedAnswer}
-                className={`w-full rounded-3xl px-5 py-3.5 text-base font-semibold transition ${
-                  selectedAnswer
-                    ? "bg-slate-900 text-white shadow-sm shadow-slate-300/40 hover:opacity-95"
-                    : "bg-slate-200 text-slate-400"
-                }`}
+                className={`primary-cta ${selectedAnswer ? "" : "is-disabled"}`}
               >
                 <span className={`block leading-none ${selectedAnswer ? "text-white" : "text-slate-400"}`}>
                   Ответить
@@ -208,7 +204,7 @@ export default function DiagnosisPage() {
               <button
                 type="button"
                 onClick={handleNext}
-                className="w-full rounded-3xl bg-slate-900 px-5 py-3.5 text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+                className="primary-cta"
               >
                 <span className="block leading-none text-white">
                   {isLastQuestion ? "Завершить диагностику" : "Следующий вопрос"}
