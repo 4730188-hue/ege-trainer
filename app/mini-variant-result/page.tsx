@@ -69,7 +69,7 @@ export default function MiniVariantResultPage() {
             href="/mini-variant"
             className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
-            Попробовать следующий вариант
+            <span className="block leading-none text-white">Попробовать следующий вариант</span>
           </Link>
           <Link
             href="/home"
