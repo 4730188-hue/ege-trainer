@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const benefits = [
   "Быстрый старт с понятной диагностикой",
@@ -9,7 +9,11 @@ const benefits = [
   "Маршрут к целевому баллу по слабым темам",
 ];
 
-function FirstImpressionScreen() {
+function FirstImpressionScreen({
+  setIsStartScreen,
+}: {
+  setIsStartScreen: (value: boolean) => void;
+}) {
   return (
     <main className="min-h-[100dvh] px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col justify-between gap-5">
@@ -30,12 +34,13 @@ function FirstImpressionScreen() {
               Помогает дойти до нужного балла. Быстро, удобно и просто.
             </p>
 
-            <Link
-              href="/?screen=start"
-              className="relative z-10 mt-8 block rounded-[1.9rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-6 py-5 text-center text-lg font-semibold text-white shadow-[0_22px_50px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px]"
+            <button
+              type="button"
+              onClick={() => setIsStartScreen(true)}
+              className="relative z-10 mt-8 block w-full rounded-[1.9rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-6 py-5 text-center text-lg font-semibold text-white shadow-[0_22px_50px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px]"
             >
               <span className="block leading-none text-white">Начать</span>
-            </Link>
+            </button>
           </div>
         </section>
 
@@ -148,12 +153,5 @@ function PreviousStartScreen() {
 export default function LandingPage() {
   const [isStartScreen, setIsStartScreen] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    setIsStartScreen(params.get("screen") === "start");
-  }, []);
-
-  return isStartScreen ? <PreviousStartScreen /> : <FirstImpressionScreen />;
+  return isStartScreen ? <PreviousStartScreen /> : <FirstImpressionScreen setIsStartScreen={setIsStartScreen} />;
 }
