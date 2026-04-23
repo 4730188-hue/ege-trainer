@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildReadiness,
   buildRoadmap,
   getDiagnosisResult,
   getExamTimelineLabel,
@@ -17,6 +18,30 @@ import {
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
+
+function getToneClasses(tone: "indigo" | "green" | "amber") {
+  if (tone === "green") {
+    return {
+      card: "border-emerald-100 bg-emerald-50/80",
+      badge: "bg-emerald-100 text-emerald-700",
+      text: "text-emerald-700",
+    };
+  }
+
+  if (tone === "amber") {
+    return {
+      card: "border-amber-100 bg-amber-50/80",
+      badge: "bg-amber-100 text-amber-700",
+      text: "text-amber-700",
+    };
+  }
+
+  return {
+    card: "border-indigo-100 bg-indigo-50/80",
+    badge: "bg-indigo-100 text-indigo-700",
+    text: "text-indigo-700",
+  };
+}
 
 export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -67,6 +92,24 @@ export default function HomePage() {
     [subjectLabel, weakTopics, sessionsCompleted, streakDays, diagnosisResult, repeatCount, completedMiniVariants],
   );
 
+  const readiness = useMemo(
+    () =>
+      buildReadiness({
+        targetLabel,
+        diagnosisCompleted: diagnosisResult?.completedDiagnosis,
+        sessionsCompleted,
+        streakDays,
+        weakTopics,
+        repeatCount,
+        completedMiniVariants,
+        lastMiniCorrectAnswers: lastMiniResult?.correctAnswers,
+        lastMiniTotalQuestions: lastMiniResult?.totalQuestions,
+      }),
+    [targetLabel, diagnosisResult, sessionsCompleted, streakDays, weakTopics, repeatCount, completedMiniVariants, lastMiniResult],
+  );
+
+  const readinessTone = getToneClasses(readiness.tone);
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -77,15 +120,18 @@ export default function HomePage() {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-          <p className="text-sm font-medium text-slate-500">Подготовка к ЕГЭ</p>
-          <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">
-            Твоя подготовка к ЕГЭ
-          </h1>
+        <div className={`rounded-3xl border p-5 shadow-sm shadow-slate-200/50 ${readinessTone.card}`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-500">Цель и готовность</p>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${readinessTone.badge}`}>
+              {readiness.statusLabel}
+            </span>
+          </div>
 
-          <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-            <p className="text-sm font-medium text-slate-500">Цель</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{targetLabel}</p>
+          <div className="mt-4 rounded-2xl bg-white/70 p-4">
+            <p className="text-sm font-medium text-slate-500">Целевой балл</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900">{targetLabel}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{readiness.closenessText}</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">Предмет: {subjectLabel}</p>
             {dailyLabel && (
               <p className="mt-1 text-sm leading-6 text-slate-600">В день: {dailyLabel}</p>
@@ -114,7 +160,7 @@ export default function HomePage() {
           </p>
           <p className="mt-3 text-sm font-medium text-slate-200">{roadmap.homeStatus}</p>
           {repeatCount > 0 && (
-            <p className="mt-2 text-sm font-medium text-slate-200">
+            <p className="mt-2 text-sm font-medium text-amber-200">
               Есть темы на повторение, вопросов в очереди: {repeatCount}.
             </p>
           )}
@@ -137,11 +183,11 @@ export default function HomePage() {
 
         <Link
           href="/mini-variant"
-          className="block rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40 transition hover:bg-slate-50"
+          className="block rounded-3xl border border-indigo-100 bg-indigo-50/70 p-5 shadow-sm shadow-slate-200/40 transition hover:bg-indigo-50"
         >
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-slate-500">Новый режим</p>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+            <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">
               8 заданий
             </span>
           </div>
@@ -158,7 +204,7 @@ export default function HomePage() {
               Пока ещё не запускал. Доступно 3 мини-варианта на предмет.
             </p>
           )}
-          <span className="mt-4 inline-block text-sm font-semibold text-slate-900">
+          <span className="mt-4 inline-block text-sm font-semibold text-indigo-700">
             Запустить мини-вариант
           </span>
         </Link>
@@ -176,7 +222,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+        <div className="rounded-3xl border border-amber-100 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-sm font-medium text-slate-500">Сегодня в фокусе</p>
           <p className="mt-2 text-lg font-semibold text-slate-900">
             {weakTopics.length > 0 ? weakTopics[0] : subjectLabel}
@@ -188,8 +234,8 @@ export default function HomePage() {
                 ? `Двигаемся к цели ${profile.targetScore} баллов спокойным темпом.`
                 : "Сначала закрепим фундамент, а потом начнём ускоряться."}
           </p>
-          <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-            <p className="text-sm font-medium text-slate-500">Статус диагностики</p>
+          <div className="mt-4 rounded-2xl bg-amber-50/80 p-4">
+            <p className="text-sm font-medium text-amber-700">Статус диагностики</p>
             <p className="mt-2 text-base font-semibold text-slate-900">{diagnosisStatus}</p>
             {repeatCount > 0 && (
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -202,20 +248,14 @@ export default function HomePage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-slate-500">Прогноз</p>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-              стабильно
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${readinessTone.badge}`}>
+              {readiness.statusLabel}
             </span>
           </div>
           <p className="mt-2 text-lg font-semibold text-slate-900">
             {levelLabel ?? targetLabel}
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            {levelLabel
-              ? `Текущий уровень: ${levelLabel}. Дальше важнее удержать регулярность и закрыть темы, где чаще всего бывают ошибки.`
-              : dailyLabel
-                ? `Если продолжишь заниматься по ${dailyLabel}, цель выглядит реалистично.`
-                : "Если продолжишь заниматься в таком темпе, цель выглядит реалистично."}
-          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{readiness.nextFocus}</p>
         </div>
 
         <div className="mt-auto border-t border-slate-100 pt-4 pb-6">

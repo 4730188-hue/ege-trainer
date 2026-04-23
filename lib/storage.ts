@@ -67,6 +67,26 @@ export type RoadmapPlan = {
   nextFocus: string;
 };
 
+export type ReadinessInput = {
+  targetLabel: string;
+  diagnosisCompleted?: boolean;
+  sessionsCompleted?: number;
+  streakDays?: number;
+  weakTopics?: string[];
+  repeatCount?: number;
+  completedMiniVariants?: number;
+  lastMiniCorrectAnswers?: number;
+  lastMiniTotalQuestions?: number;
+};
+
+export type ReadinessPlan = {
+  statusLabel: string;
+  tone: "indigo" | "green" | "amber";
+  closenessText: string;
+  blockers: string[];
+  nextFocus: string;
+};
+
 const STORAGE_KEYS = {
   studentProfile: "ege-trainer:student-profile",
   diagnosisResult: "ege-trainer:diagnosis-result",
@@ -334,6 +354,84 @@ export function getExamTimelineLabel(examTimeline?: string | null) {
   if (examTimeline === "gt6") return "Больше 6 месяцев";
   if (!examTimeline) return null;
   return examTimeline;
+}
+
+export function buildReadiness(input: ReadinessInput): ReadinessPlan {
+  const diagnosisCompleted = Boolean(input.diagnosisCompleted);
+  const sessionsCompleted = input.sessionsCompleted ?? 0;
+  const streakDays = input.streakDays ?? 0;
+  const weakTopics = input.weakTopics ?? [];
+  const repeatCount = input.repeatCount ?? 0;
+  const completedMiniVariants = input.completedMiniVariants ?? 0;
+  const lastMiniCorrectAnswers = input.lastMiniCorrectAnswers ?? 0;
+  const lastMiniTotalQuestions = input.lastMiniTotalQuestions ?? 8;
+
+  const blockers: string[] = [];
+
+  if (!diagnosisCompleted) {
+    blockers.push("ещё не собрана стартовая диагностика");
+  }
+  if (repeatCount > 0) {
+    blockers.push(`в очереди остаётся ${repeatCount} вопрос${repeatCount === 1 ? "" : repeatCount < 5 ? "а" : "ов"} на повтор`);
+  }
+  if (weakTopics[0]) {
+    blockers.push(`проседает тема ${weakTopics[0]}`);
+  }
+  if (sessionsCompleted < 3) {
+    blockers.push("ещё мало практики в регулярных сессиях");
+  }
+  if (sessionsCompleted >= 3 && completedMiniVariants === 0) {
+    blockers.push("ещё не проверена устойчивость через мини-вариант");
+  }
+
+  if (!diagnosisCompleted) {
+    return {
+      statusLabel: "Стартовая калибровка",
+      tone: "amber",
+      closenessText: `До цели ${input.targetLabel} сначала нужно собрать базовую картину по сильным и слабым темам.`,
+      blockers: blockers.slice(0, 3),
+      nextFocus: "Пройти диагностику и получить первую карту слабых тем.",
+    };
+  }
+
+  if (repeatCount > 0 || weakTopics.length > 0) {
+    return {
+      statusLabel: "Есть узкие места",
+      tone: "amber",
+      closenessText: `До цели ${input.targetLabel} уже есть маршрут, но слабые темы пока заметно мешают стабильности.`,
+      blockers: blockers.slice(0, 3),
+      nextFocus: weakTopics[0]
+        ? `Сначала выровнять тему ${weakTopics[0]} и разобрать повтор.`
+        : "Сначала закрыть повтор и убрать ошибки из очереди.",
+    };
+  }
+
+  if (
+    sessionsCompleted >= 5 ||
+    completedMiniVariants >= 2 ||
+    streakDays >= 4 ||
+    (lastMiniTotalQuestions > 0 && lastMiniCorrectAnswers / lastMiniTotalQuestions >= 0.75)
+  ) {
+    return {
+      statusLabel: "Хорошая рабочая форма",
+      tone: "green",
+      closenessText: `Ты уже заметно ближе к цели ${input.targetLabel}. Сейчас важнее удержать темп и проверять устойчивость результата.`,
+      blockers: blockers.slice(0, 2),
+      nextFocus: completedMiniVariants > 0
+        ? "Чередовать сессии и мини-варианты, чтобы закрепить стабильность."
+        : "Добавить мини-вариант и посмотреть, как держится результат под нагрузкой.",
+    };
+  }
+
+  return {
+    statusLabel: "Фундамент собирается",
+    tone: "indigo",
+    closenessText: `К цели ${input.targetLabel} уже есть рабочее движение, но пока нужна ещё серия спокойных регулярных сессий.`,
+    blockers: blockers.slice(0, 3),
+    nextFocus: sessionsCompleted >= 3
+      ? "Закрепить темп и перейти к первому мини-варианту."
+      : "Набрать ещё несколько сессий и не ронять регулярность.",
+  };
 }
 
 export function buildRoadmap(input: RoadmapInput): RoadmapPlan {

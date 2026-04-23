@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildReadiness,
   buildRoadmap,
   getDiagnosisResult,
   getIncorrectQuestionCount,
@@ -29,6 +30,30 @@ function getSubjectProgressText(subjectLabel: string) {
   return "В русском языке быстрый прогресс обычно приходит через стабильный повтор орфографии, пунктуации и работы с текстом.";
 }
 
+function getToneClasses(tone: "indigo" | "green" | "amber") {
+  if (tone === "green") {
+    return {
+      card: "border-emerald-100 bg-emerald-50/80",
+      badge: "bg-emerald-100 text-emerald-700",
+      text: "text-emerald-700",
+    };
+  }
+
+  if (tone === "amber") {
+    return {
+      card: "border-amber-100 bg-amber-50/80",
+      badge: "bg-amber-100 text-amber-700",
+      text: "text-amber-700",
+    };
+  }
+
+  return {
+    card: "border-indigo-100 bg-indigo-50/80",
+    badge: "bg-indigo-100 text-indigo-700",
+    text: "text-indigo-700",
+  };
+}
+
 export default function ProgressPage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
@@ -48,6 +73,7 @@ export default function ProgressPage() {
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject);
+  const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
   const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
   const streakDays = sessionProgress?.streakDays ?? 0;
   const lastActivityDate = sessionProgress?.lastActivityDate
@@ -74,12 +100,30 @@ export default function ProgressPage() {
     [subjectLabel, weakTopics, sessionsCompleted, streakDays, diagnosisCompleted, repeatCount, completedMiniVariants],
   );
 
+  const readiness = useMemo(
+    () =>
+      buildReadiness({
+        targetLabel,
+        diagnosisCompleted,
+        sessionsCompleted,
+        streakDays,
+        weakTopics,
+        repeatCount,
+        completedMiniVariants,
+        lastMiniCorrectAnswers: lastMiniResult?.correctAnswers,
+        lastMiniTotalQuestions: lastMiniResult?.totalQuestions,
+      }),
+    [targetLabel, diagnosisCompleted, sessionsCompleted, streakDays, weakTopics, repeatCount, completedMiniVariants, lastMiniResult],
+  );
+
   const stageLabel =
     roadmap.progressStage === "advanced"
       ? "Продвинулся"
       : roadmap.progressStage === "in_progress"
         ? "В процессе"
         : "Новичок";
+
+  const readinessTone = getToneClasses(readiness.tone);
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -98,6 +142,28 @@ export default function ProgressPage() {
           </p>
         </div>
 
+        <div className={`rounded-3xl border p-5 shadow-sm shadow-slate-200/40 ${readinessTone.card}`}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-500">Готовность сейчас</p>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${readinessTone.badge}`}>
+              {readiness.statusLabel}
+            </span>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{readiness.closenessText}</p>
+          <div className="mt-4 rounded-2xl bg-white/70 p-4">
+            <p className="text-sm font-medium text-slate-900">Что мешает дойти до цели</p>
+            <div className="mt-2 space-y-2 text-sm leading-6 text-slate-600">
+              {readiness.blockers.length > 0 ? (
+                readiness.blockers.map((item) => <p key={item}>• {item}</p>)
+              ) : (
+                <p>Сейчас критичных блокеров не видно, главное не терять темп.</p>
+              )}
+            </div>
+            <p className="mt-3 text-sm font-medium text-slate-900">Следующий фокус</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{readiness.nextFocus}</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Сессий</p>
@@ -105,7 +171,7 @@ export default function ProgressPage() {
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">На повтор</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{repeatCount}</p>
+            <p className={`mt-2 text-2xl font-bold ${repeatCount > 0 ? "text-amber-700" : "text-slate-900"}`}>{repeatCount}</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Уровень</p>
@@ -113,7 +179,7 @@ export default function ProgressPage() {
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Streak</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900">{streakDays}</p>
+            <p className={`mt-2 text-2xl font-bold ${streakDays >= 4 ? "text-emerald-700" : "text-slate-900"}`}>{streakDays}</p>
           </div>
         </div>
 
@@ -126,14 +192,16 @@ export default function ProgressPage() {
           </div>
           <div className="mt-4 space-y-3 text-base text-slate-700">
             <p>Диагностика: {diagnosisCompleted ? "пройдена" : "пока не пройдена"}</p>
-            <p>Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}</p>
+            <p className={weakTopics.length > 0 ? "text-amber-700" : "text-slate-700"}>
+              Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}
+            </p>
             <p>Последняя активность: {lastActivityDate ?? "пока нет"}</p>
           </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-sm font-medium text-slate-500">Дорожная карта</p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">{stageLabel}</p>
+          <p className={`mt-2 text-lg font-semibold ${readinessTone.text}`}>{stageLabel}</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">{roadmap.progressSummary}</p>
           <div className="mt-3 rounded-2xl bg-slate-50 p-4">
             <p className="text-sm font-medium text-slate-900">Что дальше</p>
@@ -146,7 +214,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+        <div className="rounded-3xl border border-indigo-100 bg-indigo-50/70 p-5 shadow-sm shadow-slate-200/40">
           <p className="text-sm font-medium text-slate-500">Мини-варианты ЕГЭ</p>
           <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
             <p>Завершено: {completedMiniVariants}</p>
@@ -164,8 +232,8 @@ export default function ProgressPage() {
           <p className="text-sm font-medium text-slate-500">Что это значит сейчас</p>
           <p className="mt-3 text-sm leading-6 text-slate-600">{note}</p>
           {repeatCount > 0 && (
-            <div className="mt-3 rounded-2xl bg-slate-50 p-4">
-              <p className="text-sm font-medium text-slate-900">Как работает повтор</p>
+            <div className="mt-3 rounded-2xl bg-amber-50/80 p-4">
+              <p className="text-sm font-medium text-amber-700">Как работает повтор</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Приложение возвращает вопросы с ошибками в следующие сессии, чтобы ты видел повтор именно там, где пока есть просадка.
               </p>
