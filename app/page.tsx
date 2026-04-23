@@ -106,15 +106,15 @@ function PreviousStartScreen() {
             <div className="mt-6 space-y-3">
               <Link
                 href="/onboarding"
-                className="block rounded-[1.65rem] bg-white px-5 py-4 text-center text-base font-semibold text-slate-950 shadow-[0_18px_40px_rgba(255,255,255,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_22px_42px_rgba(255,255,255,0.26)]"
+                className="block rounded-[1.65rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-5 py-4 text-center text-base font-semibold text-white shadow-[0_22px_45px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px] hover:opacity-95"
               >
-                Начать красиво и быстро
+                <span className="block leading-none text-white">Начать красиво и быстро</span>
               </Link>
               <Link
                 href="/home"
                 className="block rounded-[1.65rem] border border-white/15 bg-white/10 px-5 py-4 text-center text-base font-semibold text-white/92 backdrop-blur transition hover:bg-white/14"
               >
-                Уже внутри? Открыть кабинет
+                <span className="block leading-none text-white">Уже внутри? Открыть кабинет</span>
               </Link>
             </div>
           </div>
