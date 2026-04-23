@@ -8,12 +8,15 @@ import {
   getDiagnosisResult,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
+  getProPlanLabel,
+  getProSubscription,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
   type DiagnosisResult,
   type MiniVariantProgress,
+  type ProSubscription,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -60,6 +63,7 @@ export default function ProgressPage() {
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
+  const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
   useEffect(() => {
     const nextProfile = getStudentProfile();
@@ -70,6 +74,7 @@ export default function ProgressPage() {
     setSessionProgress(getSessionProgress());
     setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
+    setProSubscription(getProSubscription());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject);
@@ -124,14 +129,15 @@ export default function ProgressPage() {
         : "Новичок";
 
   const readinessTone = getToneClasses(readiness.tone);
+  const isPro = Boolean(proSubscription?.isPro);
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
           <span>Аналитика</span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            Прогресс
+          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>
+            {isPro ? "Pro активирован" : "Прогресс"}
           </span>
         </div>
 
@@ -141,6 +147,20 @@ export default function ProgressPage() {
             Здесь собраны основные показатели по текущей подготовке. Смотри на тренд, а не на одну цифру.
           </p>
         </div>
+
+        {isPro && (
+          <div className="rounded-3xl border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(220,252,231,0.9))] p-5 shadow-sm shadow-emerald-100/60">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-slate-500">Pro активирован</p>
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                {getProPlanLabel(proSubscription?.activePlan)}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">
+              Расширенный режим уже включён локально. Можно спокойно отслеживать динамику и идти по плану без ограничений.
+            </p>
+          </div>
+        )}
 
         <div className={`rounded-3xl border p-5 shadow-sm shadow-slate-200/40 ${readinessTone.card}`}>
           <div className="flex items-center justify-between gap-3">

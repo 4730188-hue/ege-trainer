@@ -49,6 +49,14 @@ export type MiniVariantProgress = {
   lastVariantIdBySubject?: SubjectVariantIdMap;
 };
 
+export type ProPlanKey = "monthly" | "quarterly";
+
+export type ProSubscription = {
+  isPro?: boolean;
+  activePlan?: ProPlanKey;
+  activatedAt?: string;
+};
+
 export type RoadmapInput = {
   subjectLabel: string;
   weakTopics?: string[];
@@ -93,6 +101,7 @@ const STORAGE_KEYS = {
   sessionProgress: "ege-trainer:session-progress",
   repetitionState: "ege-trainer:repetition-state",
   miniVariantProgress: "ege-trainer:mini-variant-progress",
+  proSubscription: "ege-trainer:pro-subscription",
 } as const;
 
 function isBrowser() {
@@ -294,6 +303,31 @@ export function saveMiniVariantResult(result: MiniVariantResult) {
   });
 }
 
+export function getProSubscription() {
+  return (
+    safeRead<ProSubscription>(STORAGE_KEYS.proSubscription) ?? {
+      isPro: false,
+      activePlan: undefined,
+      activatedAt: undefined,
+    }
+  );
+}
+
+export function saveProSubscription(subscription: ProSubscription) {
+  safeWrite(STORAGE_KEYS.proSubscription, subscription);
+}
+
+export function activatePro(plan: ProPlanKey) {
+  const next: ProSubscription = {
+    isPro: true,
+    activePlan: plan,
+    activatedAt: new Date().toISOString(),
+  };
+
+  saveProSubscription(next);
+  return next;
+}
+
 export function clearAppState() {
   if (!isBrowser()) return;
 
@@ -345,6 +379,12 @@ export function getSubjectLabel(subject?: string | null) {
   if (key === "math") return "Профильная математика";
   if (key === "social") return "Обществознание";
   return "Русский язык";
+}
+
+export function getProPlanLabel(plan?: ProPlanKey | null) {
+  if (plan === "quarterly") return "3 месяца Pro";
+  if (plan === "monthly") return "1 месяц Pro";
+  return "Pro";
 }
 
 export function getExamTimelineLabel(examTimeline?: string | null) {

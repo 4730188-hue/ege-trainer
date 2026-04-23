@@ -6,24 +6,30 @@ import { useEffect, useState } from "react";
 import {
   clearAppState,
   getExamTimelineLabel,
+  getProPlanLabel,
+  getProSubscription,
   getStudentProfile,
   getSubjectLabel,
+  type ProSubscription,
   type StudentProfile,
 } from "@/lib/storage";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setProfile(getStudentProfile());
+    setProSubscription(getProSubscription());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject) ?? "Русский язык";
   const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
   const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут` : null;
   const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
+  const isPro = Boolean(proSubscription?.isPro);
 
   const handleReset = () => {
     clearAppState();
@@ -35,8 +41,8 @@ export default function ProfilePage() {
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
           <span>Аккаунт</span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            Профиль
+          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>
+            {isPro ? "Pro" : "Профиль"}
           </span>
         </div>
 
@@ -47,9 +53,19 @@ export default function ProfilePage() {
             <p>Цель: {targetLabel}</p>
             {dailyLabel && <p>В день: {dailyLabel}</p>}
             {timelineLabel && <p>Экзамен: {timelineLabel}</p>}
-            <p>Тариф: Pro</p>
+            <p>Тариф: {isPro ? getProPlanLabel(proSubscription?.activePlan) : "Free"}</p>
           </div>
         </div>
+
+        {isPro && (
+          <div className="rounded-3xl border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(220,252,231,0.9))] p-5 shadow-[0_18px_40px_rgba(16,185,129,0.08)]">
+            <p className="text-sm font-medium text-slate-500">Pro активирован</p>
+            <p className="mt-2 text-base font-semibold text-slate-900">{getProPlanLabel(proSubscription?.activePlan)}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Полный доступ уже открыт локально. Дата активации: {proSubscription?.activatedAt ? new Date(proSubscription.activatedAt).toLocaleDateString("ru-RU") : "сейчас"}.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-3">
           <Link

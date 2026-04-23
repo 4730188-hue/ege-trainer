@@ -9,12 +9,15 @@ import {
   getExamTimelineLabel,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
+  getProPlanLabel,
+  getProSubscription,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
   type DiagnosisResult,
   type MiniVariantProgress,
+  type ProSubscription,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -49,6 +52,7 @@ export default function HomePage() {
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
+  const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
   useEffect(() => {
     const nextProfile = getStudentProfile();
@@ -59,6 +63,7 @@ export default function HomePage() {
     setSessionProgress(getSessionProgress());
     setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
+    setProSubscription(getProSubscription());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject);
@@ -109,14 +114,15 @@ export default function HomePage() {
   );
 
   const readinessTone = getToneClasses(readiness.tone);
+  const isPro = Boolean(proSubscription?.isPro);
 
   return (
     <main className="min-h-[100dvh] px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col gap-4">
         <div className="flex items-center justify-between rounded-full border border-white/65 bg-white/55 px-4 py-2 text-sm text-slate-500 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur-xl">
           <span>Учебный кабинет</span>
-          <span className="rounded-full bg-indigo-100/90 px-3 py-1 text-xs font-semibold text-indigo-700">
-            Personal plan
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100/90 text-indigo-700"}`}>
+            {isPro ? "Pro активирован" : "Personal plan"}
           </span>
         </div>
 
@@ -173,6 +179,20 @@ export default function HomePage() {
             <span className="block leading-none text-white">Начать тренировку</span>
           </Link>
         </section>
+
+        {isPro && (
+          <section className="rounded-[1.8rem] border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(220,252,231,0.9))] p-5 shadow-[0_18px_45px_rgba(16,185,129,0.08)]">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-slate-500">Pro активирован</p>
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                {getProPlanLabel(proSubscription?.activePlan)}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-700">
+              Полный режим уже открыт. Можно спокойно идти по плану, смотреть прогресс и крутить мини-варианты без ограничений.
+            </p>
+          </section>
+        )}
 
         <section className={`rounded-[1.8rem] border p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] ${readinessTone.card}`}>
           <div className="flex items-center justify-between gap-3">
