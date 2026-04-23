@@ -167,8 +167,9 @@ export default function SessionPage() {
 
               {showResult && (
                 <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-base text-slate-900">
-                  <p className="font-medium">
-                    {isCorrect ? "Верно. Хорошо идёшь." : "Пока ошибка. Ничего страшного."}
+                  <p className="font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
+                  <p className="mt-2 text-sm font-medium text-slate-900">
+                    Правильный ответ: {currentQuestion.correctAnswer}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
                 </div>

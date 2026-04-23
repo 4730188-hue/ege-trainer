@@ -170,7 +170,10 @@ export default function DiagnosisPage() {
           {showResult && (
             <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                {isCorrect ? "Верно" : "Ответ сохранён"}
+                {isCorrect ? "Верно" : "Неверно"}
+              </p>
+              <p className="mt-2 text-sm font-medium text-slate-900">
+                Правильный ответ: {currentQuestion.correctAnswer}
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-700">{currentQuestion.explanation}</p>
             </div>

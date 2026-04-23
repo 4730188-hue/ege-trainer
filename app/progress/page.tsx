@@ -107,9 +107,12 @@ export default function ProgressPage() {
           <p className="text-sm font-medium text-slate-500">Что это значит сейчас</p>
           <p className="mt-3 text-sm leading-6 text-slate-600">{note}</p>
           {repeatCount > 0 && (
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Следующие сессии будут стараться возвращать вопросы, в которых раньше были ошибки.
-            </p>
+            <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-medium text-slate-900">Как работает повтор</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Приложение возвращает вопросы с ошибками в следующие сессии, чтобы ты видел повтор именно там, где пока есть просадка.
+              </p>
+            </div>
           )}
         </div>
 
