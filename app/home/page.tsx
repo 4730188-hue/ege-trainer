@@ -167,9 +167,9 @@ export default function HomePage() {
 
           <Link
             href="/session"
-            className="mt-5 block rounded-[1.6rem] bg-white px-5 py-4 text-center text-base font-semibold text-slate-950 shadow-[0_20px_45px_rgba(255,255,255,0.18)] transition hover:translate-y-[-1px]"
+            className="mt-5 block rounded-[1.6rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-5 py-4 text-center text-base font-semibold text-white shadow-[0_22px_45px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px] hover:opacity-95"
           >
-            Начать тренировку
+            <span className="block leading-none text-white">Начать тренировку</span>
           </Link>
         </section>
 
