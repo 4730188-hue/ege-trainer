@@ -25,10 +25,28 @@ export type SessionProgress = {
 };
 
 type SubjectQuestionMap = Partial<Record<SubjectKey, string[]>>;
+type SubjectIndexMap = Partial<Record<SubjectKey, number>>;
+type SubjectVariantIdMap = Partial<Record<SubjectKey, string>>;
 
 export type RepetitionState = {
   seenSessionQuestionIds?: SubjectQuestionMap;
   incorrectQuestionIds?: SubjectQuestionMap;
+};
+
+export type MiniVariantResult = {
+  subject?: SubjectKey;
+  variantId?: string;
+  variantNumber?: number;
+  correctAnswers?: number;
+  totalQuestions?: number;
+  completedAt?: string;
+};
+
+export type MiniVariantProgress = {
+  completedCount?: number;
+  lastResult?: MiniVariantResult | null;
+  lastVariantIndexBySubject?: SubjectIndexMap;
+  lastVariantIdBySubject?: SubjectVariantIdMap;
 };
 
 const STORAGE_KEYS = {
@@ -36,6 +54,7 @@ const STORAGE_KEYS = {
   diagnosisResult: "ege-trainer:diagnosis-result",
   sessionProgress: "ege-trainer:session-progress",
   repetitionState: "ege-trainer:repetition-state",
+  miniVariantProgress: "ege-trainer:mini-variant-progress",
 } as const;
 
 function isBrowser() {
@@ -187,6 +206,54 @@ export function clearQuestionIncorrect(subject: SubjectKey, questionId: string) 
 
 export function getIncorrectQuestionCount(subject: SubjectKey) {
   return getIncorrectQuestionIds(subject).length;
+}
+
+export function getMiniVariantProgress() {
+  return (
+    safeRead<MiniVariantProgress>(STORAGE_KEYS.miniVariantProgress) ?? {
+      completedCount: 0,
+      lastResult: null,
+      lastVariantIndexBySubject: {},
+      lastVariantIdBySubject: {},
+    }
+  );
+}
+
+export function saveMiniVariantProgress(progress: MiniVariantProgress) {
+  safeWrite(STORAGE_KEYS.miniVariantProgress, progress);
+}
+
+export function getLastMiniVariantIndex(subject: SubjectKey) {
+  return getMiniVariantProgress().lastVariantIndexBySubject?.[subject] ?? -1;
+}
+
+export function setLastMiniVariantSelection(subject: SubjectKey, index: number, variantId: string) {
+  const current = getMiniVariantProgress();
+
+  saveMiniVariantProgress({
+    ...current,
+    lastVariantIndexBySubject: {
+      ...current.lastVariantIndexBySubject,
+      [subject]: index,
+    },
+    lastVariantIdBySubject: {
+      ...current.lastVariantIdBySubject,
+      [subject]: variantId,
+    },
+  });
+}
+
+export function saveMiniVariantResult(result: MiniVariantResult) {
+  const current = getMiniVariantProgress();
+
+  saveMiniVariantProgress({
+    ...current,
+    completedCount: (current.completedCount ?? 0) + 1,
+    lastResult: {
+      ...result,
+      completedAt: new Date().toISOString(),
+    },
+  });
 }
 
 export function clearAppState() {

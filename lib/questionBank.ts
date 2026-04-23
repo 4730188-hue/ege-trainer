@@ -13,6 +13,13 @@ export type BankQuestion = {
   explanation: string;
 };
 
+export type MiniVariant = {
+  id: string;
+  subject: SubjectKey;
+  variantNumber: number;
+  questions: BankQuestion[];
+};
+
 type QuestionInput = Omit<BankQuestion, "id" | "subject" | "mode">;
 
 function createQuestions(subject: SubjectKey, mode: QuestionMode, entries: QuestionInput[]) {
@@ -198,6 +205,15 @@ const socialSession = createQuestions("social", "session", [
   { topic: "Право", difficulty: "medium", prompt: "Что из перечисленного является проступком, а не преступлением?", options: ["кража", "прогул работы без уважительной причины", "разбой", "терроризм"], correctAnswer: "прогул работы без уважительной причины", explanation: "Это дисциплинарный проступок." },
 ]);
 
+function createMiniVariants(subject: SubjectKey, questions: BankQuestion[]) {
+  return [0, 1, 2].map((index) => ({
+    id: `${subject}-mini-variant-${index + 1}`,
+    subject,
+    variantNumber: index + 1,
+    questions: questions.slice(index * 8, index * 8 + 8),
+  }));
+}
+
 export const QUESTION_BANK: BankQuestion[] = [
   ...russianDiagnosis,
   ...russianSession,
@@ -205,6 +221,12 @@ export const QUESTION_BANK: BankQuestion[] = [
   ...mathSession,
   ...socialDiagnosis,
   ...socialSession,
+];
+
+export const MINI_VARIANTS: MiniVariant[] = [
+  ...createMiniVariants("russian", russianSession),
+  ...createMiniVariants("math", mathSession),
+  ...createMiniVariants("social", socialSession),
 ];
 
 export function getQuestionsBySubject(subject: SubjectKey, mode: QuestionMode) {
@@ -215,6 +237,14 @@ export function getQuestionsBySubject(subject: SubjectKey, mode: QuestionMode) {
 
 export function getDiagnosisQuestions(subject: SubjectKey, count = 6) {
   return shuffle(getQuestionsBySubject(subject, "diagnosis")).slice(0, count);
+}
+
+export function getMiniVariantsBySubject(subject: SubjectKey) {
+  return MINI_VARIANTS.filter((variant) => variant.subject === subject);
+}
+
+export function getMiniVariantById(variantId: string) {
+  return MINI_VARIANTS.find((variant) => variant.id === variantId) ?? null;
 }
 
 export function buildSessionQuestions(

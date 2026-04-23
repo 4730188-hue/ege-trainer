@@ -5,11 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   getDiagnosisResult,
   getIncorrectQuestionCount,
+  getMiniVariantProgress,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
   type DiagnosisResult,
+  type MiniVariantProgress,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -30,6 +32,7 @@ export default function ProgressPage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+  const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
 
   useEffect(() => {
@@ -39,6 +42,7 @@ export default function ProgressPage() {
     setProfile(nextProfile);
     setDiagnosisResult(getDiagnosisResult());
     setSessionProgress(getSessionProgress());
+    setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
   }, []);
 
@@ -52,6 +56,8 @@ export default function ProgressPage() {
   const levelLabel = diagnosisResult?.levelLabel ?? "Пока нет";
   const diagnosisCompleted = Boolean(diagnosisResult?.completedDiagnosis);
   const note = useMemo(() => getSubjectProgressText(subjectLabel), [subjectLabel]);
+  const completedMiniVariants = miniVariantProgress?.completedCount ?? 0;
+  const lastMiniResult = miniVariantProgress?.lastResult ?? null;
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -100,6 +106,20 @@ export default function ProgressPage() {
             <p>Диагностика: {diagnosisCompleted ? "пройдена" : "пока не пройдена"}</p>
             <p>Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}</p>
             <p>Последняя активность: {lastActivityDate ?? "пока нет"}</p>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+          <p className="text-sm font-medium text-slate-500">Мини-варианты ЕГЭ</p>
+          <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+            <p>Завершено: {completedMiniVariants}</p>
+            {lastMiniResult ? (
+              <p>
+                Последний результат: {getSubjectLabel(lastMiniResult.subject)} , вариант {lastMiniResult.variantNumber}, {lastMiniResult.correctAnswers}/{lastMiniResult.totalQuestions}.
+              </p>
+            ) : (
+              <p>Пока ещё нет результатов. Можно запустить первый мини-вариант с главной.</p>
+            )}
           </div>
         </div>
 

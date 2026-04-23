@@ -6,11 +6,13 @@ import {
   getDiagnosisResult,
   getExamTimelineLabel,
   getIncorrectQuestionCount,
+  getMiniVariantProgress,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
   type DiagnosisResult,
+  type MiniVariantProgress,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -19,6 +21,7 @@ export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+  const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export default function HomePage() {
     setProfile(nextProfile);
     setDiagnosisResult(getDiagnosisResult());
     setSessionProgress(getSessionProgress());
+    setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
   }, []);
 
@@ -40,6 +44,8 @@ export default function HomePage() {
   const weakTopicsPreview = weakTopics.slice(0, 2).join(", ");
   const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
   const streakDays = sessionProgress?.streakDays ?? 0;
+  const completedMiniVariants = miniVariantProgress?.completedCount ?? 0;
+  const lastMiniResult = miniVariantProgress?.lastResult ?? null;
   const diagnosisStatus = diagnosisResult?.completedDiagnosis
     ? levelLabel
       ? `Пройдена, уровень ${levelLabel}`
@@ -103,6 +109,34 @@ export default function HomePage() {
             <span className="block leading-none text-white">Начать сессию</span>
           </Link>
         </div>
+
+        <Link
+          href="/mini-variant"
+          className="block rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40 transition hover:bg-slate-50"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-500">Новый режим</p>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              8 заданий
+            </span>
+          </div>
+          <h2 className="mt-2 text-xl font-bold text-slate-900">Мини-вариант ЕГЭ</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Короткий вариант по предмету, чтобы проверить себя в формате ближе к экзамену.
+          </p>
+          {lastMiniResult ? (
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Последний результат: {lastMiniResult.correctAnswers ?? 0}/{lastMiniResult.totalQuestions ?? 8}. Всего завершено: {completedMiniVariants}.
+            </p>
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Пока ещё не запускал. Доступно 3 мини-варианта на предмет.
+            </p>
+          )}
+          <span className="mt-4 inline-block text-sm font-semibold text-slate-900">
+            Запустить мини-вариант
+          </span>
+        </Link>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
