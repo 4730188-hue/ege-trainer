@@ -201,7 +201,9 @@ export default function MiniVariantPage() {
                     : "bg-slate-300"
                 }`}
               >
-                <span className="block leading-none text-white">Проверить ответ</span>
+                <span className={`block leading-none ${selectedAnswer ? "text-white" : "text-slate-400"}`}>
+                  Проверить ответ
+                </span>
               </button>
             ) : (
               <button

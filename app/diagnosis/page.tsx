@@ -200,7 +200,9 @@ export default function DiagnosisPage() {
                     : "bg-slate-200 text-slate-400"
                 }`}
               >
-                Ответить
+                <span className={`block leading-none ${selectedAnswer ? "text-white" : "text-slate-400"}`}>
+                  Ответить
+                </span>
               </button>
             ) : (
               <button
@@ -208,7 +210,9 @@ export default function DiagnosisPage() {
                 onClick={handleNext}
                 className="w-full rounded-3xl bg-slate-900 px-5 py-3.5 text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
               >
-                {isLastQuestion ? "Завершить диагностику" : "Следующий вопрос"}
+                <span className="block leading-none text-white">
+                  {isLastQuestion ? "Завершить диагностику" : "Следующий вопрос"}
+                </span>
               </button>
             )}
           </div>

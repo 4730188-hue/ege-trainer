@@ -43,8 +43,8 @@ export default function ResultPage() {
   const advice = useMemo(() => getSubjectAdvice(subjectLabel), [subjectLabel]);
 
   return (
-    <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
+    <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
+      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
           <span>Результат диагностики</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
@@ -52,58 +52,62 @@ export default function ResultPage() {
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-          <h1 className="text-4xl font-bold leading-tight tracking-tight">
-            Твоя стартовая картина готова
-          </h1>
-          <p className="mt-4 text-base leading-7 text-slate-600">
-            Мы посмотрели 6 вопросов по предмету {subjectLabel.toLowerCase()}. Верных ответов: {correctAnswers} из {totalQuestions}.
-          </p>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Текущий уровень
-          </p>
-          <p className="mt-3 text-3xl font-bold text-slate-900">{levelLabel}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">{getLevelDescription(levelLabel)}</p>
-        </div>
-
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Слабые темы
-          </p>
-
-          <div className="space-y-3">
-            {weakTopics.map((topic) => (
-              <div
-                key={topic}
-                className="rounded-3xl bg-slate-50 p-4 text-sm font-medium text-slate-900"
-              >
-                {topic}
-              </div>
-            ))}
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60">
+            <h1 className="text-3xl font-bold leading-tight tracking-tight">
+              Твоя стартовая картина готова
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Мы посмотрели 6 вопросов по предмету {subjectLabel.toLowerCase()}. Верных ответов: {correctAnswers} из {totalQuestions}.
+            </p>
           </div>
-        </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Что делать дальше
-          </p>
-          <p className="mt-3 text-sm leading-6 text-slate-700">{advice}</p>
-        </div>
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Текущий уровень
+              </p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{levelLabel}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{getLevelDescription(levelLabel)}</p>
+            </div>
 
-        <div className="mt-auto pb-4">
-          <Link
-            href="/paywall"
-            className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
-          >
-            Начать первую сессию
-          </Link>
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Слабые темы
+              </p>
 
-          <p className="mt-3 text-center text-sm text-slate-500">
-            Первая сессия займёт около 7 минут
-          </p>
+              <div className="space-y-2.5">
+                {weakTopics.map((topic) => (
+                  <div
+                    key={topic}
+                    className="rounded-3xl bg-slate-50 p-3.5 text-sm font-medium text-slate-900"
+                  >
+                    {topic}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+              <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                Что делать дальше
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{advice}</p>
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 -mx-0 mt-auto bg-slate-100/95 pt-1 pb-1 backdrop-blur">
+            <Link
+              href="/paywall"
+              className="block w-full rounded-3xl bg-slate-900 px-5 py-3.5 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
+            >
+              <span className="block leading-none text-white">Начать первую сессию</span>
+            </Link>
+
+            <p className="mt-2 text-center text-sm text-slate-500">
+              Первая сессия займёт около 7 минут
+            </p>
+          </div>
         </div>
       </div>
     </main>

@@ -196,7 +196,7 @@ export default function SessionPage() {
                       : "bg-slate-900 hover:opacity-95"
                   }`}
                 >
-                  <span className="block leading-none text-white">
+                  <span className={`block leading-none ${!showResult && !selectedAnswer ? "text-slate-400" : "text-white"}`}>
                     {showResult ? (isLastQuestion ? "Завершить сессию" : "Следующее задание") : "Проверить ответ"}
                   </span>
                 </button>
