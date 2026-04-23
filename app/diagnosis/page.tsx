@@ -16,6 +16,9 @@ function getLevelLabel(correctAnswers: number) {
   return "Нужна опора";
 }
 
+const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
+const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
+
 export default function DiagnosisPage() {
   const router = useRouter();
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
@@ -37,6 +40,9 @@ export default function DiagnosisPage() {
   const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const subjectLabel = getSubjectLabel(subject);
+  const feedbackLabel = isCorrect
+    ? positiveFeedback[currentIndex % positiveFeedback.length]
+    : gentleFeedback[currentIndex % gentleFeedback.length];
 
   const summary = useMemo(() => {
     if (questions.length === 0) return null;
@@ -170,7 +176,8 @@ export default function DiagnosisPage() {
 
             {showResult && (
               <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-3.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
+                <p className="mt-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {isCorrect ? "Верно" : "Неверно"}
                 </p>
                 <p className="mt-1.5 text-sm font-medium text-slate-900">

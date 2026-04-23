@@ -12,6 +12,9 @@ import {
   setLastMiniVariantSelection,
 } from "@/lib/storage";
 
+const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
+const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
+
 function getNextVariant(subject: ReturnType<typeof normalizeSubjectKey>) {
   const variants = getMiniVariantsBySubject(subject);
 
@@ -56,6 +59,9 @@ export default function MiniVariantPage() {
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const subjectLabel = getSubjectLabel(subject);
   const progress = totalQuestions > 0 ? ((currentIndex + 1) / totalQuestions) * 100 : 0;
+  const feedbackLabel = isCorrect
+    ? positiveFeedback[currentIndex % positiveFeedback.length]
+    : gentleFeedback[currentIndex % gentleFeedback.length];
 
   function handleCheck() {
     if (!currentQuestion || !selectedAnswer) return;
@@ -173,7 +179,8 @@ export default function MiniVariantPage() {
 
             {showResult && (
               <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-slate-900">
-                <p className="text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
+                <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
+                <p className="mt-1.5 text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
                 <p className="mt-1.5 text-sm font-medium text-slate-900">
                   Правильный ответ: {currentQuestion.correctAnswer}
                 </p>

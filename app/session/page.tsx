@@ -17,6 +17,9 @@ import {
   type SessionProgress,
 } from "@/lib/storage";
 
+const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
+const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
+
 export default function SessionPage() {
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
@@ -55,6 +58,9 @@ export default function SessionPage() {
   const isLastQuestion = currentIndex === questions.length - 1;
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const subjectLabel = getSubjectLabel(subject);
+  const feedbackLabel = isCorrect
+    ? positiveFeedback[currentIndex % positiveFeedback.length]
+    : gentleFeedback[currentIndex % gentleFeedback.length];
 
   function handlePrimaryAction() {
     if (!currentQuestion) return;
@@ -169,7 +175,8 @@ export default function SessionPage() {
 
                 {showResult && (
                   <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-slate-900">
-                    <p className="text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
+                    <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
+                    <p className="mt-1.5 text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
                     <p className="mt-1.5 text-sm font-medium text-slate-900">
                       Правильный ответ: {currentQuestion.correctAnswer}
                     </p>
