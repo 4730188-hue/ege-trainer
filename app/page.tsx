@@ -28,10 +28,10 @@ function FirstImpressionScreen({
           <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_70%)]" />
           <div className="relative z-10">
             <h1 className="text-[2.75rem] font-black leading-[1.02] tracking-tight">
-              Супер-тренажёр для ЕГЭ
+              Супер ИИ тренажёр для ЕГЭ
             </h1>
             <p className="mt-4 text-base leading-7 text-indigo-100/88">
-              Помогает дойти до нужного балла. Быстро, удобно и просто.
+              Быстро помогает увеличить твой балл
             </p>
 
             <button
