@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const benefits = [
   "Быстрый старт с понятной диагностикой",
@@ -149,8 +149,14 @@ function PreviousStartScreen() {
 }
 
 export default function LandingPage() {
-  const searchParams = useSearchParams();
-  const isStartScreen = searchParams.get("screen") === "start";
+  const [isStartScreen, setIsStartScreen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    setIsStartScreen(params.get("screen") === "start");
+  }, []);
 
   return isStartScreen ? <PreviousStartScreen /> : <FirstImpressionScreen />;
 }
