@@ -98,16 +98,26 @@ export default function OnboardingPage() {
 
                 <button
                   type="button"
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-semibold text-slate-400"
+                  onClick={() => setSubject("math")}
+                  className={`w-full rounded-3xl border px-5 py-4 text-left text-base font-semibold transition ${
+                    subject === "math"
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
+                      : "border-slate-200 bg-slate-50 text-slate-900"
+                  }`}
                 >
-                  Профильная математика · скоро
+                  Профильная математика
                 </button>
 
                 <button
                   type="button"
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-5 py-4 text-left text-base font-semibold text-slate-400"
+                  onClick={() => setSubject("social")}
+                  className={`w-full rounded-3xl border px-5 py-4 text-left text-base font-semibold transition ${
+                    subject === "social"
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
+                      : "border-slate-200 bg-slate-50 text-slate-900"
+                  }`}
                 >
-                  Обществознание · скоро
+                  Обществознание
                 </button>
               </div>
             </div>
