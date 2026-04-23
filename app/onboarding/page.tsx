@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { saveStudentProfile } from "@/lib/storage";
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
@@ -27,6 +28,13 @@ export default function OnboardingPage() {
       setStep(step + 1);
       return;
     }
+
+    saveStudentProfile({
+      subject,
+      targetScore,
+      dailyMinutes: dailyTime,
+      examTimeline: examTime,
+    });
 
     router.push("/diagnosis");
   }

@@ -1,6 +1,27 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  getExamTimelineLabel,
+  getStudentProfile,
+  getSubjectLabel,
+  type StudentProfile,
+} from "@/lib/storage";
 
 export default function ProfilePage() {
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setProfile(getStudentProfile());
+  }, []);
+
+  const subjectLabel = getSubjectLabel(profile?.subject) ?? "Русский язык";
+  const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
+  const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут` : null;
+  const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -14,8 +35,10 @@ export default function ProfilePage() {
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
           <h1 className="text-3xl font-bold leading-tight tracking-tight">Профиль</h1>
           <div className="mt-5 space-y-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-700">
-            <p>Предмет: Русский язык</p>
-            <p>Цель: 80 баллов</p>
+            <p>Предмет: {subjectLabel}</p>
+            <p>Цель: {targetLabel}</p>
+            {dailyLabel && <p>В день: {dailyLabel}</p>}
+            {timelineLabel && <p>Экзамен: {timelineLabel}</p>}
             <p>Тариф: Pro</p>
           </div>
         </div>
