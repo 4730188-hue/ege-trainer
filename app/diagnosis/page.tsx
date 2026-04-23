@@ -1,59 +1,92 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getDiagnosisQuestions, type BankQuestion } from "@/lib/questionBank";
+import {
+  getStudentProfile,
+  getSubjectLabel,
+  normalizeSubjectKey,
+  saveDiagnosisResult,
+} from "@/lib/storage";
 
-const questions = [
-  {
-    id: 1,
-    topic: "Орфография",
-    title: "В каком слове пропущена буква А?",
-    options: ["к...саться", "р...стение", "предл...гать", "изл...жение"],
-    correctAnswer: "р...стение",
-  },
-  {
-    id: 2,
-    topic: "Пунктуация",
-    title: "Укажите предложение, где нужна одна запятая.",
-    options: [
-      "Солнце взошло и осветило лес.",
-      "Я взял книгу и тетрадь и вышел.",
-      "На улице было тихо но холодно.",
-      "Мы быстро собрались и уехали домой.",
-    ],
-    correctAnswer: "На улице было тихо но холодно.",
-  },
-  {
-    id: 3,
-    topic: "Лексика",
-    title: "Укажите слово, употреблённое в неверном значении.",
-    options: [
-      "эффектный выход",
-      "эффективный метод",
-      "каменистая почва",
-      "каменный характер",
-    ],
-    correctAnswer: "каменный характер",
-  },
-];
+function getLevelLabel(correctAnswers: number) {
+  if (correctAnswers >= 5) return "Уверенный";
+  if (correctAnswers >= 3) return "Базовый";
+  return "Нужна опора";
+}
 
 export default function DiagnosisPage() {
   const router = useRouter();
+  const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
+  const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const profile = getStudentProfile();
+    const nextSubject = normalizeSubjectKey(profile?.subject);
+    setSubject(nextSubject);
+    setQuestions(getDiagnosisQuestions(nextSubject, 6));
+  }, []);
 
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
-  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
+  const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
+  const subjectLabel = getSubjectLabel(subject);
+
+  const summary = useMemo(() => {
+    if (questions.length === 0) return null;
+
+    const correctAnswers = questions.filter(
+      (question) => answers[question.id] === question.correctAnswer,
+    ).length;
+
+    const wrongTopicsCount = questions.reduce<Record<string, number>>((accumulator, question) => {
+      if (answers[question.id] && answers[question.id] !== question.correctAnswer) {
+        accumulator[question.topic] = (accumulator[question.topic] ?? 0) + 1;
+      }
+      return accumulator;
+    }, {});
+
+    const weakTopics = Object.entries(wrongTopicsCount)
+      .sort((left, right) => right[1] - left[1])
+      .slice(0, 3)
+      .map(([topic]) => topic);
+
+    return {
+      correctAnswers,
+      totalQuestions: questions.length,
+      weakTopics: weakTopics.length > 0 ? weakTopics : [questions[0].topic],
+      levelLabel: getLevelLabel(correctAnswers),
+    };
+  }, [answers, questions]);
 
   function handleSubmit() {
-    if (!selectedAnswer) return;
+    if (!selectedAnswer || !currentQuestion) return;
+
+    setAnswers((current) => ({
+      ...current,
+      [currentQuestion.id]: selectedAnswer,
+    }));
     setShowResult(true);
   }
 
   function handleNext() {
+    if (!currentQuestion || !summary) return;
+
     if (isLastQuestion) {
+      saveDiagnosisResult({
+        subject,
+        levelLabel: summary.levelLabel,
+        weakTopics: summary.weakTopics,
+        completedDiagnosis: true,
+        correctAnswers: summary.correctAnswers,
+        totalQuestions: summary.totalQuestions,
+      });
       router.push("/result");
       return;
     }
@@ -63,7 +96,20 @@ export default function DiagnosisPage() {
     setShowResult(false);
   }
 
-  const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+  if (!currentQuestion) {
+    return (
+      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight">Собираем диагностику</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Подбираем вопросы под выбранный предмет.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -80,7 +126,7 @@ export default function DiagnosisPage() {
             <p className="text-sm font-medium text-slate-500">
               Вопрос {currentIndex + 1} из {questions.length}
             </p>
-            <p className="text-sm text-slate-400">Оценка уровня</p>
+            <p className="text-sm text-slate-400">{subjectLabel}</p>
           </div>
 
           <div className="mt-4 h-2 w-full rounded-full bg-slate-100">
@@ -93,10 +139,10 @@ export default function DiagnosisPage() {
           <div className="mt-6 rounded-3xl bg-slate-50 p-5">
             <p className="text-sm font-medium text-slate-500">Тема: {currentQuestion.topic}</p>
             <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight">
-              {currentQuestion.title}
+              {currentQuestion.prompt}
             </h1>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              Это не экзамен. Мы просто оцениваем текущий уровень.
+              Это не экзамен. Мы просто быстро определяем твой текущий уровень.
             </p>
           </div>
 
@@ -126,11 +172,7 @@ export default function DiagnosisPage() {
               <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
                 {isCorrect ? "Верно" : "Ответ сохранён"}
               </p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                {isCorrect
-                  ? "Хорошо. Это задание уже выглядит уверенно."
-                  : "Ничего страшного. Диагностика нужна как раз для того, чтобы найти слабые места."}
-              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{currentQuestion.explanation}</p>
             </div>
           )}
         </div>

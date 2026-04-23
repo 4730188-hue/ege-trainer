@@ -1,57 +1,80 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { incrementSessionsCompleted, type SessionProgress } from "@/lib/storage";
-
-const questions = [
-  {
-    topic: "Пунктуация",
-    question: "Где нужна запятая?",
-    options: [
-      "Когда наступил вечер мы пошли домой.",
-      "Я люблю читать и рисовать.",
-      "Он быстро встал и вышел.",
-      "Ветер шумел и дождь стучал по окну.",
-    ],
-    correctAnswer: "Когда наступил вечер мы пошли домой.",
-  },
-  {
-    topic: "Орфография",
-    question: "В каком слове пропущена буква А?",
-    options: ["к...саться", "р...стение", "предл...гать", "изл...жение"],
-    correctAnswer: "р...стение",
-  },
-  {
-    topic: "Лексика",
-    question: "Какое слово употреблено в переносном значении?",
-    options: ["золотое кольцо", "золотые руки", "золотая монета", "золотой браслет"],
-    correctAnswer: "золотые руки",
-  },
-];
+import { useEffect, useState } from "react";
+import { buildSessionQuestions, type BankQuestion } from "@/lib/questionBank";
+import {
+  addSeenSessionQuestionIds,
+  clearQuestionIncorrect,
+  getIncorrectQuestionCount,
+  getIncorrectQuestionIds,
+  getStudentProfile,
+  getSubjectLabel,
+  getSeenSessionQuestionIds,
+  incrementSessionsCompleted,
+  markQuestionIncorrect,
+  normalizeSubjectKey,
+  type SessionProgress,
+} from "@/lib/storage";
 
 export default function SessionPage() {
+  const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
+  const [questions, setQuestions] = useState<BankQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+  const [repeatCount, setRepeatCount] = useState(0);
+
+  useEffect(() => {
+    const profile = getStudentProfile();
+    const nextSubject = normalizeSubjectKey(profile?.subject);
+    const seenIds = getSeenSessionQuestionIds(nextSubject);
+    const incorrectIds = getIncorrectQuestionIds(nextSubject);
+    const nextQuestions = buildSessionQuestions(nextSubject, {
+      count: 5,
+      seenIds,
+      incorrectIds,
+    });
+
+    setSubject(nextSubject);
+    setQuestions(nextQuestions);
+    setRepeatCount(incorrectIds.length);
+
+    if (nextQuestions.length > 0) {
+      addSeenSessionQuestionIds(
+        nextSubject,
+        nextQuestions.map((question) => question.id),
+      );
+    }
+  }, []);
 
   const currentQuestion = questions[currentIndex];
-  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
   const isLastQuestion = currentIndex === questions.length - 1;
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
+  const subjectLabel = getSubjectLabel(subject);
 
   function handlePrimaryAction() {
+    if (!currentQuestion) return;
+
     if (!showResult) {
       if (!selectedAnswer) return;
       setShowResult(true);
       return;
     }
 
+    if (!isCorrect) {
+      markQuestionIncorrect(subject, currentQuestion.id);
+    } else {
+      clearQuestionIncorrect(subject, currentQuestion.id);
+    }
+
     if (isLastQuestion) {
       const nextProgress = incrementSessionsCompleted();
       setSessionProgress(nextProgress);
+      setRepeatCount(getIncorrectQuestionCount(subject));
       setIsFinished(true);
       return;
     }
@@ -59,6 +82,21 @@ export default function SessionPage() {
     setCurrentIndex((prev) => prev + 1);
     setSelectedAnswer("");
     setShowResult(false);
+  }
+
+  if (!currentQuestion && !isFinished) {
+    return (
+      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+            <h1 className="text-2xl font-bold leading-tight tracking-tight">Подбираем задания</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Собираем сессию по выбранному предмету и темам на повторение.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -76,7 +114,7 @@ export default function SessionPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-medium text-slate-500">Сессия на сегодня</p>
-                <p className="text-sm text-slate-400">7 минут</p>
+                <p className="text-sm text-slate-400">{subjectLabel}</p>
               </div>
 
               <div className="mt-4 h-2 w-full rounded-full bg-slate-100">
@@ -93,16 +131,21 @@ export default function SessionPage() {
                 Сессия на сегодня
               </h1>
               <p className="mt-3 text-base leading-7 text-slate-600">
-                5 заданий по слабым темам и 1 задание на повторение.
+                5 заданий по предмету. Если есть ошибки в истории, стараемся вернуть хотя бы одно на повтор.
               </p>
             </div>
 
             <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-              <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-                {currentQuestion.topic}
+              <div className="flex items-center justify-between gap-3">
+                <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+                  {currentQuestion.topic}
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                  {currentQuestion.difficulty}
+                </span>
               </div>
               <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-slate-900">
-                {currentQuestion.question}
+                {currentQuestion.prompt}
               </h2>
 
               <div className="mt-6 space-y-3">
@@ -123,10 +166,11 @@ export default function SessionPage() {
               </div>
 
               {showResult && (
-                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-base font-medium text-slate-900">
-                  {isCorrect
-                    ? "Верно. Хорошо идешь."
-                    : "Пока ошибка. Ничего страшного."}
+                <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-base text-slate-900">
+                  <p className="font-medium">
+                    {isCorrect ? "Верно. Хорошо идёшь." : "Пока ошибка. Ничего страшного."}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
                 </div>
               )}
 
@@ -141,7 +185,7 @@ export default function SessionPage() {
                 }`}
               >
                 <span className="block leading-none text-white">
-                  {showResult ? "Следующее задание" : "Проверить ответ"}
+                  {showResult ? (isLastQuestion ? "Завершить сессию" : "Следующее задание") : "Проверить ответ"}
                 </span>
               </button>
             </div>
@@ -155,14 +199,14 @@ export default function SessionPage() {
               Сессия завершена
             </h1>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              Ты прошел сегодняшнюю тренировку.
+              Ты прошёл тренировку по предмету {subjectLabel.toLowerCase()}.
             </p>
 
             <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
               Хороший темп. Можно вернуться на главную или сразу посмотреть прогресс.
               {sessionProgress && (
                 <span className="mt-2 block">
-                  Всего сессий: {sessionProgress.sessionsCompleted ?? 0}. Текущий streak: {sessionProgress.streakDays ?? 0}.
+                  Всего сессий: {sessionProgress.sessionsCompleted ?? 0}. Текущий streak: {sessionProgress.streakDays ?? 0}. На повторе сейчас: {repeatCount} вопросов.
                 </span>
               )}
             </div>

@@ -1,16 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { saveDiagnosisResult } from "@/lib/storage";
+import { useEffect, useMemo, useState } from "react";
+import { getDiagnosisResult, getSubjectLabel, type DiagnosisResult } from "@/lib/storage";
+
+function getSubjectAdvice(subjectLabel: string) {
+  if (subjectLabel === "Профильная математика") {
+    return "Лучше всего даст прирост короткая ежедневная практика по базовым формулам, графикам и типовым задачам.";
+  }
+
+  if (subjectLabel === "Обществознание") {
+    return "Сильнее всего поможет повтор терминов, логики заданий и примеров из экономики, права и политики.";
+  }
+
+  return "Быстрее всего результат растёт, когда регулярно закрываешь орфографию, пунктуацию и работу с текстом.";
+}
+
+function getLevelDescription(levelLabel?: string) {
+  if (levelLabel === "Уверенный") {
+    return "База уже собрана. Сейчас важно закрепить темп и точечно добрать сложные темы.";
+  }
+
+  if (levelLabel === "Базовый") {
+    return "Основа есть, но пока результат плавает от темы к теме. Нужна спокойная системная практика.";
+  }
+
+  return "Сейчас лучше идти короткими шагами и сначала вернуть уверенность в ключевых темах.";
+}
 
 export default function ResultPage() {
-  function handleContinue() {
-    saveDiagnosisResult({
-      levelLabel: "Нестабильный",
-      weakTopics: ["Орфография", "Пунктуация", "Лексика"],
-      completedDiagnosis: true,
-    });
-  }
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
+
+  useEffect(() => {
+    setDiagnosisResult(getDiagnosisResult());
+  }, []);
+
+  const subjectLabel = getSubjectLabel(diagnosisResult?.subject);
+  const weakTopics = diagnosisResult?.weakTopics ?? [];
+  const levelLabel = diagnosisResult?.levelLabel ?? "Нужна опора";
+  const correctAnswers = diagnosisResult?.correctAnswers ?? 0;
+  const totalQuestions = diagnosisResult?.totalQuestions ?? 6;
+  const advice = useMemo(() => getSubjectAdvice(subjectLabel), [subjectLabel]);
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -27,8 +57,7 @@ export default function ResultPage() {
             Твоя стартовая картина готова
           </h1>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Ты уже справляешься с частью заданий, но пока теряешь баллы на нескольких
-            повторяющихся темах.
+            Мы посмотрели 6 вопросов по предмету {subjectLabel.toLowerCase()}. Верных ответов: {correctAnswers} из {totalQuestions}.
           </p>
         </div>
 
@@ -36,10 +65,8 @@ export default function ResultPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Текущий уровень
           </p>
-          <p className="mt-3 text-3xl font-bold text-slate-900">Нестабильный</p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Сейчас у тебя уже есть база, но результат пока сильно зависит от темы задания.
-          </p>
+          <p className="mt-3 text-3xl font-bold text-slate-900">{levelLabel}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{getLevelDescription(levelLabel)}</p>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
@@ -48,15 +75,14 @@ export default function ResultPage() {
           </p>
 
           <div className="space-y-3">
-            <div className="rounded-3xl bg-slate-50 p-4 text-sm font-medium text-slate-900">
-              Орфография
-            </div>
-            <div className="rounded-3xl bg-slate-50 p-4 text-sm font-medium text-slate-900">
-              Пунктуация
-            </div>
-            <div className="rounded-3xl bg-slate-50 p-4 text-sm font-medium text-slate-900">
-              Лексика
-            </div>
+            {weakTopics.map((topic) => (
+              <div
+                key={topic}
+                className="rounded-3xl bg-slate-50 p-4 text-sm font-medium text-slate-900"
+              >
+                {topic}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -64,16 +90,12 @@ export default function ResultPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">
             Что делать дальше
           </p>
-          <p className="mt-3 text-sm leading-6 text-slate-700">
-            Если заниматься по 15 минут в день, сначала стоит закрыть эти 3 темы.
-            После этого результат станет заметно стабильнее.
-          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-700">{advice}</p>
         </div>
 
         <div className="mt-auto pb-4">
           <Link
             href="/paywall"
-            onClick={handleContinue}
             className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
             Начать первую сессию

@@ -1,41 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getDiagnosisResult,
+  getIncorrectQuestionCount,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
+  normalizeSubjectKey,
   type DiagnosisResult,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
 
+function getSubjectProgressText(subjectLabel: string) {
+  if (subjectLabel === "Профильная математика") {
+    return "В математике особенно хорошо работает связка из коротких сессий, повтора ошибок и возврата к формулам.";
+  }
+
+  if (subjectLabel === "Обществознание") {
+    return "В обществознании прогресс растёт, когда регулярно повторяешь термины и тренируешь узнавание логики задания.";
+  }
+
+  return "В русском языке быстрый прогресс обычно приходит через стабильный повтор орфографии, пунктуации и работы с текстом.";
+}
+
 export default function ProgressPage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+  const [repeatCount, setRepeatCount] = useState(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    setProfile(getStudentProfile());
+    const nextProfile = getStudentProfile();
+    const subject = normalizeSubjectKey(nextProfile?.subject);
+
+    setProfile(nextProfile);
     setDiagnosisResult(getDiagnosisResult());
     setSessionProgress(getSessionProgress());
+    setRepeatCount(getIncorrectQuestionCount(subject));
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject);
   const sessionsCompleted = sessionProgress?.sessionsCompleted ?? 0;
   const streakDays = sessionProgress?.streakDays ?? 0;
-  const lastSessionCompletedAt = sessionProgress?.lastSessionCompletedAt
-    ? new Date(sessionProgress.lastSessionCompletedAt).toLocaleDateString("ru-RU")
-    : null;
   const lastActivityDate = sessionProgress?.lastActivityDate
     ? new Date(`${sessionProgress.lastActivityDate}T00:00:00`).toLocaleDateString("ru-RU")
     : null;
   const weakTopics = diagnosisResult?.weakTopics ?? [];
-  const levelLabel = diagnosisResult?.levelLabel;
+  const levelLabel = diagnosisResult?.levelLabel ?? "Пока нет";
   const diagnosisCompleted = Boolean(diagnosisResult?.completedDiagnosis);
+  const note = useMemo(() => getSubjectProgressText(subjectLabel), [subjectLabel]);
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -55,49 +72,45 @@ export default function ProgressPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Диагностика</p>
-            <p className="mt-2 text-lg font-bold text-slate-900">
-              {diagnosisCompleted ? "Пройдена" : "Не пройдена"}
-            </p>
-          </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Сессий</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">{sessionsCompleted}</p>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+            <p className="text-sm font-medium text-slate-500">На повтор</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{repeatCount}</p>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+            <p className="text-sm font-medium text-slate-500">Уровень</p>
+            <p className="mt-2 text-lg font-bold text-slate-900">{levelLabel}</p>
           </div>
           <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
             <p className="text-sm font-medium text-slate-500">Streak</p>
             <p className="mt-2 text-2xl font-bold text-slate-900">{streakDays}</p>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-            <p className="text-sm font-medium text-slate-500">Последняя активность</p>
-            <p className="mt-2 text-lg font-bold text-slate-900">
-              {lastActivityDate ?? "Пока нет"}
-            </p>
-          </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Темы и уровень</p>
+            <p className="text-sm font-medium text-slate-500">Текущий срез</p>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-              текущий срез
+              {subjectLabel}
             </span>
           </div>
           <div className="mt-4 space-y-3 text-base text-slate-700">
-            <p>Уровень: {levelLabel ?? "Пока нет"}</p>
-            <p>
-              Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "Пока не определены"}
-            </p>
-            {lastSessionCompletedAt && <p>Последняя завершенная сессия: {lastSessionCompletedAt}</p>}
+            <p>Диагностика: {diagnosisCompleted ? "пройдена" : "пока не пройдена"}</p>
+            <p>Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}</p>
+            <p>Последняя активность: {lastActivityDate ?? "пока нет"}</p>
           </div>
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="text-base leading-7 text-slate-600">
-            {diagnosisCompleted
-              ? `Диагностика завершена${subjectLabel ? ` по предмету ${subjectLabel}` : ""}. ${levelLabel ? `Текущий уровень: ${levelLabel}. ` : ""}${weakTopics.length > 0 ? `Слабые темы: ${weakTopics.join(", ")}. ` : ""}${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${streakDays > 0 ? `Текущий streak: ${streakDays}. ` : ""}${lastActivityDate ? `Последняя активность: ${lastActivityDate}.` : ""}`
-              : `Диагностика пока не пройдена. ${sessionsCompleted > 0 ? `Сессий завершено: ${sessionsCompleted}. ` : ""}${streakDays > 0 ? `Текущий streak: ${streakDays}. ` : ""}${lastActivityDate ? `Последняя активность: ${lastActivityDate}.` : "Главное, не выпадать из ежедневного ритма."}`}
-          </p>
+          <p className="text-sm font-medium text-slate-500">Что это значит сейчас</p>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{note}</p>
+          {repeatCount > 0 && (
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Следующие сессии будут стараться возвращать вопросы, в которых раньше были ошибки.
+            </p>
+          )}
         </div>
 
         <div className="mt-auto border-t border-slate-100 pt-4 pb-6">

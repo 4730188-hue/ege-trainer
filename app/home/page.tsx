@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import {
   getDiagnosisResult,
   getExamTimelineLabel,
+  getIncorrectQuestionCount,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
+  normalizeSubjectKey,
   type DiagnosisResult,
   type SessionProgress,
   type StudentProfile,
@@ -17,15 +19,19 @@ export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
+  const [repeatCount, setRepeatCount] = useState(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    setProfile(getStudentProfile());
+    const nextProfile = getStudentProfile();
+    const subject = normalizeSubjectKey(nextProfile?.subject);
+
+    setProfile(nextProfile);
     setDiagnosisResult(getDiagnosisResult());
     setSessionProgress(getSessionProgress());
+    setRepeatCount(getIncorrectQuestionCount(subject));
   }, []);
 
-  const subjectLabel = getSubjectLabel(profile?.subject) ?? "Русский язык";
+  const subjectLabel = getSubjectLabel(profile?.subject);
   const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
   const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут в день` : null;
   const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
@@ -85,6 +91,11 @@ export default function HomePage() {
                 ? `Держим темп: ${dailyLabel}. Небольшая тренировка поможет не потерять ритм.`
                 : "Короткая тренировка, чтобы закрепить прогресс и не потерять ритм."}
           </p>
+          {repeatCount > 0 && (
+            <p className="mt-3 text-sm font-medium text-slate-200">
+              Есть темы на повторение, вопросов в очереди: {repeatCount}.
+            </p>
+          )}
           <Link
             href="/session"
             className="mt-5 block rounded-2xl bg-slate-900 px-5 py-4 text-center text-base font-semibold transition hover:opacity-95"
@@ -116,11 +127,16 @@ export default function HomePage() {
               ? `После диагностики стоит начать со слабых тем: ${weakTopicsPreview}.`
               : profile?.targetScore
                 ? `Двигаемся к цели ${profile.targetScore} баллов спокойным темпом.`
-                : "Повторим сложные случаи с запятыми в сложных предложениях."}
+                : "Сначала закрепим фундамент, а потом начнём ускоряться."}
           </p>
           <div className="mt-4 rounded-2xl bg-slate-50 p-4">
             <p className="text-sm font-medium text-slate-500">Статус диагностики</p>
             <p className="mt-2 text-base font-semibold text-slate-900">{diagnosisStatus}</p>
+            {repeatCount > 0 && (
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                На повторе {repeatCount} вопросов. Следующая сессия постарается вернуть хотя бы один.
+              </p>
+            )}
           </div>
         </div>
 
@@ -136,7 +152,7 @@ export default function HomePage() {
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {levelLabel
-              ? `Текущий уровень: ${levelLabel}. Слабые темы пока влияют на стабильность результата.`
+              ? `Текущий уровень: ${levelLabel}. Дальше важнее удержать регулярность и закрыть темы, где чаще всего бывают ошибки.`
               : dailyLabel
                 ? `Если продолжишь заниматься по ${dailyLabel}, цель выглядит реалистично.`
                 : "Если продолжишь заниматься в таком темпе, цель выглядит реалистично."}
