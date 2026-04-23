@@ -49,6 +49,24 @@ export type MiniVariantProgress = {
   lastVariantIdBySubject?: SubjectVariantIdMap;
 };
 
+export type RoadmapInput = {
+  subjectLabel: string;
+  weakTopics?: string[];
+  sessionsCompleted?: number;
+  streakDays?: number;
+  diagnosisCompleted?: boolean;
+  repeatCount?: number;
+  completedMiniVariants?: number;
+};
+
+export type RoadmapPlan = {
+  homeStatus: string;
+  homeSteps: string[];
+  progressStage: "novice" | "in_progress" | "advanced";
+  progressSummary: string;
+  nextFocus: string;
+};
+
 const STORAGE_KEYS = {
   studentProfile: "ege-trainer:student-profile",
   diagnosisResult: "ege-trainer:diagnosis-result",
@@ -316,4 +334,105 @@ export function getExamTimelineLabel(examTimeline?: string | null) {
   if (examTimeline === "gt6") return "Больше 6 месяцев";
   if (!examTimeline) return null;
   return examTimeline;
+}
+
+export function buildRoadmap(input: RoadmapInput): RoadmapPlan {
+  const weakTopics = input.weakTopics ?? [];
+  const sessionsCompleted = input.sessionsCompleted ?? 0;
+  const streakDays = input.streakDays ?? 0;
+  const diagnosisCompleted = Boolean(input.diagnosisCompleted);
+  const repeatCount = input.repeatCount ?? 0;
+  const completedMiniVariants = input.completedMiniVariants ?? 0;
+
+  const steps: string[] = [];
+
+  if (!diagnosisCompleted) {
+    steps.push(`Пройди диагностику по предмету ${input.subjectLabel.toLowerCase()}`);
+    if (sessionsCompleted === 0) {
+      steps.push("Сделай 1 короткую сессию после диагностики");
+    }
+  }
+
+  if (repeatCount > 0) {
+    steps.push(
+      weakTopics[0]
+        ? `Повтори тему ${weakTopics[0]}`
+        : `Разбери ${repeatCount} вопросов на повтор`,
+    );
+    steps.push(`Закрой ${repeatCount} вопрос${repeatCount === 1 ? "" : repeatCount < 5 ? "а" : "ов"} из повтора`);
+  }
+
+  if (diagnosisCompleted && sessionsCompleted === 0) {
+    steps.push("Пройди 1 первую сессию");
+  }
+
+  if (diagnosisCompleted && sessionsCompleted > 0 && sessionsCompleted < 3) {
+    steps.push("Сделай ещё 1 сессию сегодня");
+  }
+
+  if (sessionsCompleted >= 3) {
+    steps.push("Попробуй мини-вариант ЕГЭ");
+  }
+
+  if (completedMiniVariants > 0) {
+    steps.push("Сравни новый результат мини-варианта с прошлым");
+  }
+
+  if (streakDays > 0 && sessionsCompleted > 0) {
+    steps.push(`Удержи streak, сейчас он ${streakDays} дн.`);
+  }
+
+  if (weakTopics.length > 1) {
+    steps.push(`После этого вернись к теме ${weakTopics[1]}`);
+  }
+
+  const uniqueSteps = Array.from(new Set(steps)).slice(0, 4);
+
+  let progressStage: RoadmapPlan["progressStage"] = "novice";
+  if (diagnosisCompleted && (sessionsCompleted >= 4 || completedMiniVariants >= 2 || streakDays >= 4)) {
+    progressStage = "advanced";
+  } else if (diagnosisCompleted && sessionsCompleted >= 1) {
+    progressStage = "in_progress";
+  }
+
+  let homeStatus = "Сначала пройди диагностику";
+  if (repeatCount > 0) {
+    homeStatus = weakTopics[0] ? `Есть вопросы на повтор по теме ${weakTopics[0]}` : "Есть вопросы на повтор";
+  } else if (!diagnosisCompleted) {
+    homeStatus = "Диагностика ещё не пройдена";
+  } else if (sessionsCompleted === 0) {
+    homeStatus = "Диагностика пройдена, пора в первую сессию";
+  } else if (sessionsCompleted >= 3 && completedMiniVariants === 0) {
+    homeStatus = "Готов попробовать мини-вариант";
+  } else if (sessionsCompleted > 0) {
+    homeStatus = "Сделай ещё 1 сессию сегодня";
+  }
+
+  let progressSummary = "Пока мало данных, сначала нужно собрать базовую картину.";
+  if (progressStage === "in_progress") {
+    progressSummary = `Ты уже в процессе: диагностика пройдена, сессий завершено ${sessionsCompleted}.`;
+  }
+  if (progressStage === "advanced") {
+    progressSummary = `Ты уже продвинулся: сессий ${sessionsCompleted}, мини-вариантов ${completedMiniVariants}.`;
+  }
+
+  let nextFocus = !diagnosisCompleted
+    ? "Сначала открыть диагностику и получить первую карту слабых тем."
+    : weakTopics[0]
+      ? `Следующий фокус, тема ${weakTopics[0]} и её стабильное повторение.`
+      : "Следующий фокус, удерживать темп и постепенно усложнять практику.";
+
+  if (repeatCount > 0) {
+    nextFocus = `Следующий фокус, закрыть повтор и убрать ошибки из очереди, сейчас их ${repeatCount}.`;
+  } else if (sessionsCompleted >= 3) {
+    nextFocus = "Следующий фокус, проверить устойчивость результата через мини-вариант.";
+  }
+
+  return {
+    homeStatus,
+    homeSteps: uniqueSteps.length > 0 ? uniqueSteps : ["Сделай 1 короткую сессию"],
+    progressStage,
+    progressSummary,
+    nextFocus,
+  };
 }

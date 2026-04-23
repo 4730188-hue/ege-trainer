@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  buildRoadmap,
   getDiagnosisResult,
   getExamTimelineLabel,
   getIncorrectQuestionCount,
@@ -52,6 +53,20 @@ export default function HomePage() {
       : "Пройдена"
     : "Не пройдена";
 
+  const roadmap = useMemo(
+    () =>
+      buildRoadmap({
+        subjectLabel,
+        weakTopics,
+        sessionsCompleted,
+        streakDays,
+        diagnosisCompleted: diagnosisResult?.completedDiagnosis,
+        repeatCount,
+        completedMiniVariants,
+      }),
+    [subjectLabel, weakTopics, sessionsCompleted, streakDays, diagnosisResult, repeatCount, completedMiniVariants],
+  );
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -97,8 +112,9 @@ export default function HomePage() {
                 ? `Держим темп: ${dailyLabel}. Небольшая тренировка поможет не потерять ритм.`
                 : "Короткая тренировка, чтобы закрепить прогресс и не потерять ритм."}
           </p>
+          <p className="mt-3 text-sm font-medium text-slate-200">{roadmap.homeStatus}</p>
           {repeatCount > 0 && (
-            <p className="mt-3 text-sm font-medium text-slate-200">
+            <p className="mt-2 text-sm font-medium text-slate-200">
               Есть темы на повторение, вопросов в очереди: {repeatCount}.
             </p>
           )}
@@ -108,6 +124,15 @@ export default function HomePage() {
           >
             <span className="block leading-none text-white">Начать сессию</span>
           </Link>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+          <p className="text-sm font-medium text-slate-500">Твой следующий шаг</p>
+          <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+            {roadmap.homeSteps.map((step) => (
+              <p key={step}>• {step}</p>
+            ))}
+          </div>
         </div>
 
         <Link

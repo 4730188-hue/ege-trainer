@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  buildRoadmap,
   getDiagnosisResult,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
@@ -59,6 +60,27 @@ export default function ProgressPage() {
   const completedMiniVariants = miniVariantProgress?.completedCount ?? 0;
   const lastMiniResult = miniVariantProgress?.lastResult ?? null;
 
+  const roadmap = useMemo(
+    () =>
+      buildRoadmap({
+        subjectLabel,
+        weakTopics,
+        sessionsCompleted,
+        streakDays,
+        diagnosisCompleted,
+        repeatCount,
+        completedMiniVariants,
+      }),
+    [subjectLabel, weakTopics, sessionsCompleted, streakDays, diagnosisCompleted, repeatCount, completedMiniVariants],
+  );
+
+  const stageLabel =
+    roadmap.progressStage === "advanced"
+      ? "Продвинулся"
+      : roadmap.progressStage === "in_progress"
+        ? "В процессе"
+        : "Новичок";
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -110,12 +132,27 @@ export default function ProgressPage() {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+          <p className="text-sm font-medium text-slate-500">Дорожная карта</p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">{stageLabel}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{roadmap.progressSummary}</p>
+          <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-900">Что дальше</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{roadmap.nextFocus}</p>
+            <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              {roadmap.homeSteps.slice(0, 3).map((step) => (
+                <p key={step}>• {step}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-sm font-medium text-slate-500">Мини-варианты ЕГЭ</p>
           <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
             <p>Завершено: {completedMiniVariants}</p>
             {lastMiniResult ? (
               <p>
-                Последний результат: {getSubjectLabel(lastMiniResult.subject)} , вариант {lastMiniResult.variantNumber}, {lastMiniResult.correctAnswers}/{lastMiniResult.totalQuestions}.
+                Последний результат: {getSubjectLabel(lastMiniResult.subject)}, вариант {lastMiniResult.variantNumber}, {lastMiniResult.correctAnswers}/{lastMiniResult.totalQuestions}.
               </p>
             ) : (
               <p>Пока ещё нет результатов. Можно запустить первый мини-вариант с главной.</p>
