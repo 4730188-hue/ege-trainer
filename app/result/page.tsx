@@ -1,6 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { saveDiagnosisResult } from "@/lib/storage";
 
 export default function ResultPage() {
+  function handleContinue() {
+    saveDiagnosisResult({
+      levelLabel: "Нестабильный",
+      weakTopics: ["Орфография", "Пунктуация", "Лексика"],
+      completedDiagnosis: true,
+    });
+  }
+
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
@@ -62,6 +73,7 @@ export default function ResultPage() {
         <div className="mt-auto pb-4">
           <Link
             href="/paywall"
+            onClick={handleContinue}
             className="block w-full rounded-3xl bg-slate-900 px-5 py-4 text-center text-base font-semibold text-white shadow-sm shadow-slate-300/40 transition hover:opacity-95"
           >
             Начать первую сессию

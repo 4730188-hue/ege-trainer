@@ -3,24 +3,31 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  getDiagnosisResult,
   getExamTimelineLabel,
   getStudentProfile,
   getSubjectLabel,
+  type DiagnosisResult,
   type StudentProfile,
 } from "@/lib/storage";
 
 export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     setProfile(getStudentProfile());
+    setDiagnosisResult(getDiagnosisResult());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject) ?? "Русский язык";
   const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
   const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут в день` : null;
   const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
+  const levelLabel = diagnosisResult?.levelLabel ?? null;
+  const weakTopics = diagnosisResult?.weakTopics ?? [];
+  const weakTopicsPreview = weakTopics.slice(0, 2).join(", ");
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -61,9 +68,11 @@ export default function HomePage() {
 
           <h2 className="mt-3 text-2xl font-bold leading-tight">{subjectLabel}</h2>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            {dailyLabel
-              ? `Держим темп: ${dailyLabel}. Небольшая тренировка поможет не потерять ритм.`
-              : "Короткая тренировка, чтобы закрепить прогресс и не потерять ритм."}
+            {weakTopicsPreview
+              ? `Сегодня стоит пройтись по темам: ${weakTopicsPreview}.`
+              : dailyLabel
+                ? `Держим темп: ${dailyLabel}. Небольшая тренировка поможет не потерять ритм.`
+                : "Короткая тренировка, чтобы закрепить прогресс и не потерять ритм."}
           </p>
           <Link
             href="/session"
@@ -90,11 +99,15 @@ export default function HomePage() {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <p className="text-sm font-medium text-slate-500">Сегодня в фокусе</p>
-          <p className="mt-2 text-lg font-semibold text-slate-900">{subjectLabel}</p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
+            {weakTopics.length > 0 ? weakTopics[0] : subjectLabel}
+          </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            {profile?.targetScore
-              ? `Двигаемся к цели ${profile.targetScore} баллов спокойным темпом.`
-              : "Повторим сложные случаи с запятыми в сложных предложениях."}
+            {weakTopicsPreview
+              ? `После диагностики стоит начать со слабых тем: ${weakTopicsPreview}.`
+              : profile?.targetScore
+                ? `Двигаемся к цели ${profile.targetScore} баллов спокойным темпом.`
+                : "Повторим сложные случаи с запятыми в сложных предложениях."}
           </p>
         </div>
 
@@ -105,11 +118,15 @@ export default function HomePage() {
               стабильно
             </span>
           </div>
-          <p className="mt-2 text-lg font-semibold text-slate-900">{targetLabel}</p>
+          <p className="mt-2 text-lg font-semibold text-slate-900">
+            {levelLabel ?? targetLabel}
+          </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            {dailyLabel
-              ? `Если продолжишь заниматься по ${dailyLabel}, цель выглядит реалистично.`
-              : "Если продолжишь заниматься в таком темпе, цель выглядит реалистично."}
+            {levelLabel
+              ? `Текущий уровень: ${levelLabel}. Слабые темы пока влияют на стабильность результата.`
+              : dailyLabel
+                ? `Если продолжишь заниматься по ${dailyLabel}, цель выглядит реалистично.`
+                : "Если продолжишь заниматься в таком темпе, цель выглядит реалистично."}
           </p>
         </div>
 
