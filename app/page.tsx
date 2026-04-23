@@ -112,9 +112,9 @@ function PreviousStartScreen() {
               </Link>
               <Link
                 href="/home"
-                className="secondary-cta border-white/30 bg-white/18 text-white shadow-[0_14px_30px_rgba(15,23,42,0.12)] backdrop-blur hover:bg-white/24"
+                className="secondary-cta border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.94))] text-slate-950 shadow-[0_16px_34px_rgba(15,23,42,0.16)] hover:bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]"
               >
-                <span className="block leading-none text-white">Открыть кабинет</span>
+                <span className="block leading-none text-slate-950">Открыть кабинет</span>
               </Link>
             </div>
           </div>
