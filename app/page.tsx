@@ -22,11 +22,8 @@ function FirstImpressionScreen() {
 
         <section className="relative overflow-hidden rounded-[2.2rem] border border-indigo-100/80 bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.34),transparent_34%),linear-gradient(135deg,#1e1b4b_0%,#312e81_42%,#4338ca_100%)] px-6 py-8 text-white shadow-[0_30px_80px_rgba(49,46,129,0.32)]">
           <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.28),transparent_70%)]" />
-          <div className="relative">
-            <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-100">
-              Первый экран
-            </p>
-            <h1 className="mt-5 text-[2.75rem] font-black leading-[1.02] tracking-tight">
+          <div className="relative z-10">
+            <h1 className="text-[2.75rem] font-black leading-[1.02] tracking-tight">
               Супер-тренажёр для ЕГЭ
             </h1>
             <p className="mt-4 text-base leading-7 text-indigo-100/88">
@@ -35,9 +32,9 @@ function FirstImpressionScreen() {
 
             <Link
               href="/?screen=start"
-              className="mt-8 block rounded-[1.9rem] bg-white px-6 py-5 text-center text-lg font-semibold text-slate-950 shadow-[0_22px_50px_rgba(255,255,255,0.22)] transition hover:translate-y-[-1px]"
+              className="relative z-10 mt-8 block rounded-[1.9rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_52%,#7c3aed_100%)] px-6 py-5 text-center text-lg font-semibold text-white shadow-[0_22px_50px_rgba(79,70,229,0.32)] transition hover:translate-y-[-1px]"
             >
-              Начать
+              <span className="block leading-none text-white">Начать</span>
             </Link>
           </div>
         </section>
