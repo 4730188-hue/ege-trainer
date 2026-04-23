@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  clearAppState,
   getExamTimelineLabel,
   getStudentProfile,
   getSubjectLabel,
@@ -10,6 +12,7 @@ import {
 } from "@/lib/storage";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
 
   useEffect(() => {
@@ -21,6 +24,11 @@ export default function ProfilePage() {
   const targetLabel = profile?.targetScore ? `${profile.targetScore} баллов` : "80 баллов";
   const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут` : null;
   const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
+
+  const handleReset = () => {
+    clearAppState();
+    router.push("/");
+  };
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
@@ -62,6 +70,13 @@ export default function ProfilePage() {
           >
             <span className="block leading-none text-white">Написать в поддержку</span>
           </Link>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="block w-full rounded-3xl border border-slate-200 bg-white px-5 py-4 text-center text-base font-semibold text-slate-900 shadow-sm shadow-slate-200/40 transition hover:bg-slate-50"
+          >
+            Начать заново
+          </button>
         </div>
 
         <div className="mt-auto border-t border-slate-100 pt-4 pb-6">

@@ -73,6 +73,18 @@ export function saveSessionProgress(progress: SessionProgress) {
   safeWrite(STORAGE_KEYS.sessionProgress, progress);
 }
 
+export function clearAppState() {
+  if (!isBrowser()) return;
+
+  try {
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      window.localStorage.removeItem(key);
+    });
+  } catch {
+    // noop
+  }
+}
+
 export function incrementSessionsCompleted() {
   const current = getSessionProgress() ?? {};
   const next: SessionProgress = {
