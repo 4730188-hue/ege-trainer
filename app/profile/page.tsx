@@ -70,7 +70,12 @@ export default function ProfilePage() {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="text-sm font-medium text-slate-500">Текущий предмет</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-500">Текущий предмет</p>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+              Основной переключатель на главной
+            </span>
+          </div>
           <p className="mt-2 text-base font-semibold text-slate-900">{subjectLabel}</p>
           <div className="mt-4 space-y-2">
             {subjectOptions.map((option) => {
@@ -93,7 +98,7 @@ export default function ProfilePage() {
             })}
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-500">
-            Меняется только текущий предмет. Остальной прогресс, подписка и история остаются на месте.
+            Здесь предмет тоже можно поменять, но основной быстрый сценарий теперь находится на главной. Остальной прогресс, подписка и история остаются на месте.
           </p>
         </div>
 

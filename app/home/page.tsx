@@ -10,13 +10,13 @@ import {
   getIncorrectQuestionCount,
   getMiniVariantProgress,
   getRepeatInsight,
-  getWeakTaskTypes,
   getProPlanLabel,
   getProSubscription,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
+  updateStudentSubject,
   type DiagnosisResult,
   type MiniVariantProgress,
   type ProSubscription,
@@ -24,6 +24,12 @@ import {
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
+
+const subjectOptions = [
+  { key: "russian", label: "Русский язык" },
+  { key: "math", label: "Профильная математика" },
+  { key: "social", label: "Обществознание" },
+] as const;
 
 function getToneClasses(tone: "indigo" | "green" | "amber") {
   if (tone === "green") {
@@ -59,19 +65,22 @@ export default function HomePage() {
   const [hasPersistentWeakness, setHasPersistentWeakness] = useState(false);
   const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
-  useEffect(() => {
-    const nextProfile = getStudentProfile();
+  const syncHomeState = (nextProfile: StudentProfile | null) => {
     const subject = normalizeSubjectKey(nextProfile?.subject);
+    const repeatInsight = getRepeatInsight(subject);
 
     setProfile(nextProfile);
     setDiagnosisResult(getDiagnosisResult());
     setSessionProgress(getSessionProgress());
     setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
-    const repeatInsight = getRepeatInsight(subject);
     setWeakTaskTypes(repeatInsight.weakTaskTypes);
     setHasPersistentWeakness(repeatInsight.persistentWeaknessCount > 0);
     setProSubscription(getProSubscription());
+  };
+
+  useEffect(() => {
+    syncHomeState(getStudentProfile());
   }, []);
 
   const subjectLabel = getSubjectLabel(profile?.subject);
@@ -126,6 +135,11 @@ export default function HomePage() {
   const readinessTone = getToneClasses(readiness.tone);
   const isPro = Boolean(proSubscription?.isPro);
 
+  const handleSubjectChange = (subject: "russian" | "math" | "social") => {
+    const nextProfile = updateStudentSubject(subject);
+    syncHomeState(nextProfile);
+  };
+
   return (
     <main className="min-h-[100dvh] px-4 py-5 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col gap-4">
@@ -169,6 +183,35 @@ export default function HomePage() {
             <div className="rounded-2xl border border-white/12 bg-white/10 p-3 backdrop-blur">
               <p className="text-xs text-indigo-100/72">Streak</p>
               <p className="mt-1 text-lg font-bold">{streakDays}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-indigo-100/84">Предмет</p>
+              <span className="rounded-full bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/90">
+                Быстрый переключатель
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {subjectOptions.map((option) => {
+                const isActive = normalizeSubjectKey(profile?.subject) === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => handleSubjectChange(option.key)}
+                    className={`rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
+                      isActive
+                        ? "border-white/30 bg-white text-slate-900 shadow-sm shadow-indigo-950/10"
+                        : "border-white/12 bg-white/8 text-white"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
