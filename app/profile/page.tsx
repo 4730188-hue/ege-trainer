@@ -10,9 +10,16 @@ import {
   getProSubscription,
   getStudentProfile,
   getSubjectLabel,
+  updateStudentSubject,
   type ProSubscription,
   type StudentProfile,
 } from "@/lib/storage";
+
+const subjectOptions = [
+  { key: "russian", label: "Русский язык" },
+  { key: "math", label: "Профильная математика" },
+  { key: "social", label: "Обществознание" },
+] as const;
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -30,6 +37,11 @@ export default function ProfilePage() {
   const dailyLabel = profile?.dailyMinutes ? `${profile.dailyMinutes} минут` : null;
   const timelineLabel = getExamTimelineLabel(profile?.examTimeline);
   const isPro = Boolean(proSubscription?.isPro);
+
+  const handleSubjectChange = (subject: "russian" | "math" | "social") => {
+    const nextProfile = updateStudentSubject(subject);
+    setProfile(nextProfile);
+  };
 
   const handleReset = () => {
     clearAppState();
@@ -55,6 +67,34 @@ export default function ProfilePage() {
             {timelineLabel && <p>Экзамен: {timelineLabel}</p>}
             <p>Тариф: {isPro ? getProPlanLabel(proSubscription?.activePlan) : "Free"}</p>
           </div>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
+          <p className="text-sm font-medium text-slate-500">Текущий предмет</p>
+          <p className="mt-2 text-base font-semibold text-slate-900">{subjectLabel}</p>
+          <div className="mt-4 space-y-2">
+            {subjectOptions.map((option) => {
+              const isActive = profile?.subject === option.key || (!profile?.subject && option.key === "russian");
+
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => handleSubjectChange(option.key)}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-medium transition ${
+                    isActive
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
+                      : "border-slate-200 bg-slate-50 text-slate-900"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Меняется только текущий предмет. Остальной прогресс, подписка и история остаются на месте.
+          </p>
         </div>
 
         {isPro && (

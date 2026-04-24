@@ -131,9 +131,14 @@ export default function HomePage() {
       <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col gap-4">
         <div className="flex items-center justify-between rounded-full border border-white/65 bg-white/55 px-4 py-2 text-sm text-slate-500 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur-xl">
           <span>Учебный кабинет</span>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100/90 text-indigo-700"}`}>
-            {isPro ? "Pro активирован" : "Personal plan"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700">
+              {subjectLabel}
+            </span>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100/90 text-indigo-700"}`}>
+              {isPro ? "Pro активирован" : "Personal plan"}
+            </span>
+          </div>
         </div>
 
         <section className="rounded-[2rem] border border-indigo-100/70 bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.26),transparent_32%),linear-gradient(135deg,#1e1b4b_0%,#312e81_50%,#4338ca_100%)] p-5 text-white shadow-[0_30px_80px_rgba(49,46,129,0.28)]">

@@ -232,6 +232,17 @@ export function saveStudentProfile(profile: StudentProfile) {
   safeWrite(STORAGE_KEYS.studentProfile, profile);
 }
 
+export function updateStudentSubject(subject: SubjectKey) {
+  const current = getStudentProfile() ?? {};
+  const next: StudentProfile = {
+    ...current,
+    subject,
+  };
+
+  saveStudentProfile(next);
+  return next;
+}
+
 export function getDiagnosisResult() {
   return safeRead<DiagnosisResult>(STORAGE_KEYS.diagnosisResult);
 }
