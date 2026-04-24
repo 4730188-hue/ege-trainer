@@ -245,6 +245,88 @@ export default function PaywallPage() {
           </div>
         </section>
 
+        <section className="rounded-[1.85rem] border border-white/70 bg-white/88 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+          <p className="px-2 pb-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Тарифы</p>
+          <div className="space-y-3">
+            {plans.map((plan) => {
+              const selected = selectedPlan === plan.key;
+
+              return (
+                <button
+                  key={plan.key}
+                  type="button"
+                  onClick={() => setSelectedPlan(plan.key)}
+                  className={`w-full rounded-[1.7rem] border p-4 text-left transition ${
+                    selected
+                      ? plan.recommended
+                        ? "border-indigo-200 bg-[linear-gradient(135deg,#312e81_0%,#4338ca_48%,#6366f1_100%)] text-white shadow-[0_24px_50px_rgba(79,70,229,0.24)]"
+                        : "border-indigo-200 bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(129,140,248,0.14))] shadow-[0_18px_36px_rgba(99,102,241,0.14)]"
+                      : "border-slate-200 bg-white shadow-[0_12px_24px_rgba(15,23,42,0.04)]"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-bold">{plan.title}</p>
+                      <p className={`mt-1 text-sm ${selected && plan.recommended ? "text-indigo-100/84" : "text-slate-500"}`}>
+                        {plan.note}
+                      </p>
+                      <p className={`mt-3 text-sm font-medium ${selected && plan.recommended ? "text-white" : "text-emerald-600"}`}>
+                        {plan.price}, {plan.hint}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${plan.recommended ? (selected ? "bg-white/14 text-white" : "bg-emerald-100 text-emerald-700") : selected ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"}`}>
+                      {plan.recommended ? "Рекомендуем" : selected ? "Выбрано" : "План"}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-[1.85rem] border border-white/70 bg-white/90 p-4 shadow-[0_18px_40px_rgba(99,102,241,0.12)] backdrop-blur-xl">
+          {purchaseState === "success" ? (
+            <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/80 px-4 py-4 text-center">
+              <p className="text-sm font-semibold text-emerald-700">Pro активирован</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Демо-покупка завершена. Твой план, {getProPlanLabel(selectedPlan)}, сохранён локально.
+              </p>
+              <Link href="/home" className="primary-cta mt-4">
+                <span className="block leading-none text-white">Открыть кабинет Pro</span>
+              </Link>
+              <p className="mt-3 text-center text-sm text-slate-500">Pro активируется сразу</p>
+            </div>
+          ) : (
+            <>
+              <button type="button" onClick={handleActivate} className={`primary-cta ${purchaseState === "processing" ? "is-disabled" : ""}`}>
+                <span className={`block leading-none ${purchaseState === "processing" ? "text-slate-400" : "text-white"}`}>
+                  {purchaseState === "processing" ? "Активируем Pro..." : `Оформить Pro, ${selectedPlanMeta.title}`}
+                </span>
+              </button>
+              <p className="mt-3 text-center text-sm text-slate-500">Pro активируется сразу</p>
+              <p className="mt-3 text-center text-xs font-medium text-slate-500">
+                Это mock purchase flow, без реального списания. После нажатия Pro активируется локально.
+              </p>
+            </>
+          )}
+
+          <p className="mt-3 text-center text-sm text-slate-500">Подписку можно сбросить только вместе с локальными данными приложения</p>
+        </section>
+
+        <section className="rounded-[1.85rem] border border-white/70 bg-white/78 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Что откроется в Pro</p>
+          <div className="mt-4 space-y-3">
+            {planBenefits.map((benefit, index) => (
+              <div key={benefit} className="flex items-start gap-3 rounded-[1.3rem] bg-slate-50/85 px-4 py-3">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                  {index + 1}
+                </span>
+                <p className="text-sm leading-6 text-slate-700">{benefit}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="rounded-[1.85rem] border border-indigo-100 bg-white/88 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -259,20 +341,6 @@ export default function PaywallPage() {
             <p>{weakSummary}</p>
             <p>На повторе сейчас: {repeatCount}. Завершено сессий: {sessionsCompleted}. Мини-вариантов: {completedMiniVariants}.</p>
             <p>Следующий полезный шаг: {roadmapNextFocus}</p>
-          </div>
-        </section>
-
-        <section className="rounded-[1.85rem] border border-white/70 bg-white/78 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Почему Pro реально полезен</p>
-          <div className="mt-4 space-y-3">
-            {planBenefits.map((benefit, index) => (
-              <div key={benefit} className="flex items-start gap-3 rounded-[1.3rem] bg-slate-50/85 px-4 py-3">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                  {index + 1}
-                </span>
-                <p className="text-sm leading-6 text-slate-700">{benefit}</p>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -296,69 +364,6 @@ export default function PaywallPage() {
             </div>
           </div>
         </section>
-
-        <div className="space-y-3">
-          {plans.map((plan) => {
-            const selected = selectedPlan === plan.key;
-
-            return (
-              <button
-                key={plan.key}
-                type="button"
-                onClick={() => setSelectedPlan(plan.key)}
-                className={`w-full rounded-[1.9rem] border p-5 text-left transition ${
-                  selected
-                    ? plan.recommended
-                      ? "border-indigo-200 bg-[linear-gradient(135deg,#312e81_0%,#4338ca_48%,#6366f1_100%)] text-white shadow-[0_28px_55px_rgba(79,70,229,0.28)]"
-                      : "border-indigo-200 bg-[linear-gradient(135deg,rgba(99,102,241,0.14),rgba(129,140,248,0.14))] shadow-[0_20px_40px_rgba(99,102,241,0.16)]"
-                    : "border-white/70 bg-white/78 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xl font-bold">{plan.title}</p>
-                    <p className={`mt-1 text-sm ${selected && plan.recommended ? "text-indigo-100/84" : "text-slate-500"}`}>
-                      {plan.note}
-                    </p>
-                    <p className={`mt-3 text-sm font-medium ${selected && plan.recommended ? "text-white" : "text-emerald-600"}`}>
-                      {plan.price}, {plan.hint}
-                    </p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${plan.recommended ? (selected ? "bg-white/14 text-white" : "bg-emerald-100 text-emerald-700") : selected ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"}`}>
-                    {plan.recommended ? "Рекомендуем" : selected ? "Выбрано" : "План"}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-auto rounded-[1.8rem] border border-white/70 bg-white/80 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.12)] backdrop-blur-xl">
-          {purchaseState === "success" ? (
-            <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/80 px-4 py-4 text-center">
-              <p className="text-sm font-semibold text-emerald-700">Pro активирован</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                Демо-покупка завершена. Твой план, {getProPlanLabel(selectedPlan)}, сохранён локально.
-              </p>
-              <Link href="/home" className="primary-cta mt-4">
-                <span className="block leading-none text-white">Открыть кабинет Pro</span>
-              </Link>
-            </div>
-          ) : (
-            <>
-              <p className="mb-2 text-center text-xs font-medium text-slate-500">
-                Это mock purchase flow, без реального списания. После нажатия Pro активируется локально.
-              </p>
-              <button type="button" onClick={handleActivate} className={`primary-cta ${purchaseState === "processing" ? "is-disabled" : ""}`}>
-                <span className={`block leading-none ${purchaseState === "processing" ? "text-slate-400" : "text-white"}`}>
-                  {purchaseState === "processing" ? "Активируем Pro..." : `Оформить Pro, ${selectedPlanMeta.title}`}
-                </span>
-              </button>
-            </>
-          )}
-
-          <p className="mt-3 text-center text-sm text-slate-500">Подписку можно сбросить только вместе с локальными данными приложения</p>
-        </div>
       </div>
     </main>
   );
