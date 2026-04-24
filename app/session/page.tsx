@@ -8,6 +8,8 @@ import {
   clearQuestionIncorrect,
   getIncorrectQuestionCount,
   getIncorrectQuestionIds,
+  getPrioritizedIncorrectQuestionIds,
+  getRepeatInsight,
   getStudentProfile,
   getSubjectLabel,
   getSeenSessionQuestionIds,
@@ -29,21 +31,33 @@ export default function SessionPage() {
   const [isFinished, setIsFinished] = useState(false);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
+  const [repeatFocusLabel, setRepeatFocusLabel] = useState<string | null>(null);
 
   useEffect(() => {
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     const seenIds = getSeenSessionQuestionIds(nextSubject);
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
-    const nextQuestions = buildSessionQuestions(nextSubject, {
-      count: 5,
+    const prioritizedIncorrectIds = getPrioritizedIncorrectQuestionIds(nextSubject);
+    const candidateQuestions = buildSessionQuestions(nextSubject, {
+      count: 10,
       seenIds,
-      incorrectIds,
+      incorrectIds: prioritizedIncorrectIds,
     });
+    const nextQuestions = [...candidateQuestions]
+      .sort((left, right) => {
+        const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
+        const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
+        const leftRank = leftPriority === -1 ? 999 : leftPriority;
+        const rightRank = rightPriority === -1 ? 999 : rightPriority;
+        return leftRank - rightRank;
+      })
+      .slice(0, 5);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
     setRepeatCount(incorrectIds.length);
+    setRepeatFocusLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
 
     if (nextQuestions.length > 0) {
       addSeenSessionQuestionIds(
@@ -137,8 +151,11 @@ export default function SessionPage() {
                 Сессия на сегодня
               </h1>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                5 заданий по предмету. Если есть ошибки в истории, стараемся вернуть хотя бы одно на повтор.
+                5 заданий по предмету. Если в истории есть ошибки, сначала поднимаем более устойчиво проблемные вопросы и типы заданий.
               </p>
+              {repeatFocusLabel && (
+                <p className="mt-2 text-sm font-medium text-amber-700">Фокус повтора: {repeatFocusLabel}</p>
+              )}
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">

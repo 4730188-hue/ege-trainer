@@ -8,6 +8,8 @@ import {
   getDiagnosisResult,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
+  getRepeatInsight,
+  getWeakTaskTypes,
   getProPlanLabel,
   getProSubscription,
   getSessionProgress,
@@ -17,6 +19,7 @@ import {
   type DiagnosisResult,
   type MiniVariantProgress,
   type ProSubscription,
+  type WeakTaskTypeEntry,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -63,6 +66,9 @@ export default function ProgressPage() {
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
+  const [weakTaskTypes, setWeakTaskTypes] = useState<WeakTaskTypeEntry[]>([]);
+  const [ordinaryErrorCount, setOrdinaryErrorCount] = useState(0);
+  const [persistentWeaknessCount, setPersistentWeaknessCount] = useState(0);
   const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
   useEffect(() => {
@@ -74,6 +80,10 @@ export default function ProgressPage() {
     setSessionProgress(getSessionProgress());
     setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
+    const repeatInsight = getRepeatInsight(subject);
+    setWeakTaskTypes(getWeakTaskTypes(subject));
+    setOrdinaryErrorCount(repeatInsight.ordinaryErrorCount);
+    setPersistentWeaknessCount(repeatInsight.persistentWeaknessCount);
     setProSubscription(getProSubscription());
   }, []);
 
@@ -216,6 +226,28 @@ export default function ProgressPage() {
               Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}
             </p>
             <p>Последняя активность: {lastActivityDate ?? "пока нет"}</p>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+            <p className="text-sm font-medium text-slate-900">Повторы и западающие зоны</p>
+            <div className="mt-2 space-y-2 text-sm leading-6 text-slate-600">
+              <p>Вопросы на повтор: {repeatCount > 0 ? repeatCount : "пока нет"}</p>
+              <p>Обычные ошибки: {ordinaryErrorCount}</p>
+              <p className={persistentWeaknessCount > 0 ? "text-amber-700" : "text-slate-600"}>
+                Зоны, которые западают: {persistentWeaknessCount > 0 ? persistentWeaknessCount : "пока не выделяются"}
+              </p>
+            </div>
+            {weakTaskTypes.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {weakTaskTypes.slice(0, 3).map((entry) => (
+                  <span key={entry.taskType} className={`rounded-full px-3 py-1 text-xs font-semibold ${entry.isWeakness ? "bg-amber-100 text-amber-700" : "bg-slate-200 text-slate-700"}`}>
+                    {entry.label} · {entry.count}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm leading-6 text-slate-600">Пока недостаточно ошибок, чтобы уверенно выделить слабый тип задания.</p>
+            )}
           </div>
         </div>
 

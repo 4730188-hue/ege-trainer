@@ -9,6 +9,8 @@ import {
   getExamTimelineLabel,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
+  getRepeatInsight,
+  getWeakTaskTypes,
   getProPlanLabel,
   getProSubscription,
   getSessionProgress,
@@ -18,6 +20,7 @@ import {
   type DiagnosisResult,
   type MiniVariantProgress,
   type ProSubscription,
+  type WeakTaskTypeEntry,
   type SessionProgress,
   type StudentProfile,
 } from "@/lib/storage";
@@ -52,6 +55,8 @@ export default function HomePage() {
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [miniVariantProgress, setMiniVariantProgress] = useState<MiniVariantProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
+  const [weakTaskTypes, setWeakTaskTypes] = useState<WeakTaskTypeEntry[]>([]);
+  const [hasPersistentWeakness, setHasPersistentWeakness] = useState(false);
   const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
 
   useEffect(() => {
@@ -63,6 +68,9 @@ export default function HomePage() {
     setSessionProgress(getSessionProgress());
     setMiniVariantProgress(getMiniVariantProgress());
     setRepeatCount(getIncorrectQuestionCount(subject));
+    const repeatInsight = getRepeatInsight(subject);
+    setWeakTaskTypes(repeatInsight.weakTaskTypes);
+    setHasPersistentWeakness(repeatInsight.persistentWeaknessCount > 0);
     setProSubscription(getProSubscription());
   }, []);
 
@@ -77,6 +85,8 @@ export default function HomePage() {
   const streakDays = sessionProgress?.streakDays ?? 0;
   const completedMiniVariants = miniVariantProgress?.completedCount ?? 0;
   const lastMiniResult = miniVariantProgress?.lastResult ?? null;
+  const focusTaskType = weakTaskTypes[0]?.label ?? null;
+  const focusLabel = focusTaskType ?? weakTopics[0] ?? subjectLabel;
   const diagnosisStatus = diagnosisResult?.completedDiagnosis
     ? levelLabel
       ? `Пройдена, уровень ${levelLabel}`
@@ -158,16 +168,23 @@ export default function HomePage() {
           </div>
 
           <div className="mt-5 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur">
-            <p className="text-sm font-medium text-indigo-100/84">Сегодняшний фокус</p>
-            <p className="mt-2 text-lg font-semibold text-white">
-              {weakTopics.length > 0 ? weakTopics[0] : subjectLabel}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-indigo-100/84">Сегодняшний фокус</p>
+              {focusTaskType && (
+                <span className="rounded-full bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/90">
+                  {hasPersistentWeakness ? `Слабость: ${focusTaskType}` : `Фокус: ${focusTaskType}`}
+                </span>
+              )}
+            </div>
+            <p className="mt-2 text-lg font-semibold text-white">{focusLabel}</p>
             <p className="mt-2 text-sm leading-6 text-indigo-100/84">
-              {weakTopicsPreview
-                ? `Сильнее всего сейчас окупится работа по темам: ${weakTopicsPreview}.`
-                : dailyLabel
-                  ? `Держим реалистичный темп: ${dailyLabel}. Маленькая сессия сегодня важнее идеального плана завтра.`
-                  : "Короткая сессия сегодня поможет удержать ритм и сделать прогресс осязаемым."}
+              {focusTaskType
+                ? `${hasPersistentWeakness ? "Уже видна устойчивая слабость" : "По ошибкам пока чаще всплывает"} в типе задания: ${focusTaskType}${weakTopicsPreview ? `. Рядом по темам, ${weakTopicsPreview}.` : "."}`
+                : weakTopicsPreview
+                  ? `Сильнее всего сейчас окупится работа по темам: ${weakTopicsPreview}.`
+                  : dailyLabel
+                    ? `Держим реалистичный темп: ${dailyLabel}. Маленькая сессия сегодня важнее идеального плана завтра.`
+                    : "Короткая сессия сегодня поможет удержать ритм и сделать прогресс осязаемым."}
             </p>
           </div>
 

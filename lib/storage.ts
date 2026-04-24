@@ -1,4 +1,6 @@
-import type { SubjectKey } from "@/lib/questionBank";
+import { QUESTION_BANK, type SubjectKey, type TaskType } from "@/lib/questionBank";
+
+export type SubjectTaskTypeCountMap = Partial<Record<SubjectKey, Partial<Record<TaskType, number>>>>;
 
 export type StudentProfile = {
   subject?: string;
@@ -17,6 +19,21 @@ export type DiagnosisResult = {
   totalQuestions?: number;
 };
 
+export type WeakTaskTypeEntry = {
+  taskType: TaskType;
+  label: string;
+  count: number;
+  isWeakness: boolean;
+};
+
+export type RepeatInsight = {
+  repeatCount: number;
+  weakTaskTypes: WeakTaskTypeEntry[];
+  ordinaryErrorCount: number;
+  persistentWeaknessCount: number;
+  priorityTaskTypeLabel?: string;
+};
+
 export type SessionProgress = {
   sessionsCompleted?: number;
   lastSessionCompletedAt?: string;
@@ -25,12 +42,15 @@ export type SessionProgress = {
 };
 
 type SubjectQuestionMap = Partial<Record<SubjectKey, string[]>>;
+type SubjectQuestionCountMap = Partial<Record<SubjectKey, Record<string, number>>>;
 type SubjectIndexMap = Partial<Record<SubjectKey, number>>;
 type SubjectVariantIdMap = Partial<Record<SubjectKey, string>>;
 
 export type RepetitionState = {
   seenSessionQuestionIds?: SubjectQuestionMap;
   incorrectQuestionIds?: SubjectQuestionMap;
+  questionErrorCounts?: SubjectQuestionCountMap;
+  taskTypeErrorCounts?: SubjectTaskTypeCountMap;
 };
 
 export type MiniVariantResult = {
@@ -134,6 +154,45 @@ function dedupe(items: string[]) {
   return Array.from(new Set(items));
 }
 
+function toTaskTypeLabel(taskType: TaskType) {
+  return taskType.replaceAll("_", " ");
+}
+function getQuestionById(subject: SubjectKey, questionId: string) {
+  return QUESTION_BANK.find((entry) => entry.id === questionId && entry.subject === subject) ?? null;
+}
+
+function getQuestionErrorCount(subject: SubjectKey, questionId: string) {
+  const state = getRepetitionState();
+  return state.questionErrorCounts?.[subject]?.[questionId] ?? 0;
+}
+
+function getTaskTypeErrorCount(subject: SubjectKey, taskType: TaskType) {
+  const state = getRepetitionState();
+  return state.taskTypeErrorCounts?.[subject]?.[taskType] ?? 0;
+}
+
+function isPersistentQuestionWeakness(subject: SubjectKey, questionId: string) {
+  return getQuestionErrorCount(subject, questionId) >= 2;
+}
+
+function isPersistentTaskTypeWeakness(subject: SubjectKey, taskType: TaskType) {
+  return getTaskTypeErrorCount(subject, taskType) >= 3;
+}
+
+function getPrioritizedIncorrectIds(subject: SubjectKey) {
+  const ids = getIncorrectQuestionIds(subject);
+
+  return [...ids].sort((leftId, rightId) => {
+    const leftQuestion = getQuestionById(subject, leftId);
+    const rightQuestion = getQuestionById(subject, rightId);
+
+    const leftScore = (getQuestionErrorCount(subject, leftId) * 10) + (leftQuestion ? getTaskTypeErrorCount(subject, leftQuestion.taskType) : 0);
+    const rightScore = (getQuestionErrorCount(subject, rightId) * 10) + (rightQuestion ? getTaskTypeErrorCount(subject, rightQuestion.taskType) : 0);
+
+    return rightScore - leftScore;
+  });
+}
+
 function getLocalDateString(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -194,6 +253,8 @@ export function getRepetitionState() {
     safeRead<RepetitionState>(STORAGE_KEYS.repetitionState) ?? {
       seenSessionQuestionIds: {},
       incorrectQuestionIds: {},
+      questionErrorCounts: {},
+      taskTypeErrorCounts: {},
     }
   );
 }
@@ -225,9 +286,17 @@ export function getIncorrectQuestionIds(subject: SubjectKey) {
   return state.incorrectQuestionIds?.[subject] ?? [];
 }
 
+export function getPrioritizedIncorrectQuestionIds(subject: SubjectKey) {
+  return getPrioritizedIncorrectIds(subject);
+}
+
 export function markQuestionIncorrect(subject: SubjectKey, questionId: string) {
   const state = getRepetitionState();
   const current = state.incorrectQuestionIds?.[subject] ?? [];
+  const currentQuestionCounts = state.questionErrorCounts?.[subject] ?? {};
+  const question = getQuestionById(subject, questionId);
+  const taskType = question?.taskType;
+  const currentTaskTypeCounts = state.taskTypeErrorCounts?.[subject] ?? {};
 
   saveRepetitionState({
     ...state,
@@ -235,6 +304,22 @@ export function markQuestionIncorrect(subject: SubjectKey, questionId: string) {
       ...state.incorrectQuestionIds,
       [subject]: dedupe([...current, questionId]),
     },
+    questionErrorCounts: {
+      ...state.questionErrorCounts,
+      [subject]: {
+        ...currentQuestionCounts,
+        [questionId]: (currentQuestionCounts[questionId] ?? 0) + 1,
+      },
+    },
+    taskTypeErrorCounts: taskType
+      ? {
+          ...state.taskTypeErrorCounts,
+          [subject]: {
+            ...currentTaskTypeCounts,
+            [taskType]: (currentTaskTypeCounts[taskType] ?? 0) + 1,
+          },
+        }
+      : state.taskTypeErrorCounts,
   });
 }
 
@@ -253,6 +338,62 @@ export function clearQuestionIncorrect(subject: SubjectKey, questionId: string) 
 
 export function getIncorrectQuestionCount(subject: SubjectKey) {
   return getIncorrectQuestionIds(subject).length;
+}
+
+export function getWeakTaskTypes(subject: SubjectKey, limit = 3): WeakTaskTypeEntry[] {
+  const incorrectIds = getIncorrectQuestionIds(subject);
+  const state = getRepetitionState();
+  const accumulatedTaskTypeCounts = state.taskTypeErrorCounts?.[subject] ?? {};
+  const counts = new Map<TaskType, number>();
+
+  incorrectIds.forEach((questionId) => {
+    const question = getQuestionById(subject, questionId);
+    if (!question) return;
+    counts.set(question.taskType, (counts.get(question.taskType) ?? 0) + 1);
+  });
+
+  Object.entries(accumulatedTaskTypeCounts).forEach(([taskType, count]) => {
+    counts.set(taskType as TaskType, Math.max(counts.get(taskType as TaskType) ?? 0, Number(count) || 0));
+  });
+
+  return Array.from(counts.entries())
+    .sort((a, b) => {
+      const diff = b[1] - a[1];
+      if (diff !== 0) return diff;
+      return Number(isPersistentTaskTypeWeakness(subject, b[0])) - Number(isPersistentTaskTypeWeakness(subject, a[0]));
+    })
+    .slice(0, limit)
+    .map(([taskType, count]) => ({
+      taskType,
+      label: toTaskTypeLabel(taskType),
+      count,
+      isWeakness: isPersistentTaskTypeWeakness(subject, taskType),
+    }));
+}
+
+export function getRepeatInsight(subject: SubjectKey): RepeatInsight {
+  const incorrectIds = getIncorrectQuestionIds(subject);
+  const weakTaskTypes = getWeakTaskTypes(subject, 3);
+
+  let persistentWeaknessCount = 0;
+
+  incorrectIds.forEach((questionId) => {
+    const question = getQuestionById(subject, questionId);
+    if (!question) return;
+    if (isPersistentQuestionWeakness(subject, questionId) || isPersistentTaskTypeWeakness(subject, question.taskType)) {
+      persistentWeaknessCount += 1;
+    }
+  });
+
+  const ordinaryErrorCount = Math.max(incorrectIds.length - persistentWeaknessCount, 0);
+
+  return {
+    repeatCount: incorrectIds.length,
+    weakTaskTypes,
+    ordinaryErrorCount,
+    persistentWeaknessCount,
+    priorityTaskTypeLabel: weakTaskTypes[0]?.label,
+  };
 }
 
 export function getMiniVariantProgress() {
