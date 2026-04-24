@@ -6,7 +6,6 @@ import { buildSessionQuestions, type BankQuestion } from "@/lib/questionBank";
 import {
   addSeenSessionQuestionIds,
   clearQuestionIncorrect,
-  consumeFreeGateAccess,
   getIncorrectQuestionCount,
   getIncorrectQuestionIds,
   getPrioritizedIncorrectQuestionIds,
@@ -17,7 +16,6 @@ import {
   incrementSessionsCompleted,
   markQuestionIncorrect,
   normalizeSubjectKey,
-  type FreeGateStatus,
   type SessionProgress,
 } from "@/lib/storage";
 
@@ -34,18 +32,8 @@ export default function SessionPage() {
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
   const [repeatFocusLabel, setRepeatFocusLabel] = useState<string | null>(null);
-  const [gateStatus, setGateStatus] = useState<FreeGateStatus | null>(null);
-  const [isGateResolved, setIsGateResolved] = useState(false);
 
   useEffect(() => {
-    const nextGateStatus = consumeFreeGateAccess("session");
-    setGateStatus(nextGateStatus);
-    setIsGateResolved(true);
-
-    if (nextGateStatus.isBlocked) {
-      return;
-    }
-
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     const seenIds = getSeenSessionQuestionIds(nextSubject);
@@ -114,56 +102,6 @@ export default function SessionPage() {
     setCurrentIndex((prev) => prev + 1);
     setSelectedAnswer("");
     setShowResult(false);
-  }
-
-  if (!isGateResolved) {
-    return (
-      <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
-        <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <h1 className="text-2xl font-bold leading-tight tracking-tight">Проверяем доступ</h1>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (gateStatus?.isBlocked) {
-    return (
-      <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
-        <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <div className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
-              Free лимит на сегодня
-            </div>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900">
-              Сегодня сессия уже использована
-            </h1>
-            <p className="mt-3 text-base leading-7 text-slate-600">
-              В Free доступна 1 учебная сессия в день. Завтра лимит сбросится автоматически.
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              Использовано: {gateStatus.count}/{gateStatus.limit}
-            </p>
-
-            <div className="mt-6 space-y-3">
-              <Link
-                href="/home"
-                className="primary-cta"
-              >
-                <span className="block leading-none text-white">Вернуться на главную</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="block rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center text-base font-semibold text-slate-900 transition hover:bg-slate-100"
-              >
-                Открыть профиль
-              </Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
   }
 
   if (!currentQuestion && !isFinished) {
