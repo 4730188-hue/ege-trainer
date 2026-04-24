@@ -77,6 +77,26 @@ export type ProSubscription = {
   activatedAt?: string;
 };
 
+export type FreeGateFeatureKey = "session" | "miniVariant";
+
+export type FreeGateFeatureState = {
+  date?: string;
+  count?: number;
+  blocked?: boolean;
+  inProgress?: boolean;
+};
+
+export type FreeGateState = Partial<Record<FreeGateFeatureKey, FreeGateFeatureState>>;
+
+export type FreeGateStatus = {
+  isPro: boolean;
+  isBlocked: boolean;
+  count: number;
+  limit: number;
+  date: string;
+  inProgress: boolean;
+};
+
 export type RoadmapInput = {
   subjectLabel: string;
   weakTopics?: string[];
@@ -122,6 +142,7 @@ const STORAGE_KEYS = {
   repetitionState: "ege-trainer:repetition-state",
   miniVariantProgress: "ege-trainer:mini-variant-progress",
   proSubscription: "ege-trainer:pro-subscription",
+  freeGateState: "ege-trainer:free-gate-state",
 } as const;
 
 function isBrowser() {
@@ -205,6 +226,130 @@ function getDayDiff(from: string, to: string) {
   const toDate = new Date(`${to}T00:00:00`);
   const diffMs = toDate.getTime() - fromDate.getTime();
   return Math.round(diffMs / 86400000);
+}
+
+const FREE_DAILY_LIMITS: Record<FreeGateFeatureKey, number> = {
+  session: 1,
+  miniVariant: 1,
+};
+
+function getFreeGateState() {
+  return safeRead<FreeGateState>(STORAGE_KEYS.freeGateState) ?? {};
+}
+
+function saveFreeGateState(state: FreeGateState) {
+  safeWrite(STORAGE_KEYS.freeGateState, state);
+}
+
+function getNormalizedFreeGateEntry(feature: FreeGateFeatureKey, today = getLocalDateString(new Date())) {
+  const state = getFreeGateState();
+  const entry = state[feature];
+
+  if (!entry || entry.date !== today) {
+    return {
+      state,
+      today,
+      entry: {
+        date: today,
+        count: 0,
+        blocked: false,
+        inProgress: false,
+      } satisfies FreeGateFeatureState,
+    };
+  }
+
+  return {
+    state,
+    today,
+    entry: {
+      date: today,
+      count: entry.count ?? 0,
+      blocked: Boolean(entry.blocked),
+      inProgress: Boolean(entry.inProgress),
+    } satisfies FreeGateFeatureState,
+  };
+}
+
+function buildFreeGateStatus(feature: FreeGateFeatureKey): FreeGateStatus {
+  const { today, entry } = getNormalizedFreeGateEntry(feature);
+  const limit = FREE_DAILY_LIMITS[feature];
+  const isPro = Boolean(getProSubscription().isPro);
+  const count = entry.count ?? 0;
+  const inProgress = Boolean(entry.inProgress);
+
+  return {
+    isPro,
+    isBlocked: !isPro && count >= limit && !inProgress,
+    count,
+    limit,
+    date: today,
+    inProgress,
+  };
+}
+
+function persistFreeGateEntry(feature: FreeGateFeatureKey, nextEntry: FreeGateFeatureState) {
+  const { state } = getNormalizedFreeGateEntry(feature, nextEntry.date ?? getLocalDateString(new Date()));
+
+  saveFreeGateState({
+    ...state,
+    [feature]: nextEntry,
+  });
+}
+
+export function getFreeGateStatus(feature: FreeGateFeatureKey) {
+  return buildFreeGateStatus(feature);
+}
+
+export function consumeFreeGateAccess(feature: FreeGateFeatureKey) {
+  const status = buildFreeGateStatus(feature);
+
+  if (status.isPro) {
+    return status;
+  }
+
+  if (status.inProgress) {
+    return status;
+  }
+
+  if (status.isBlocked) {
+    persistFreeGateEntry(feature, {
+      date: status.date,
+      count: status.count,
+      blocked: true,
+      inProgress: false,
+    });
+    return {
+      ...status,
+      isBlocked: true,
+    };
+  }
+
+  const nextCount = status.count + 1;
+  persistFreeGateEntry(feature, {
+    date: status.date,
+    count: nextCount,
+    blocked: nextCount >= status.limit,
+    inProgress: true,
+  });
+
+  return buildFreeGateStatus(feature);
+}
+
+export function releaseFreeGateAccess(feature: FreeGateFeatureKey) {
+  const status = buildFreeGateStatus(feature);
+
+  if (status.isPro) {
+    return status;
+  }
+
+  persistFreeGateEntry(feature, {
+    date: status.date,
+    count: status.count,
+    blocked: status.count >= status.limit,
+    inProgress: false,
+  });
+
+  return buildFreeGateStatus(feature);
 }
 
 export function normalizeSubjectKey(subject?: string | null): SubjectKey {
@@ -453,6 +598,8 @@ export function saveMiniVariantResult(result: MiniVariantResult) {
       completedAt: new Date().toISOString(),
     },
   });
+
+  releaseFreeGateAccess("miniVariant");
 }
 
 export function getProSubscription() {
@@ -522,6 +669,7 @@ export function incrementSessionsCompleted() {
   };
 
   saveSessionProgress(next);
+  releaseFreeGateAccess("session");
   return next;
 }
 
