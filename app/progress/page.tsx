@@ -159,9 +159,9 @@ export default function ProgressPage() {
         </div>
 
         <div className="glass-card rounded-3xl p-5">
-          <h1 className="text-3xl font-bold leading-tight tracking-tight">Твой прогресс</h1>
+          <h1 className="text-3xl font-bold leading-tight tracking-tight">Твой тренировочный профиль</h1>
           <p className="mt-3 text-sm helper-text">
-            Здесь собраны основные показатели по текущей подготовке. Смотри на тренд, а не на одну цифру.
+            Здесь собраны основные показатели по текущему тренировочному процессу. Смотри на тренд, а не на одну цифру.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default function ProgressPage() {
               </span>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Расширенный режим уже включён локально. Можно отслеживать динамику, идти по roadmap и не упираться в лимиты сессий и мини-вариантов.
+              Расширенный режим уже включён локально. Можно отслеживать тренировочную динамику, идти по roadmap и не упираться в лимиты сессий и мини-вариантов.
             </p>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export default function ProgressPage() {
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="font-semibold text-slate-900">Что открыто в Free</p>
+                <p className="font-semibold text-slate-900">Что уже есть в Free</p>
                 <div className="mt-2 space-y-2 text-slate-600">
                   <p>• Базовая аналитика</p>
                   <p>• Видно слабые темы и повтор</p>
@@ -219,7 +219,7 @@ export default function ProgressPage() {
 
         <div className={`rounded-3xl border p-5 shadow-sm shadow-slate-200/40 ${readinessTone.card}`}>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Готовность сейчас</p>
+            <p className="text-sm font-medium text-slate-500">Текущий тренировочный фокус</p>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${readinessTone.badge}`}>
               {readiness.statusLabel}
             </span>
@@ -262,13 +262,13 @@ export default function ProgressPage() {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Текущий срез</p>
+            <p className="text-sm font-medium text-slate-500">Стартовый срез и текущая форма</p>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
               {subjectLabel}
             </span>
           </div>
           <div className="mt-4 space-y-3 text-base text-slate-700">
-            <p>Диагностика: {diagnosisCompleted ? "пройдена" : "пока не пройдена"}</p>
+            <p>Стартовый срез: {diagnosisCompleted ? "собран" : "пока не собран"}</p>
             <p className={weakTopics.length > 0 ? "text-amber-700" : "text-slate-700"}>
               Слабые темы: {weakTopics.length > 0 ? weakTopics.join(", ") : "пока не определены"}
             </p>
@@ -300,7 +300,7 @@ export default function ProgressPage() {
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Дорожная карта</p>
+            <p className="text-sm font-medium text-slate-500">Тренировочный маршрут</p>
             <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>
               {isPro ? "Полная" : "Доступна в Pro глубже"}
             </span>
@@ -338,7 +338,7 @@ export default function ProgressPage() {
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/40">
-          <p className="text-sm font-medium text-slate-500">Что это значит сейчас</p>
+          <p className="text-sm font-medium text-slate-500">Что сейчас тренируем</p>
           <p className="mt-3 text-sm leading-6 text-slate-600">{note}</p>
           {repeatCount > 0 && (
             <div className="mt-3 rounded-2xl bg-amber-50/80 p-4">

@@ -70,7 +70,7 @@ export default function ProfilePage() {
             <div>
               <h1 className="text-3xl font-bold leading-tight tracking-tight">Профиль</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Здесь видно, что уже открыто по тарифу и как сейчас устроена подготовка.
+                Здесь видно, что уже открыто по тарифу и как сейчас устроен тренировочный процесс.
               </p>
             </div>
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>
@@ -84,6 +84,7 @@ export default function ProfilePage() {
             {dailyLabel && <p>В день: {dailyLabel}</p>}
             {timelineLabel && <p>Экзамен: {timelineLabel}</p>}
             <p>Тариф: {isPro ? getProPlanLabel(proSubscription?.activePlan) : "Free"}</p>
+            <p>Режим: тренировочный профиль</p>
           </div>
         </div>
 
@@ -115,7 +116,7 @@ export default function ProfilePage() {
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {blockedFeature
                 ? `Сегодня уже достигнут лимит на ${blockedFeature === "session" ? "сессию" : "мини-вариант"}. Pro нужен не для давления, а чтобы продолжить подготовку без паузы в самый полезный момент.`
-                : "Free помогает начать и увидеть базовую картину. Pro снимает лимиты и превращает подготовку в спокойный устойчивый процесс."}
+                : "Free помогает собрать стартовый срез и войти в тренировочный ритм. Pro снимает лимиты и делает процесс спокойным и устойчивым."}
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-2xl bg-slate-50 p-4">
@@ -123,7 +124,7 @@ export default function ProfilePage() {
                 <div className="mt-2 space-y-2 text-slate-600">
                   <p>• 1 session в день</p>
                   <p>• 1 mini-variant запуск в день</p>
-                  <p>• Базовый прогресс и профиль</p>
+                  <p>• Базовый прогресс и тренировочный профиль</p>
                 </div>
               </div>
               <div className="rounded-2xl bg-indigo-50 p-4">

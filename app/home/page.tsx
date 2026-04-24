@@ -122,9 +122,9 @@ export default function HomePage() {
   const focusLabel = focusTaskType ?? weakTopics[0] ?? subjectLabel;
   const diagnosisStatus = diagnosisResult?.completedDiagnosis
     ? levelLabel
-      ? `Пройдена, уровень ${levelLabel}`
-      : "Пройдена"
-    : "Не пройдена";
+      ? `Стартовый срез собран, уровень ${levelLabel}`
+      : "Стартовый срез собран"
+    : "Стартовый срез ещё не собран";
 
   const roadmap = useMemo(
     () =>
@@ -271,7 +271,7 @@ export default function HomePage() {
 
           <div className="mt-5 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-indigo-100/84">Сегодняшний фокус</p>
+              <p className="text-sm font-medium text-indigo-100/84">Текущий тренировочный фокус</p>
               {focusTaskType && (
                 <span className="rounded-full bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/90">
                   {hasPersistentWeakness ? `Слабость: ${focusTaskType}` : `Фокус: ${focusTaskType}`}
@@ -305,7 +305,7 @@ export default function HomePage() {
               </span>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Полный режим уже открыт. Можно идти без пауз по сессиям, мини-вариантам, умному повтору ошибок и дорожной карте к цели.
+              Полный режим уже открыт. Можно идти без пауз по тренировкам, мини-вариантам, умному повтору ошибок и дорожной карте к цели.
             </p>
           </section>
         ) : (
@@ -364,7 +364,7 @@ export default function HomePage() {
 
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-white/72 p-4">
-              <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Диагностика</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Стартовый срез</p>
               <p className="mt-2 text-base font-semibold text-slate-900">{diagnosisStatus}</p>
             </div>
             <div className="rounded-2xl bg-white/72 p-4">
@@ -377,8 +377,8 @@ export default function HomePage() {
         <section className="rounded-[1.8rem] border border-white/70 bg-white/78 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-slate-500">Твой следующий шаг</p>
-              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Что двинет результат уже сегодня</h2>
+              <p className="text-sm font-medium text-slate-500">Следующая тренировка</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Что сейчас тренируем, чтобы двинуть результат</h2>
             </div>
             {repeatCount > 0 && (
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
