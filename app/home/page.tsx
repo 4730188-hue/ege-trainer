@@ -7,6 +7,7 @@ import {
   buildRoadmap,
   getDiagnosisResult,
   getExamTimelineLabel,
+  getFreeGateStatus,
   getIncorrectQuestionCount,
   getMiniVariantProgress,
   getRepeatInsight,
@@ -18,11 +19,12 @@ import {
   normalizeSubjectKey,
   updateStudentSubject,
   type DiagnosisResult,
+  type FreeGateStatus,
   type MiniVariantProgress,
   type ProSubscription,
-  type WeakTaskTypeEntry,
   type SessionProgress,
   type StudentProfile,
+  type WeakTaskTypeEntry,
 } from "@/lib/storage";
 
 const subjectOptions = [
@@ -55,6 +57,24 @@ function getToneClasses(tone: "indigo" | "green" | "amber") {
   };
 }
 
+function getWeaknessSummary(weakTopics: string[], weakTaskTypes: WeakTaskTypeEntry[], repeatCount: number) {
+  if (weakTaskTypes[0]?.label) {
+    return `Уже видно, что чаще проседает тип задания ${weakTaskTypes[0].label}${repeatCount > 0 ? `, а на повторе сейчас ${repeatCount}.` : "."}`;
+  }
+
+  if (weakTopics[0]) {
+    return `Уже найдена слабая тема, ${weakTopics[0]}. Следующий шаг, не терять ритм и добить её повтором.`;
+  }
+
+  return "Даже по первым данным уже можно собрать спокойный и понятный маршрут подготовки без угадываний.";
+}
+
+function getBlockedFeature(gates: { session: FreeGateStatus; miniVariant: FreeGateStatus }) {
+  if (gates.session.isBlocked) return "session" as const;
+  if (gates.miniVariant.isBlocked) return "miniVariant" as const;
+  return null;
+}
+
 export default function HomePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
@@ -64,6 +84,8 @@ export default function HomePage() {
   const [weakTaskTypes, setWeakTaskTypes] = useState<WeakTaskTypeEntry[]>([]);
   const [hasPersistentWeakness, setHasPersistentWeakness] = useState(false);
   const [proSubscription, setProSubscription] = useState<ProSubscription | null>(null);
+  const [sessionGate, setSessionGate] = useState<FreeGateStatus | null>(null);
+  const [miniVariantGate, setMiniVariantGate] = useState<FreeGateStatus | null>(null);
 
   const syncHomeState = (nextProfile: StudentProfile | null) => {
     const subject = normalizeSubjectKey(nextProfile?.subject);
@@ -77,6 +99,8 @@ export default function HomePage() {
     setWeakTaskTypes(repeatInsight.weakTaskTypes);
     setHasPersistentWeakness(repeatInsight.persistentWeaknessCount > 0);
     setProSubscription(getProSubscription());
+    setSessionGate(getFreeGateStatus("session"));
+    setMiniVariantGate(getFreeGateStatus("miniVariant"));
   };
 
   useEffect(() => {
@@ -134,6 +158,12 @@ export default function HomePage() {
 
   const readinessTone = getToneClasses(readiness.tone);
   const isPro = Boolean(proSubscription?.isPro);
+  const blockedFeature = sessionGate && miniVariantGate ? getBlockedFeature({ session: sessionGate, miniVariant: miniVariantGate }) : null;
+  const gateSummary = blockedFeature === "session"
+    ? "Лимит на сессию сегодня уже исчерпан, но карта слабых мест уже собрана и её можно продолжить в Pro без пауз."
+    : blockedFeature === "miniVariant"
+      ? "Лимит на мини-вариант сегодня уже исчерпан, а значит дальше важнее не прерывать проверку темпа и устойчивости."
+      : null;
 
   const handleSubjectChange = (subject: "russian" | "math" | "social") => {
     const nextProfile = updateStudentSubject(subject);
@@ -150,7 +180,7 @@ export default function HomePage() {
               {subjectLabel}
             </span>
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isPro ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100/90 text-indigo-700"}`}>
-              {isPro ? "Pro активирован" : "Personal plan"}
+              {isPro ? "Pro активирован" : "Free"}
             </span>
           </div>
         </div>
@@ -184,6 +214,30 @@ export default function HomePage() {
               <p className="text-xs text-indigo-100/72">Streak</p>
               <p className="mt-1 text-lg font-bold">{streakDays}</p>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-indigo-100/84">Статус доступа</p>
+              <span className="rounded-full bg-white/12 px-3 py-1 text-[11px] font-semibold text-white/90">
+                {isPro ? getProPlanLabel(proSubscription?.activePlan) : "Free сегодня"}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-sm text-indigo-100/88">
+              <div className="rounded-2xl bg-white/10 p-3">
+                <p>Сессия</p>
+                <p className="mt-1 font-semibold text-white">{isPro ? "без лимита" : `${sessionGate?.count ?? 0}/${sessionGate?.limit ?? 1} сегодня`}</p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-3">
+                <p>Мини-вариант</p>
+                <p className="mt-1 font-semibold text-white">{isPro ? "без лимита" : `${miniVariantGate?.count ?? 0}/${miniVariantGate?.limit ?? 1} сегодня`}</p>
+              </div>
+            </div>
+            {!isPro && (
+              <p className="mt-3 text-sm leading-6 text-indigo-100/82">
+                Free помогает войти в ритм, а Pro открывает безлимитную практику, roadmap и более глубокий прогресс к целевому баллу.
+              </p>
+            )}
           </div>
 
           <div className="mt-4 rounded-[1.5rem] border border-white/12 bg-white/10 p-4 backdrop-blur">
@@ -237,15 +291,12 @@ export default function HomePage() {
           </div>
 
           <p className="mt-4 text-xs font-medium text-indigo-100/70">Короткая сессия займёт всего несколько минут и подтянет слабые места.</p>
-          <Link
-            href="/session"
-            className="primary-cta mt-5"
-          >
+          <Link href="/session" className="primary-cta mt-5">
             <span className="block leading-none text-white">Начать тренировку</span>
           </Link>
         </section>
 
-        {isPro && (
+        {isPro ? (
           <section className="rounded-[1.8rem] border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(220,252,231,0.9))] p-5 shadow-[0_18px_45px_rgba(16,185,129,0.08)]">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium text-slate-500">Pro активирован</p>
@@ -254,8 +305,48 @@ export default function HomePage() {
               </span>
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-700">
-              Полный режим уже открыт. Можно спокойно идти по плану, смотреть прогресс и крутить мини-варианты без ограничений.
+              Полный режим уже открыт. Можно идти без пауз по сессиям, мини-вариантам, умному повтору ошибок и дорожной карте к цели.
             </p>
+          </section>
+        ) : (
+          <section className={`rounded-[1.8rem] border p-5 shadow-[0_18px_45px_rgba(99,102,241,0.08)] ${blockedFeature ? "border-indigo-200 bg-[linear-gradient(135deg,rgba(238,242,255,0.98),rgba(224,231,255,0.95))]" : "border-white/70 bg-white/78 backdrop-blur-xl"}`}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Free и Pro</p>
+                <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+                  {blockedFeature ? "Подготовка уже упёрлась в дневной лимит" : "Что уже открыто и что добавит Pro"}
+                </h2>
+              </div>
+              <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                {blockedFeature ? "Есть повод открыть Pro" : "Без давления"}
+              </span>
+            </div>
+
+            {gateSummary && <p className="mt-3 text-sm leading-6 text-slate-700">{gateSummary}</p>}
+            <p className="mt-3 text-sm leading-6 text-slate-600">{getWeaknessSummary(weakTopics, weakTaskTypes, repeatCount)}</p>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-2xl bg-slate-50/90 p-4">
+                <p className="font-semibold text-slate-900">Free сейчас</p>
+                <div className="mt-2 space-y-2 text-slate-600">
+                  <p>• 1 session в день</p>
+                  <p>• 1 mini-variant запуск в день</p>
+                  <p>• Базовый прогресс и стартовый фокус</p>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-indigo-50/90 p-4">
+                <p className="font-semibold text-slate-900">Pro открывает</p>
+                <div className="mt-2 space-y-2 text-slate-700">
+                  <p>• Безлимитные session и mini-variant</p>
+                  <p>• Умный повтор ошибок и слабых типов заданий</p>
+                  <p>• Roadmap и более ясное движение к {targetLabel}</p>
+                </div>
+              </div>
+            </div>
+
+            <Link href="/paywall" className="primary-cta mt-5">
+              <span className="block leading-none text-white">Посмотреть Pro</span>
+            </Link>
           </section>
         )}
 
@@ -314,7 +405,9 @@ export default function HomePage() {
         >
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-slate-500">Мини-вариант ЕГЭ</p>
-            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">8 заданий</span>
+            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+              {isPro ? "без лимита" : "1 запуск в день"}
+            </span>
           </div>
           <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">Проверить себя ближе к реальному формату</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -342,22 +435,13 @@ export default function HomePage() {
 
         <div className="bottom-nav">
           <div className="bottom-nav-grid">
-            <Link
-              href="/home"
-              className="bottom-nav-link bottom-nav-link-active whitespace-nowrap"
-            >
+            <Link href="/home" className="bottom-nav-link bottom-nav-link-active whitespace-nowrap">
               <span className="block leading-none">Главная</span>
             </Link>
-            <Link
-              href="/progress"
-              className="bottom-nav-link whitespace-nowrap"
-            >
+            <Link href="/progress" className="bottom-nav-link whitespace-nowrap">
               <span className="block leading-none">Прогресс</span>
             </Link>
-            <Link
-              href="/profile"
-              className="bottom-nav-link whitespace-nowrap"
-            >
+            <Link href="/profile" className="bottom-nav-link whitespace-nowrap">
               <span className="block leading-none">Профиль</span>
             </Link>
           </div>

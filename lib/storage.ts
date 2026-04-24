@@ -270,7 +270,16 @@ function getNormalizedFreeGateEntry(feature: FreeGateFeatureKey, today = getLoca
   };
 }
 
-function buildFreeGateStatus(feature: FreeGateFeatureKey): FreeGateStatus {
+function persistFreeGateEntry(feature: FreeGateFeatureKey, nextEntry: FreeGateFeatureState) {
+  const { state } = getNormalizedFreeGateEntry(feature, nextEntry.date ?? getLocalDateString(new Date()));
+
+  saveFreeGateState({
+    ...state,
+    [feature]: nextEntry,
+  });
+}
+
+export function getFreeGateStatus(feature: FreeGateFeatureKey): FreeGateStatus {
   const { today, entry } = getNormalizedFreeGateEntry(feature);
   const limit = FREE_DAILY_LIMITS[feature];
   const isPro = Boolean(getProSubscription().isPro);
@@ -287,27 +296,10 @@ function buildFreeGateStatus(feature: FreeGateFeatureKey): FreeGateStatus {
   };
 }
 
-function persistFreeGateEntry(feature: FreeGateFeatureKey, nextEntry: FreeGateFeatureState) {
-  const { state } = getNormalizedFreeGateEntry(feature, nextEntry.date ?? getLocalDateString(new Date()));
-
-  saveFreeGateState({
-    ...state,
-    [feature]: nextEntry,
-  });
-}
-
-export function getFreeGateStatus(feature: FreeGateFeatureKey) {
-  return buildFreeGateStatus(feature);
-}
-
 export function consumeFreeGateAccess(feature: FreeGateFeatureKey) {
-  const status = buildFreeGateStatus(feature);
+  const status = getFreeGateStatus(feature);
 
-  if (status.isPro) {
-    return status;
-  }
-
-  if (status.inProgress) {
+  if (status.isPro || status.inProgress) {
     return status;
   }
 
@@ -332,11 +324,11 @@ export function consumeFreeGateAccess(feature: FreeGateFeatureKey) {
     inProgress: true,
   });
 
-  return buildFreeGateStatus(feature);
+  return getFreeGateStatus(feature);
 }
 
 export function releaseFreeGateAccess(feature: FreeGateFeatureKey) {
-  const status = buildFreeGateStatus(feature);
+  const status = getFreeGateStatus(feature);
 
   if (status.isPro) {
     return status;
@@ -349,7 +341,7 @@ export function releaseFreeGateAccess(feature: FreeGateFeatureKey) {
     inProgress: false,
   });
 
-  return buildFreeGateStatus(feature);
+  return getFreeGateStatus(feature);
 }
 
 export function normalizeSubjectKey(subject?: string | null): SubjectKey {
