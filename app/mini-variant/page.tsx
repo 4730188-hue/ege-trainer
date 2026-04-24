@@ -141,7 +141,7 @@ export default function MiniVariantPage() {
 
           <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight">Мини-вариант ЕГЭ</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Короткий вариант на 8 вопросов, чтобы проверить темп и собранность по предмету.
+            Вариант на 12 вопросов, чтобы проверить темп, выносливость и собранность по предмету.
           </p>
         </div>
 

@@ -35,7 +35,7 @@ export default function MiniVariantResultPage() {
 
   const subjectLabel = getSubjectLabel(result?.subject);
   const correctAnswers = result?.correctAnswers ?? 0;
-  const totalQuestions = result?.totalQuestions ?? 8;
+  const totalQuestions = result?.totalQuestions ?? 12;
   const variantNumber = result?.variantNumber ?? 1;
   const comment = getComment(correctAnswers, totalQuestions);
 

@@ -40,7 +40,7 @@ export default function SessionPage() {
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
     const prioritizedIncorrectIds = getPrioritizedIncorrectQuestionIds(nextSubject);
     const candidateQuestions = buildSessionQuestions(nextSubject, {
-      count: 10,
+      count: 9,
       seenIds,
       incorrectIds: prioritizedIncorrectIds,
     });
@@ -52,7 +52,7 @@ export default function SessionPage() {
         const rightRank = rightPriority === -1 ? 999 : rightPriority;
         return leftRank - rightRank;
       })
-      .slice(0, 5);
+      .slice(0, 9);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
@@ -151,7 +151,7 @@ export default function SessionPage() {
                 Сессия на сегодня
               </h1>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                5 заданий по предмету. Если в истории есть ошибки, сначала поднимаем более устойчиво проблемные вопросы и типы заданий.
+                9 заданий по предмету. Если в истории есть ошибки, сначала поднимаем более устойчиво проблемные вопросы и типы заданий.
               </p>
               {repeatFocusLabel && (
                 <p className="mt-2 text-sm font-medium text-amber-700">Фокус повтора: {repeatFocusLabel}</p>
