@@ -399,26 +399,80 @@ export default function HomePage() {
           </div>
         </section>
 
-        <Link
-          href="/mini-variant"
-          className="block rounded-[1.85rem] border border-indigo-200/80 bg-[linear-gradient(135deg,rgba(238,242,255,0.96),rgba(224,231,255,0.92))] p-5 shadow-[0_18px_45px_rgba(99,102,241,0.12)] transition hover:translate-y-[-1px]"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-500">Мини-вариант ЕГЭ</p>
-            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-              {isPro ? "без лимита" : "1 запуск в день"}
-            </span>
+        <section className="rounded-[1.8rem] border border-white/70 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] backdrop-blur-xl">
+          <div className="mb-4">
+            <p className="text-sm font-medium text-slate-500">Режим тренировки</p>
+            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Как хочешь заниматься сегодня?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Выбери формат: приложение поведёт по слабым местам, даст точечную тренировку по типу задания или проверит тебя мини-вариантом.
+            </p>
           </div>
-          <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-950">Проверить себя ближе к реальному формату</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Короткий вариант по предмету, чтобы увидеть, как держится концентрация и темп на связке заданий.
-          </p>
-          <p className="mt-3 text-sm font-medium text-indigo-700">
-            {lastMiniResult
-              ? `Последний результат: ${lastMiniResult.correctAnswers ?? 0}/${lastMiniResult.totalQuestions ?? 8}. Завершено: ${completedMiniVariants}.`
-              : "Пока ещё не запускал. Доступно 3 мини-варианта на предмет."}
-          </p>
-        </Link>
+
+          <div className="space-y-3">
+            <Link
+              href="/session"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.localStorage.removeItem("ege-trainer:selected-task-type");
+                }
+              }}
+              className="block rounded-[1.65rem] border border-indigo-200 bg-[linear-gradient(135deg,#4f46e5,#7c3aed,#0ea5e9)] p-5 text-white shadow-[0_22px_55px_rgba(79,70,229,0.24)]"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-white/72">Слабые места</p>
+                  <h3 className="mt-1 text-xl font-black">Ещё тренировка</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/84">
+                    {focusTaskType ? `Сегодня лучший фокус — ${focusTaskType.toLowerCase()}.` : "Идём по тому, что сейчас сильнее всего мешает росту балла."}
+                  </p>
+                </div>
+                <span className="rounded-full bg-white/16 px-3 py-1 text-sm font-bold">9 задач</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/task-training"
+              className="block rounded-[1.65rem] border border-slate-200 bg-slate-50/90 p-5 transition hover:bg-white"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Тип задания</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-950">Точечно прокачать навык</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Пунктуация, уравнения, экономика и другие типы — выбирай конкретный навык и тренируй его отдельно.
+                  </p>
+                </div>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-semibold text-slate-700">Выбрать</span>
+              </div>
+            </Link>
+
+            <Link
+              href="/mini-variant"
+              className="block rounded-[1.65rem] border border-indigo-200/80 bg-[linear-gradient(135deg,rgba(238,242,255,0.98),rgba(224,231,255,0.94))] p-5 shadow-[0_18px_45px_rgba(99,102,241,0.12)] transition hover:translate-y-[-1px]"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-indigo-500">Мини-вариант ЕГЭ</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-950">Проверить устойчивость и формат</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    12 задач подряд: проверка темпа, концентрации и готовности к более длинной работе.
+                  </p>
+                </div>
+                <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">12 задач</span>
+              </div>
+            </Link>
+          </div>
+
+          {isPro ? (
+            <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-emerald-200">
+              Pro: тренировки, мини-варианты и повтор ошибок доступны без дневных лимитов.
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 ring-1 ring-amber-200">
+              Free даёт попробовать формат. Pro открывает систему: безлимитную практику, повтор ошибок и полный маршрут.
+            </div>
+          )}
+        </section>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-[1.55rem] border border-white/70 bg-white/78 p-4 shadow-[0_14px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">

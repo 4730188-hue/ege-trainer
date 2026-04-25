@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { buildSessionQuestions, type BankQuestion } from "@/lib/questionBank";
+import { buildSessionQuestions, getQuestionsBySubject, type BankQuestion } from "@/lib/questionBank";
 import {
   addSeenSessionQuestionIds,
   clearQuestionIncorrect,
@@ -40,19 +40,38 @@ export default function SessionPage() {
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
     const prioritizedIncorrectIds = getPrioritizedIncorrectQuestionIds(nextSubject);
     const candidateQuestions = buildSessionQuestions(nextSubject, {
-      count: 9,
+      count: 18,
       seenIds,
       incorrectIds: prioritizedIncorrectIds,
     });
-    const nextQuestions = [...candidateQuestions]
-      .sort((left, right) => {
-        const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
-        const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
-        const leftRank = leftPriority === -1 ? 999 : leftPriority;
-        const rightRank = rightPriority === -1 ? 999 : rightPriority;
-        return leftRank - rightRank;
-      })
-      .slice(0, 9);
+
+    const selectedTaskType =
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("ege-trainer:selected-task-type")
+        : null;
+
+    const sortedQuestions = [...candidateQuestions].sort((left, right) => {
+      const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
+      const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
+      const leftRank = leftPriority === -1 ? 999 : leftPriority;
+      const rightRank = rightPriority === -1 ? 999 : rightPriority;
+      return leftRank - rightRank;
+    });
+
+    const taskTypeQuestions = selectedTaskType
+      ? getQuestionsBySubject(nextSubject, "session")
+          .filter((question) => question.taskType === selectedTaskType)
+          .sort((left, right) => {
+            const leftSeen = seenIds.includes(left.id) ? 1 : 0;
+            const rightSeen = seenIds.includes(right.id) ? 1 : 0;
+            return leftSeen - rightSeen;
+          })
+      : [];
+
+    const nextQuestions = [
+      ...taskTypeQuestions,
+      ...sortedQuestions.filter((question) => !taskTypeQuestions.some((item) => item.id === question.id)),
+    ].slice(0, 9);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);

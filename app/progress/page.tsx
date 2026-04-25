@@ -165,6 +165,58 @@ export default function ProgressPage() {
           </p>
         </div>
 
+        <section className="rounded-3xl border border-indigo-100 bg-white p-5 shadow-sm shadow-slate-200/40">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Следующее действие</p>
+              <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Не просто смотри прогресс — сразу тренируй</h2>
+            </div>
+            <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+              {isPro ? "без лимитов" : "Free лимиты"}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            <Link
+              href="/session"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.localStorage.removeItem("ege-trainer:selected-task-type");
+                }
+              }}
+              className="primary-cta"
+            >
+              <span className="block leading-none text-white">Ещё тренировка</span>
+            </Link>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/task-training"
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-semibold text-slate-900 transition hover:bg-white"
+              >
+                Тип задания
+              </Link>
+              <Link
+                href="/mini-variant"
+                className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-center text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+              >
+                Мини-вариант
+              </Link>
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {isPro
+              ? "Pro открыт: можно тренироваться и проходить мини-варианты без дневных ограничений."
+              : "В Free есть дневные лимиты. Pro открывает безлимитную практику, повтор ошибок и полный маршрут."}
+          </p>
+
+          {repeatCount > 0 && (
+            <p className="mt-2 text-sm font-medium text-amber-700">
+              В очереди на повтор: {repeatCount}. Лучше разобрать их до следующего мини-варианта.
+            </p>
+          )}
+        </section>
+
         {isPro ? (
           <div className="rounded-3xl border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(236,253,245,0.96),rgba(220,252,231,0.9))] p-5 shadow-sm shadow-emerald-100/60">
             <div className="flex items-center justify-between gap-3">
