@@ -1,21 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { buildSessionQuestions, getQuestionsBySubject, type BankQuestion } from "@/lib/questionBank";
+import { useEffect, useMemo, useState } from "react";
+import { buildSessionQuestions, getTaskTypeGuide, type BankQuestion } from "@/lib/questionBank";
 import {
   addSeenSessionQuestionIds,
   clearQuestionIncorrect,
+  clearSelectedTaskType,
+  consumeFreeGateAccess,
+  getDueReviewEntries,
+  getFreeGateStatus,
   getIncorrectQuestionCount,
   getIncorrectQuestionIds,
   getPrioritizedIncorrectQuestionIds,
   getRepeatInsight,
+  getSelectedTaskType,
   getStudentProfile,
   getSubjectLabel,
   getSeenSessionQuestionIds,
   incrementSessionsCompleted,
   markQuestionIncorrect,
   normalizeSubjectKey,
+  type FreeGateStatus,
   type SessionProgress,
 } from "@/lib/storage";
 
@@ -28,55 +34,46 @@ export default function SessionPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [showLesson, setShowLesson] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
   const [sessionProgress, setSessionProgress] = useState<SessionProgress | null>(null);
   const [repeatCount, setRepeatCount] = useState(0);
   const [repeatFocusLabel, setRepeatFocusLabel] = useState<string | null>(null);
+  const [selectedModeLabel, setSelectedModeLabel] = useState<string | null>(null);
+  const [gateStatus, setGateStatus] = useState<FreeGateStatus | null>(null);
 
   useEffect(() => {
+    const gate = consumeFreeGateAccess("session");
+    setGateStatus(gate);
+
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
+    const selectedTask = getSelectedTaskType(nextSubject);
     const seenIds = getSeenSessionQuestionIds(nextSubject);
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
-    const prioritizedIncorrectIds = getPrioritizedIncorrectQuestionIds(nextSubject);
+    const dueReviewIds = getDueReviewEntries(nextSubject).map((entry) => entry.questionId);
+    const prioritizedIncorrectIds = Array.from(new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject)]));
     const candidateQuestions = buildSessionQuestions(nextSubject, {
-      count: 18,
+      count: 9,
       seenIds,
       incorrectIds: prioritizedIncorrectIds,
+      taskType: selectedTask?.taskType,
     });
-
-    const selectedTaskType =
-      typeof window !== "undefined"
-        ? window.localStorage.getItem("ege-trainer:selected-task-type")
-        : null;
-
-    const sortedQuestions = [...candidateQuestions].sort((left, right) => {
-      const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
-      const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
-      const leftRank = leftPriority === -1 ? 999 : leftPriority;
-      const rightRank = rightPriority === -1 ? 999 : rightPriority;
-      return leftRank - rightRank;
-    });
-
-    const taskTypeQuestions = selectedTaskType
-      ? getQuestionsBySubject(nextSubject, "session")
-          .filter((question) => question.taskType === selectedTaskType)
-          .sort((left, right) => {
-            const leftSeen = seenIds.includes(left.id) ? 1 : 0;
-            const rightSeen = seenIds.includes(right.id) ? 1 : 0;
-            return leftSeen - rightSeen;
-          })
-      : [];
-
-    const nextQuestions = [
-      ...taskTypeQuestions,
-      ...sortedQuestions.filter((question) => !taskTypeQuestions.some((item) => item.id === question.id)),
-    ].slice(0, 9);
+    const nextQuestions = [...candidateQuestions]
+      .sort((left, right) => {
+        const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
+        const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
+        const leftRank = leftPriority === -1 ? 999 : leftPriority;
+        const rightRank = rightPriority === -1 ? 999 : rightPriority;
+        return leftRank - rightRank;
+      })
+      .slice(0, 9);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
     setRepeatCount(incorrectIds.length);
     setRepeatFocusLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
+    setSelectedModeLabel(selectedTask?.label ?? null);
 
     if (nextQuestions.length > 0) {
       addSeenSessionQuestionIds(
@@ -91,6 +88,10 @@ export default function SessionPage() {
   const isLastQuestion = currentIndex === questions.length - 1;
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const subjectLabel = getSubjectLabel(subject);
+  const guide = useMemo(() => {
+    const selectedTask = getSelectedTaskType(subject);
+    return getTaskTypeGuide(selectedTask?.taskType ?? currentQuestion?.taskType ?? null);
+  }, [subject, currentQuestion?.taskType]);
   const feedbackLabel = isCorrect
     ? positiveFeedback[currentIndex % positiveFeedback.length]
     : gentleFeedback[currentIndex % gentleFeedback.length];
@@ -123,6 +124,26 @@ export default function SessionPage() {
     setShowResult(false);
   }
 
+  if (gateStatus?.isBlocked && !gateStatus.inProgress && !gateStatus.isPro) {
+    return (
+      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
+          <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-indigo-900 to-violet-700 p-6 text-white">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/65">Free-лимит</p>
+            <h1 className="mt-3 text-3xl font-black leading-tight">Сегодняшняя бесплатная тренировка уже использована</h1>
+            <p className="mt-3 text-sm leading-6 text-white/80">
+              Pro открывает безлимитные сессии, интервальный повтор ошибок, тренировку по типам заданий и мини-варианты без паузы.
+            </p>
+          </section>
+          <Link href="/paywall" className="primary-cta">
+            <span className="block leading-none text-white">Открыть Pro и продолжить</span>
+          </Link>
+          <Link href="/home" className="secondary-cta">На главную</Link>
+        </div>
+      </main>
+    );
+  }
+
   if (!currentQuestion && !isFinished) {
     return (
       <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
@@ -138,11 +159,51 @@ export default function SessionPage() {
     );
   }
 
+  if (showLesson && !isFinished) {
+    return (
+      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
+          <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
+            <span>Мини-урок перед практикой</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{subjectLabel}</span>
+          </div>
+
+          <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-indigo-900 to-violet-700 p-6 text-white shadow-[0_24px_60px_rgba(30,41,59,0.22)]">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/65">
+              {selectedModeLabel ? "Тренировка по типу задания" : "Тренировка по слабым местам"}
+            </p>
+            <h1 className="mt-3 text-3xl font-black leading-tight">{guide?.title ?? repeatFocusLabel ?? "Рабочая сессия"}</h1>
+            <p className="mt-3 text-sm leading-6 text-white/82">
+              Перед задачами быстро вспоминаем правило. Так тренировка работает не как тест, а как обучение.
+            </p>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Правило</p>
+            <p className="mt-2 text-base leading-7 text-slate-800">{guide?.rule ?? "Сначала внимательно определи тип задания, затем выбери стратегию решения."}</p>
+            <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-900">Пример</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{guide?.example ?? "Смотри не только на ответ, но и на ход рассуждения."}</p>
+            </div>
+            <div className="mt-3 rounded-2xl bg-amber-50 p-4 text-amber-800">
+              <p className="text-sm font-semibold">Типичная ловушка</p>
+              <p className="mt-2 text-sm leading-6">{guide?.trap ?? "Не отвечай на автомате: проверь условие и правило."}</p>
+            </div>
+          </section>
+
+          <button type="button" onClick={() => setShowLesson(false)} className="primary-cta">
+            <span className="block leading-none text-white">Начать 9 заданий</span>
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
-          <span>Учебная сессия</span>
+          <span>{selectedModeLabel ? `Навык: ${selectedModeLabel}` : "Учебная сессия"}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
             {isFinished ? "Готово" : `${currentIndex + 1}/${questions.length}`}
           </span>
@@ -157,78 +218,72 @@ export default function SessionPage() {
               </div>
 
               <div className="mt-3 h-2 w-full rounded-full bg-slate-100">
-                <div
-                  className="h-2 rounded-full bg-slate-900 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-2 rounded-full bg-slate-900 transition-all" style={{ width: `${progress}%` }} />
               </div>
-              <p className="mt-2 text-sm font-medium text-slate-500">
-                Задание {currentIndex + 1} из {questions.length}
-              </p>
-
-              <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight">
-                Сессия на сегодня
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                9 заданий по предмету. Если в истории есть ошибки, сначала поднимаем более устойчиво проблемные вопросы и типы заданий.
-              </p>
-              {repeatFocusLabel && (
-                <p className="mt-2 text-sm font-medium text-amber-700">Фокус повтора: {repeatFocusLabel}</p>
-              )}
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
+            <div className="flex flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-3">
-                <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
                   {currentQuestion.topic}
-                </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
                   {currentQuestion.difficulty}
                 </span>
               </div>
 
-              <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
-                <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900">
-                  {currentQuestion.prompt}
-                </h2>
+              <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight">{currentQuestion.prompt}</h1>
 
-                <div className="mt-4 space-y-2.5">
-                  {currentQuestion.options.map((option) => (
+              <div className="mt-6 space-y-3">
+                {currentQuestion.options.map((option) => {
+                  const isSelected = selectedAnswer === option;
+                  const shouldHighlightCorrect = showResult && option === currentQuestion.correctAnswer;
+                  const shouldHighlightWrong = showResult && isSelected && option !== currentQuestion.correctAnswer;
+
+                  return (
                     <button
                       key={option}
                       type="button"
+                      disabled={showResult}
                       onClick={() => setSelectedAnswer(option)}
-                      className={`w-full rounded-2xl border px-4 py-3.5 text-left text-sm font-medium leading-6 transition ${
-                        selectedAnswer === option
-                          ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
-                          : "border-slate-200 bg-slate-50 text-slate-900"
+                      className={`w-full rounded-3xl border px-4 py-4 text-left text-base transition ${
+                        shouldHighlightCorrect
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : shouldHighlightWrong
+                            ? "border-rose-200 bg-rose-50 text-rose-800"
+                            : isSelected
+                              ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
+                              : "border-slate-200 bg-slate-50 text-slate-900"
                       }`}
                     >
                       {option}
                     </button>
-                  ))}
-                </div>
-
-                {showResult && (
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-slate-900">
-                    <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
-                    <p className="mt-1.5 text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
-                    <p className="mt-1.5 text-sm font-medium text-slate-900">
-                      Правильный ответ: {currentQuestion.correctAnswer}
-                    </p>
-                    <p className="mt-1.5 text-sm leading-5 text-slate-600">{currentQuestion.explanation}</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
 
-              <div className="sticky bottom-0 mt-3 -mx-4 border-t border-slate-100 bg-white/95 px-4 pt-3 pb-1 backdrop-blur">
+              {showResult && (
+                <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-base font-semibold text-slate-600">{feedbackLabel}</p>
+                  <p className="mt-2 text-base font-semibold text-slate-900">
+                    {isCorrect ? "Верно" : "Правильный ответ: " + currentQuestion.correctAnswer}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
+                </div>
+              )}
+
+              <div className="sticky bottom-4 mt-auto pt-5">
                 <button
                   type="button"
                   onClick={handlePrimaryAction}
-                  disabled={!showResult && !selectedAnswer}
-                  className={`primary-cta ${!showResult && !selectedAnswer ? "is-disabled" : ""}`}
+                  disabled={!selectedAnswer && !showResult}
+                  className={`w-full rounded-full px-5 py-4 text-base font-semibold shadow-sm transition ${
+                    selectedAnswer || showResult
+                      ? "bg-gradient-to-r from-indigo-700 via-violet-600 to-purple-600 text-white shadow-indigo-200/50"
+                      : "bg-slate-200 text-slate-400"
+                  }`}
                 >
-                  <span className={`block leading-none ${!showResult && !selectedAnswer ? "text-slate-400" : "text-white"}`}>
+                  <span className="block leading-none text-white">
                     {showResult ? (isLastQuestion ? "Завершить сессию" : "Следующее задание") : "Проверить ответ"}
                   </span>
                 </button>
@@ -237,64 +292,32 @@ export default function SessionPage() {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-              Сессия завершена
-            </div>
-            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-slate-900">
-              Сессия завершена
-            </h1>
-            <p className="mt-3 text-base leading-7 text-slate-600">
-              Ты прошёл тренировку по предмету {subjectLabel.toLowerCase()}.
+            <p className="text-sm font-medium text-slate-500">Сессия завершена</p>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">Отлично, тренировка засчитана</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Теперь ошибки вернутся по расписанию: часть можно повторить сегодня, часть — позже, чтобы знание закрепилось.
             </p>
 
-            <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-              Хороший темп. Можно вернуться на главную или сразу посмотреть прогресс.
-              {sessionProgress && (
-                <span className="mt-2 block">
-                  Всего сессий: {sessionProgress.sessionsCompleted ?? 0}. Текущий streak: {sessionProgress.streakDays ?? 0}. На повторе сейчас: {repeatCount} вопросов.
-                </span>
-              )}
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-3xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Сессий всего</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionProgress?.sessionsCompleted ?? 1}</p>
+              </div>
+              <div className="rounded-3xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">На повтор</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{repeatCount}</p>
+              </div>
             </div>
 
-            <div className="mt-6 space-y-3">
-              <Link
-                href="/home"
-                className="primary-cta"
-              >
-                <span className="block leading-none text-white">Вернуться на главную</span>
+            <div className="mt-5 space-y-3">
+              <Link href="/session" onClick={() => clearSelectedTaskType()} className="primary-cta">
+                <span className="block leading-none text-white">Ещё тренировка</span>
               </Link>
-              <Link
-                href="/progress"
-                className="block rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center text-base font-semibold text-slate-900 transition hover:bg-slate-100"
-              >
-                Посмотреть прогресс
-              </Link>
+              <Link href="/mini-variant" className="secondary-cta">Мини-вариант ЕГЭ</Link>
+              <Link href="/progress" className="secondary-cta">Посмотреть прогресс</Link>
             </div>
           </div>
         )}
-
-        <div className="bottom-nav">
-          <div className="bottom-nav-grid">
-            <Link
-              href="/home"
-              className="bottom-nav-link whitespace-nowrap"
-            >
-              <span className="block leading-none">Главная</span>
-            </Link>
-            <Link
-              href="/progress"
-              className="bottom-nav-link whitespace-nowrap"
-            >
-              <span className="block leading-none">Прогресс</span>
-            </Link>
-            <Link
-              href="/profile"
-              className="bottom-nav-link whitespace-nowrap"
-            >
-              <span className="block leading-none">Профиль</span>
-            </Link>
-          </div>
-        </div>
       </div>
     </main>
   );

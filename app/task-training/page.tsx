@@ -3,176 +3,134 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  getQuestionsBySubject,
-  type BankQuestion,
-  type SubjectKey,
-  type TaskType,
-} from "@/lib/questionBank";
-import {
+  getDueReviewEntries,
   getRepeatInsight,
+  getSelectedTaskType,
   getStudentProfile,
   getSubjectLabel,
-  getWeakTaskTypes,
+  getTaskTypeMastery,
   normalizeSubjectKey,
-  type WeakTaskTypeEntry,
+  setSelectedTaskType,
 } from "@/lib/storage";
+import { getTaskTypeGuide, type SubjectKey, type TaskType } from "@/lib/questionBank";
 
-function formatTaskType(value: TaskType | string) {
-  return String(value).replaceAll("_", " ");
-}
-
-function groupByTaskType(questions: BankQuestion[]) {
-  return questions.reduce<Record<string, BankQuestion[]>>((acc, question) => {
-    const key = question.taskType;
-    acc[key] = acc[key] ?? [];
-    acc[key].push(question);
-    return acc;
-  }, {});
-}
-
-function getTaskTypeHint(taskType: string) {
-  if (taskType.includes("пунктуац")) return "Запятые, двоеточие, тире и конструкции, где чаще всего теряются баллы.";
-  if (taskType.includes("лекс")) return "Смысл слов, паронимы, речевые ошибки и точность формулировки.";
-  if (taskType.includes("текст")) return "Понимание смысла, связи предложений и авторской позиции.";
-  if (taskType.includes("уравн")) return "Уравнения и неравенства: короткая практика на технику решения.";
-  if (taskType.includes("функц")) return "Формулы, графики, значения функций и базовая аналитика.";
-  if (taskType.includes("геометр")) return "Планиметрия и стереометрия: формулы, фигуры и внимательность к условию.";
-  if (taskType.includes("вероят")) return "Вероятность и подсчёт исходов без лишней сложности.";
-  if (taskType.includes("эконом")) return "Рынок, деньги, налоги, спрос, предложение и семейный бюджет.";
-  if (taskType.includes("прав")) return "Право, ответственность, органы власти и жизненные ситуации.";
-  if (taskType.includes("полит")) return "Государство, выборы, партии и ветви власти.";
-  if (taskType.includes("социолог")) return "Социальные роли, группы, мобильность и конфликты.";
-  return "Точечная тренировка по одному типу заданий, чтобы убрать конкретный пробел.";
-}
+const subjectTaskTypes: Record<SubjectKey, TaskType[]> = {
+  russian: ["пунктуация", "орфография", "грамматика", "лексика", "текст", "орфоэпия"],
+  math: ["уравнения", "функции", "геометрия", "вероятность", "текстовая_задача", "вычисления", "прогрессия", "производная"],
+  social: ["экономика", "право", "политика", "социология", "человек_и_общество", "духовная_сфера"],
+};
 
 export default function TaskTrainingPage() {
   const [subject, setSubject] = useState<SubjectKey>("russian");
-  const [weakTypes, setWeakTypes] = useState<WeakTaskTypeEntry[]>([]);
-  const [priorityLabel, setPriorityLabel] = useState<string | null>(null);
+  const [selected, setSelected] = useState<TaskType | null>(null);
+  const [mastery, setMastery] = useState<ReturnType<typeof getTaskTypeMastery>>([]);
+  const [repeatCount, setRepeatCount] = useState(0);
+  const [dueReviews, setDueReviews] = useState(0);
 
   useEffect(() => {
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     setSubject(nextSubject);
-    setWeakTypes(getWeakTaskTypes(nextSubject));
-    setPriorityLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
+    setSelected(getSelectedTaskType(nextSubject)?.taskType ?? null);
+    setMastery(getTaskTypeMastery(nextSubject));
+    setRepeatCount(getRepeatInsight(nextSubject).repeatCount);
+    setDueReviews(getDueReviewEntries(nextSubject).length);
   }, []);
 
-  const questions = useMemo(() => getQuestionsBySubject(subject, "session"), [subject]);
-  const grouped = useMemo(() => groupByTaskType(questions), [questions]);
+  const subjectLabel = getSubjectLabel(subject);
+  const items = useMemo(() => {
+    const byTask = new Map(mastery.map((item) => [item.taskType, item]));
+    return subjectTaskTypes[subject].map((taskType) => {
+      const guide = getTaskTypeGuide(taskType);
+      const stats = byTask.get(taskType);
+      return {
+        taskType,
+        title: guide?.title ?? taskType.replaceAll("_", " "),
+        rule: guide?.rule ?? "Сначала разберём короткое правило, затем закрепим его задачами.",
+        trap: guide?.trap ?? "Главная ошибка — решать наугад без проверки правила.",
+        score: stats?.score ?? 70,
+        errors: stats?.errors ?? 0,
+      };
+    });
+  }, [subject, mastery]);
 
-  const taskTypes = useMemo(
-    () =>
-      Object.entries(grouped)
-        .map(([taskType, items]) => ({
-          taskType,
-          label: formatTaskType(taskType),
-          count: items.length,
-          isWeak: weakTypes.some((entry) => entry.taskType === taskType),
-        }))
-        .sort((left, right) => {
-          if (left.isWeak !== right.isWeak) return left.isWeak ? -1 : 1;
-          return right.count - left.count;
-        }),
-    [grouped, weakTypes],
-  );
-
-  function startTaskTraining(taskType: string) {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("ege-trainer:selected-task-type", taskType);
-      window.location.href = "/session";
-    }
-  }
+  const chooseTaskType = (taskType: TaskType) => {
+    const guide = getTaskTypeGuide(taskType);
+    setSelected(taskType);
+    setSelectedTaskType(subject, taskType, guide?.title ?? taskType.replaceAll("_", " "));
+  };
 
   return (
-    <main className="min-h-[100dvh] px-4 py-5 text-slate-900">
-      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-md flex-col gap-4">
-        <div className="flex items-center justify-between rounded-full border border-white/65 bg-white/60 px-4 py-2 text-sm text-slate-500 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur-xl">
-          <span>Тип задания</span>
-          <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-            {getSubjectLabel(subject)}
-          </span>
+    <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 pb-24">
+        <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
+          <span>Тренировка по типу задания</span>
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{subjectLabel}</span>
         </div>
 
-        <section className="rounded-[2rem] border border-indigo-100/80 bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.24),transparent_34%),linear-gradient(135deg,#1e1b4b,#312e81,#4338ca)] p-5 text-white shadow-[0_30px_80px_rgba(49,46,129,0.26)]">
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-indigo-100/75">Точечная прокачка</p>
-          <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight">
-            Выбери навык и тренируй его отдельно
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-indigo-100/85">
-            Это режим для роста: меньше хаоса, больше повторения конкретного типа заданий.
+        <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-indigo-900 to-violet-700 p-5 text-white shadow-[0_24px_60px_rgba(30,41,59,0.22)]">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/70">Точечный режим</p>
+          <h1 className="mt-3 text-3xl font-black leading-tight">Выбери навык, который хочешь прокачать</h1>
+          <p className="mt-3 text-sm leading-6 text-white/82">
+            Каждый режим начинается с короткого мини-урока: правило, пример, типичная ловушка. Потом — 9 заданий именно по выбранному типу.
           </p>
-          {priorityLabel && (
-            <div className="mt-4 rounded-2xl bg-white/12 px-4 py-3 text-sm font-medium text-white/90">
-              Рекомендуемый фокус сейчас: {priorityLabel}
+          <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-2xl bg-white/14 p-3">
+              <p className="text-white/70">На повтор</p>
+              <p className="mt-1 text-2xl font-black">{repeatCount}</p>
             </div>
-          )}
+            <div className="rounded-2xl bg-white/14 p-3">
+              <p className="text-white/70">Пора вернуть</p>
+              <p className="mt-1 text-2xl font-black">{dueReviews}</p>
+            </div>
+          </div>
         </section>
 
-        <section className="rounded-[1.8rem] border border-white/70 bg-white/82 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] backdrop-blur-xl">
-          <div className="mb-4">
-            <p className="text-sm font-medium text-slate-500">Доступные типы</p>
-            <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">
-              Что тренируем?
-            </h2>
-          </div>
-
-          <div className="space-y-3">
-            {taskTypes.map((item) => (
+        <section className="space-y-3">
+          {items.map((item) => {
+            const active = selected === item.taskType;
+            return (
               <button
                 key={item.taskType}
                 type="button"
-                onClick={() => startTaskTraining(item.taskType)}
-                className={`w-full rounded-[1.55rem] border p-4 text-left transition ${
-                  item.isWeak
-                    ? "border-amber-200 bg-amber-50/90 shadow-[0_14px_35px_rgba(245,158,11,0.12)]"
-                    : "border-slate-200 bg-slate-50/90 hover:bg-white"
+                onClick={() => chooseTaskType(item.taskType)}
+                className={`w-full rounded-[28px] border p-4 text-left transition ${
+                  active
+                    ? "border-indigo-300 bg-indigo-50 shadow-[0_16px_35px_rgba(79,70,229,0.12)]"
+                    : "border-slate-200 bg-white shadow-sm shadow-slate-200/50"
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-bold text-slate-950">{item.label}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {getTaskTypeHint(item.taskType)}
-                    </p>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Навык</p>
+                    <h2 className="mt-1 text-xl font-black text-slate-950">{item.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.rule}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
-                    item.isWeak ? "bg-amber-100 text-amber-700" : "bg-white text-slate-700 ring-1 ring-slate-200"
-                  }`}>
-                    {item.isWeak ? "фокус" : `${item.count} задач`}
+                  <span className={`rounded-full px-3 py-1 text-sm font-bold ${active ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700"}`}>
+                    {item.score}%
                   </span>
                 </div>
+                <p className="mt-3 rounded-2xl bg-white/70 px-3 py-2 text-sm leading-6 text-slate-500">
+                  Ловушка: {item.trap}
+                </p>
               </button>
-            ))}
-          </div>
-
-          {taskTypes.length === 0 && (
-            <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-              Пока нет задач для выбранного предмета. Вернись на главную и выбери другой предмет.
-            </div>
-          )}
+            );
+          })}
         </section>
 
-        <section className="rounded-[1.8rem] border border-indigo-100 bg-indigo-50/80 p-5 shadow-sm shadow-indigo-100/60">
-          <p className="text-sm font-semibold text-indigo-700">Как это помогает</p>
-          <p className="mt-2 text-sm leading-6 text-slate-700">
-            Обычная тренировка ведёт по слабым местам автоматически. Этот режим нужен, когда хочешь добить конкретный навык: например, пунктуацию, уравнения или право.
-          </p>
-        </section>
-
-        <nav className="bottom-nav mt-auto">
-          <div className="bottom-nav-grid">
-            <Link href="/home" className="bottom-nav-link whitespace-nowrap">
-              <span className="block leading-none">Главная</span>
-            </Link>
-            <Link href="/progress" className="bottom-nav-link whitespace-nowrap">
-              <span className="block leading-none">Прогресс</span>
-            </Link>
-            <Link href="/profile" className="bottom-nav-link whitespace-nowrap">
-              <span className="block leading-none">Профиль</span>
-            </Link>
-          </div>
-        </nav>
+        <div className="sticky bottom-4 z-20 rounded-[28px] border border-slate-200 bg-white/95 p-3 shadow-[0_18px_45px_rgba(15,23,42,0.16)] backdrop-blur">
+          <Link
+            href="/session"
+            className={`block rounded-[22px] px-4 py-4 text-center text-base font-bold ${
+              selected ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white" : "bg-slate-200 text-slate-500"
+            }`}
+          >
+            {selected ? "Начать тренировку по выбранному типу" : "Выбери тип задания"}
+          </Link>
+          <Link href="/home" className="mt-2 block rounded-[20px] px-4 py-3 text-center text-sm font-semibold text-slate-500">
+            Вернуться на главную
+          </Link>
+        </div>
       </div>
     </main>
   );

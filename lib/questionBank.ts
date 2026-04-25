@@ -42,6 +42,36 @@ export type BankQuestion = {
   explanation: string;
 };
 
+
+export type TaskTypeGuide = { taskType: TaskType; title: string; rule: string; example: string; trap: string; };
+
+export const TASK_TYPE_GUIDES: Partial<Record<TaskType, TaskTypeGuide>> = {
+  пунктуация: { taskType: "пунктуация", title: "Пунктуация", rule: "Найди грамматические основы и смысловые границы: обращение, вводное слово, части сложного предложения или обособление.", example: "Друзья, давайте начнём раньше. «Друзья» — обращение, поэтому нужна запятая.", trap: "Не ставь запятую только по паузе: в ЕГЭ работает правило." },
+  орфография: { taskType: "орфография", title: "Орфография", rule: "Определи орфограмму: корень, приставка, суффикс или окончание. Затем применяй правило.", example: "В корнях раст/ращ/рос перед СТ и Щ пишется А: растение.", trap: "Не выбирай букву на слух: сначала найди часть слова." },
+  грамматика: { taskType: "грамматика", title: "Грамматика", rule: "Проверь, кто выполняет действие, как согласуются слова и нет ли нарушения построения предложения.", example: "Когда я подъезжал к станции, у меня слетела шляпа — грамматически верно.", trap: "Деепричастный оборот должен относиться к тому же действующему лицу." },
+  лексика: { taskType: "лексика", title: "Лексика", rule: "Смотри на точное значение слова и устойчивость сочетания: паронимы и речевая избыточность часто выглядят похоже.", example: "Эффективный метод — результативный метод. Эффектный — производящий впечатление.", trap: "Красивое слово не всегда подходит по смыслу." },
+  текст: { taskType: "текст", title: "Работа с текстом", rule: "Ищи главную мысль, связь предложений и роль фрагмента в тексте.", example: "Если предложение раскрывает причину предыдущего, оно связано по смыслу, а не только повтором слов.", trap: "Не выбирай ответ по одному совпавшему слову." },
+  орфоэпия: { taskType: "орфоэпия", title: "Орфоэпия", rule: "Ударения лучше запоминать группами и регулярно возвращать в повтор.", example: "звонИт, жалюзИ, каталОг — нормы, которые нужно узнавать автоматически.", trap: "Бытовое произношение часто расходится с экзаменационной нормой." },
+  уравнения: { taskType: "уравнения", title: "Уравнения и неравенства", rule: "Упрости выражение, проверь область допустимых значений и только потом решай.", example: "В логарифмическом уравнении сначала проверь, что аргумент логарифма положительный.", trap: "Не забывай проверку корней после преобразований." },
+  функции: { taskType: "функции", title: "Функции", rule: "Связывай формулу, график и значение функции в точке.", example: "Для y = 2x + 3 при x = 4 получаем y = 11.", trap: "Не путай значение функции и значение аргумента." },
+  геометрия: { taskType: "геометрия", title: "Геометрия", rule: "Нарисуй схему, подпиши известные величины и выбери формулу под конкретную фигуру.", example: "Площадь треугольника: S = 1/2 · основание · высота.", trap: "Не подставляй сторону вместо высоты, если это разные отрезки." },
+  вероятность: { taskType: "вероятность", title: "Вероятность", rule: "Вероятность = число благоприятных исходов / число всех равновозможных исходов.", example: "На кубике вероятность выпадения 6 равна 1/6.", trap: "Проверяй, равновозможны ли исходы." },
+  текстовая_задача: { taskType: "текстовая_задача", title: "Текстовая задача", rule: "Переведи условие на формулу: скорость-время-расстояние, цена-количество-стоимость, проценты-доля.", example: "Если скорость 4 км/ч, а путь 12 км, время равно 12 / 4 = 3 часа.", trap: "Не начинай считать до того, как понял, что ищешь." },
+  вычисления: { taskType: "вычисления", title: "Практические вычисления", rule: "Сначала оцени порядок ответа, затем аккуратно выполняй действие.", example: "20% от 150 — это 0,2 · 150 = 30.", trap: "Проценты — это доли: 15% = 0,15." },
+  прогрессия: { taskType: "прогрессия", title: "Прогрессии", rule: "Арифметическая прогрессия имеет постоянную разность, геометрическая — постоянный множитель.", example: "2, 5, 8, 11 — арифметическая прогрессия с разностью 3.", trap: "Не путай номер члена и значение члена." },
+  производная: { taskType: "производная", title: "Производная", rule: "Производная показывает скорость изменения функции и помогает находить возрастание, убывание и экстремумы.", example: "Если f'(x) > 0 на промежутке, функция возрастает.", trap: "Знак производной — это не значение функции." },
+  экономика: { taskType: "экономика", title: "Экономика", rule: "Определи участников и отношения: производство, обмен, спрос, предложение, доходы, налоги.", example: "Рост цены при дефиците товара связан со спросом и предложением.", trap: "Не называй любое денежное действие налогом или прибылью." },
+  право: { taskType: "право", title: "Право", rule: "Определи отрасль права и участников правоотношения, затем выбирай норму.", example: "Договор купли-продажи между гражданами — гражданское право.", trap: "Не путай моральную оценку и юридическую ответственность." },
+  политика: { taskType: "политика", title: "Политика", rule: "Различай власть, государство, партии, выборы, формы правления и ветви власти.", example: "Парламент относится к законодательной ветви власти.", trap: "Партия и государственный орган — не одно и то же." },
+  социология: { taskType: "социология", title: "Социальные отношения", rule: "Определи группу, статус, роль, мобильность или конфликт по ситуации.", example: "Переход на руководящую должность — вертикальная социальная мобильность.", trap: "Статус — положение, роль — ожидаемое поведение." },
+  человек_и_общество: { taskType: "человек_и_общество", title: "Человек и общество", rule: "Различай деятельность, потребности, социализацию, общество и природу.", example: "Обучение нормам общества — социализация.", trap: "Не любое изменение человека является социализацией." },
+  духовная_сфера: { taskType: "духовная_сфера", title: "Духовная сфера", rule: "Различай науку, образование, мораль, искусство и религию по функциям.", example: "Наука производит объективные знания, искусство создаёт художественные образы.", trap: "Не путай личное мнение и научное знание." },
+};
+
+export function getTaskTypeGuide(taskType?: TaskType | null) {
+  return taskType ? TASK_TYPE_GUIDES[taskType] ?? null : null;
+}
+
 export type MiniVariant = {
   id: string;
   subject: SubjectKey;
@@ -336,25 +366,22 @@ export function getMiniVariantById(variantId: string) {
 
 export function buildSessionQuestions(
   subject: SubjectKey,
-  options: { count?: number; seenIds?: string[]; incorrectIds?: string[] } = {},
+  options: { count?: number; seenIds?: string[]; incorrectIds?: string[]; taskType?: TaskType | null } = {},
 ) {
   const count = options.count ?? 9;
   const seenIds = new Set(options.seenIds ?? []);
   const incorrectIds = new Set(options.incorrectIds ?? []);
   const allQuestions = shuffle(getQuestionsBySubject(subject, "session"));
+  const taskTypeQuestions = options.taskType
+    ? allQuestions.filter((question) => question.taskType === options.taskType)
+    : [];
+  const baseQuestions = options.taskType && taskTypeQuestions.length >= Math.min(4, count) ? taskTypeQuestions : allQuestions;
 
-  const unseenIncorrect = allQuestions.filter(
-    (question) => incorrectIds.has(question.id) && !seenIds.has(question.id),
-  );
-  const unseenRegular = allQuestions.filter(
-    (question) => !incorrectIds.has(question.id) && !seenIds.has(question.id),
-  );
-  const seenIncorrect = allQuestions.filter(
-    (question) => incorrectIds.has(question.id) && seenIds.has(question.id),
-  );
-  const seenRegular = allQuestions.filter(
-    (question) => !incorrectIds.has(question.id) && seenIds.has(question.id),
-  );
+  const unseenIncorrect = baseQuestions.filter((question) => incorrectIds.has(question.id) && !seenIds.has(question.id));
+  const unseenRegular = baseQuestions.filter((question) => !incorrectIds.has(question.id) && !seenIds.has(question.id));
+  const seenIncorrect = baseQuestions.filter((question) => incorrectIds.has(question.id) && seenIds.has(question.id));
+  const seenRegular = baseQuestions.filter((question) => !incorrectIds.has(question.id) && seenIds.has(question.id));
+  const fallback = allQuestions.filter((question) => !baseQuestions.some((item) => item.id === question.id));
 
   const picked: BankQuestion[] = [];
   const pickedIds = new Set<string>();
@@ -369,16 +396,15 @@ export function buildSessionQuestions(
   }
 
   if (incorrectIds.size > 0) {
-    takeFrom(unseenIncorrect, 1);
-    if (picked.length === 0) {
-      takeFrom(seenIncorrect, 1);
-    }
+    takeFrom(unseenIncorrect, Math.min(options.taskType ? 3 : 1, count));
+    if (picked.length === 0) takeFrom(seenIncorrect, 1);
   }
 
   takeFrom(unseenRegular, count);
   takeFrom(unseenIncorrect, count);
   takeFrom(seenRegular, count);
   takeFrom(seenIncorrect, count);
+  takeFrom(fallback, count);
 
   return picked.slice(0, count);
 }

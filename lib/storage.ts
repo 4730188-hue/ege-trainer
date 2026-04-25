@@ -88,6 +88,27 @@ export type FreeGateFeatureState = {
 
 export type FreeGateState = Partial<Record<FreeGateFeatureKey, FreeGateFeatureState>>;
 
+
+export type ReviewScheduleEntry = {
+  questionId: string;
+  subject: SubjectKey;
+  taskType?: TaskType;
+  mistakes: number;
+  intervalDays: number;
+  dueDate: string;
+  lastAnsweredAt: string;
+};
+
+export type ReviewScheduleState = Partial<Record<SubjectKey, Record<string, ReviewScheduleEntry>>>;
+
+export type ParentWeeklyReport = {
+  title: string;
+  summary: string;
+  wins: string[];
+  risks: string[];
+  nextWeek: string[];
+};
+
 export type FreeGateStatus = {
   isPro: boolean;
   isBlocked: boolean;
@@ -143,6 +164,9 @@ const STORAGE_KEYS = {
   miniVariantProgress: "ege-trainer:mini-variant-progress",
   proSubscription: "ege-trainer:pro-subscription",
   freeGateState: "ege-trainer:free-gate-state",
+  selectedTaskType: "ege-trainer:selected-task-type",
+  reviewSchedule: "ege-trainer:review-schedule",
+  lessonHistory: "ege-trainer:lesson-history",
 } as const;
 
 function isBrowser() {
@@ -344,6 +368,155 @@ export function releaseFreeGateAccess(feature: FreeGateFeatureKey) {
   return getFreeGateStatus(feature);
 }
 
+
+export function getSelectedTaskType(subject?: SubjectKey) {
+  const stored = safeRead<{ subject?: SubjectKey; taskType?: TaskType; label?: string }>(STORAGE_KEYS.selectedTaskType);
+  if (!stored?.taskType) return null;
+  if (subject && stored.subject && stored.subject !== subject) return null;
+  return stored;
+}
+
+export function setSelectedTaskType(subject: SubjectKey, taskType: TaskType, label?: string) {
+  const next = { subject, taskType, label: label ?? toTaskTypeLabel(taskType) };
+  safeWrite(STORAGE_KEYS.selectedTaskType, next);
+  return next;
+}
+
+export function clearSelectedTaskType() {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEYS.selectedTaskType);
+  } catch {
+    // noop
+  }
+}
+
+export function getReviewSchedule() {
+  return safeRead<ReviewScheduleState>(STORAGE_KEYS.reviewSchedule) ?? {};
+}
+
+export function saveReviewSchedule(state: ReviewScheduleState) {
+  safeWrite(STORAGE_KEYS.reviewSchedule, state);
+}
+
+export function getDueReviewEntries(subject: SubjectKey) {
+  const today = getLocalDateString(new Date());
+  const entries = Object.values(getReviewSchedule()[subject] ?? {});
+  return entries
+    .filter((entry) => entry.dueDate <= today)
+    .sort((a, b) => b.mistakes - a.mistakes || a.dueDate.localeCompare(b.dueDate));
+}
+
+export function scheduleQuestionReview(subject: SubjectKey, questionId: string) {
+  const question = getQuestionById(subject, questionId);
+  const state = getReviewSchedule();
+  const subjectSchedule = state[subject] ?? {};
+  const previous = subjectSchedule[questionId];
+  const mistakes = (previous?.mistakes ?? 0) + 1;
+  const intervalDays = mistakes === 1 ? 1 : mistakes === 2 ? 2 : mistakes === 3 ? 5 : 10;
+  const now = new Date();
+  const due = new Date(now);
+  due.setDate(now.getDate() + intervalDays);
+
+  const nextEntry: ReviewScheduleEntry = {
+    questionId,
+    subject,
+    taskType: question?.taskType,
+    mistakes,
+    intervalDays,
+    dueDate: getLocalDateString(due),
+    lastAnsweredAt: now.toISOString(),
+  };
+
+  saveReviewSchedule({
+    ...state,
+    [subject]: {
+      ...subjectSchedule,
+      [questionId]: nextEntry,
+    },
+  });
+
+  return nextEntry;
+}
+
+export function completeQuestionReview(subject: SubjectKey, questionId: string) {
+  const state = getReviewSchedule();
+  const subjectSchedule = { ...(state[subject] ?? {}) };
+  delete subjectSchedule[questionId];
+
+  saveReviewSchedule({
+    ...state,
+    [subject]: subjectSchedule,
+  });
+}
+
+export function getTaskTypeMastery(subject: SubjectKey) {
+  const questions = QUESTION_BANK.filter((entry) => entry.subject === subject && entry.mode !== "diagnosis");
+  const state = getRepetitionState();
+  const errorCounts = state.taskTypeErrorCounts?.[subject] ?? {};
+  const groups = new Map<TaskType, number>();
+
+  questions.forEach((question) => {
+    groups.set(question.taskType, (groups.get(question.taskType) ?? 0) + 1);
+  });
+
+  return Array.from(groups.entries())
+    .map(([taskType, total]) => {
+      const errors = Number(errorCounts[taskType] ?? 0);
+      const score = Math.max(20, Math.min(100, Math.round(100 - (errors / Math.max(total, 1)) * 35)));
+      return {
+        taskType,
+        label: toTaskTypeLabel(taskType),
+        score,
+        errors,
+        status: score >= 80 ? "сильная зона" : score >= 55 ? "в работе" : "нужна опора",
+      };
+    })
+    .sort((a, b) => a.score - b.score);
+}
+
+export function buildParentWeeklyReport(input: {
+  subjectLabel: string;
+  targetLabel: string;
+  sessionsCompleted?: number;
+  streakDays?: number;
+  weakTopics?: string[];
+  repeatCount?: number;
+  weakTaskTypes?: WeakTaskTypeEntry[];
+  completedMiniVariants?: number;
+}): ParentWeeklyReport {
+  const weakTask = input.weakTaskTypes?.[0]?.label;
+  const sessions = input.sessionsCompleted ?? 0;
+  const streak = input.streakDays ?? 0;
+  const repeat = input.repeatCount ?? 0;
+  const mini = input.completedMiniVariants ?? 0;
+
+  const wins = [
+    sessions > 0 ? `завершено тренировочных сессий: ${sessions}` : "стартовый маршрут готов к запуску",
+    streak > 1 ? `держится серия занятий: ${streak} дня` : "можно быстро набрать регулярность короткими сессиями",
+    mini > 0 ? `мини-вариантов пройдено: ${mini}` : "мини-вариант пока ждёт первой проверки устойчивости",
+  ];
+
+  const risks = [
+    repeat > 0 ? `в очереди на повтор: ${repeat}` : "очередь ошибок пока не перегружена",
+    weakTask ? `проседает тип задания: ${weakTask}` : input.weakTopics?.[0] ? `проседает тема: ${input.weakTopics[0]}` : "слабые зоны ещё уточняются",
+  ];
+
+  const nextWeek = [
+    repeat > 0 ? "закрыть вопросы на повтор по расписанию" : "набрать 2–3 регулярные тренировки",
+    weakTask ? `потренировать тип задания «${weakTask}»` : "выбрать конкретный тип задания и закрепить навык",
+    "проверить устойчивость через мини-вариант ЕГЭ",
+  ];
+
+  return {
+    title: `Отчёт для родителя: ${input.subjectLabel}`,
+    summary: `Цель — ${input.targetLabel}. Видно, что подготовку лучше вести не тестами вразнобой, а циклом: навык → практика → повтор → мини-вариант.`,
+    wins,
+    risks,
+    nextWeek,
+  };
+}
+
 export function normalizeSubjectKey(subject?: string | null): SubjectKey {
   if (subject === "math" || subject === "math-profile" || subject === "profile-math") {
     return "math";
@@ -446,6 +619,8 @@ export function markQuestionIncorrect(subject: SubjectKey, questionId: string) {
   const taskType = question?.taskType;
   const currentTaskTypeCounts = state.taskTypeErrorCounts?.[subject] ?? {};
 
+  scheduleQuestionReview(subject, questionId);
+
   saveRepetitionState({
     ...state,
     incorrectQuestionIds: {
@@ -472,6 +647,7 @@ export function markQuestionIncorrect(subject: SubjectKey, questionId: string) {
 }
 
 export function clearQuestionIncorrect(subject: SubjectKey, questionId: string) {
+  completeQuestionReview(subject, questionId);
   const state = getRepetitionState();
   const current = state.incorrectQuestionIds?.[subject] ?? [];
 
