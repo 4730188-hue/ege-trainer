@@ -416,33 +416,40 @@ export default function SessionPage() {
             </div>
 
             <div className="mt-5 space-y-3">
-              <Link
-                href="/session"
+              <button
+                type="button"
                 onClick={() => {
                   clearSelectedTaskType();
                   setStoredReviewMode(subject, "session");
+                  window.location.href = "/session";
                 }}
-                className="primary-cta"
+                className="primary-cta w-full"
               >
                 <span className="block leading-none text-white">Разобрать ошибки</span>
-              </Link>
-              <Link
-                href="/session"
+              </button>
+
+              <button
+                type="button"
                 onClick={() => {
                   clearSelectedTaskType();
                   clearStoredReviewMode();
+                  window.location.href = "/session";
                 }}
-                className="secondary-cta"
+                className="secondary-cta w-full"
               >
                 Ещё тренировка
-              </Link>
-              <Link
-                href="/mini-variant"
-                onClick={() => clearStoredReviewMode()}
-                className="secondary-cta"
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearStoredReviewMode();
+                  window.location.href = "/mini-variant";
+                }}
+                className="secondary-cta w-full"
               >
                 Мини-вариант ЕГЭ
-              </Link>
+              </button>
             </div>
           </div>
         )}
