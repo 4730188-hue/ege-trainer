@@ -14,10 +14,13 @@ import {
   getIncorrectQuestionIds,
   getPrioritizedIncorrectQuestionIds,
   getRepeatInsight,
+  getReviewMode,
   getSelectedTaskType,
   getStudentProfile,
   getSubjectLabel,
   getSeenSessionQuestionIds,
+  setReviewMode as setStoredReviewMode,
+  clearReviewMode as clearStoredReviewMode,
   incrementSessionsCompleted,
   markQuestionIncorrect,
   normalizeSubjectKey,
@@ -62,6 +65,16 @@ function buildNextStepHint(isCorrect: boolean) {
     : "Это задание уйдёт на повтор, так что ты ещё вернёшься к нему и закрепишь решение спокойнее.";
 }
 
+function getNextRecommendedStep(errorsCount: number, repeatFocusLabel?: string | null) {
+  if (errorsCount > 0) {
+    return repeatFocusLabel
+      ? `Сначала разобрать ошибки по фокусу ${repeatFocusLabel.toLowerCase()}.`
+      : "Сначала разобрать ошибки и вернуть их в повтор.";
+  }
+
+  return "Можно идти дальше: ещё тренировка или мини-вариант ЕГЭ.";
+}
+
 export default function SessionPage() {
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
@@ -75,6 +88,8 @@ export default function SessionPage() {
   const [repeatFocusLabel, setRepeatFocusLabel] = useState<string | null>(null);
   const [selectedModeLabel, setSelectedModeLabel] = useState<string | null>(null);
   const [gateStatus, setGateStatus] = useState<FreeGateStatus | null>(null);
+  const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
+  const [sessionIncorrectCount, setSessionIncorrectCount] = useState(0);
 
   useEffect(() => {
     const gate = consumeFreeGateAccess("session");
@@ -107,7 +122,8 @@ export default function SessionPage() {
     setQuestions(nextQuestions);
     setRepeatCount(incorrectIds.length);
     setRepeatFocusLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
-    setSelectedModeLabel(selectedTask?.label ?? null);
+    const isReviewMode = getReviewMode();
+    setSelectedModeLabel(isReviewMode ? "Разбор ошибок" : selectedTask?.label ?? null);
 
     if (nextQuestions.length > 0) {
       addSeenSessionQuestionIds(
@@ -141,8 +157,10 @@ export default function SessionPage() {
 
     if (!isCorrect) {
       markQuestionIncorrect(subject, currentQuestion.id);
+      setSessionIncorrectCount((prev) => prev + 1);
     } else {
       clearQuestionIncorrect(subject, currentQuestion.id);
+      setSessionCorrectCount((prev) => prev + 1);
     }
 
     if (isLastQuestion) {
@@ -237,7 +255,7 @@ export default function SessionPage() {
     <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
-          <span>{selectedModeLabel ? `Навык: ${selectedModeLabel}` : "Учебная сессия"}</span>
+          <span>{selectedModeLabel ? selectedModeLabel : "Учебная сессия"}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
             {isFinished ? "Готово" : `${currentIndex + 1} из ${questions.length}`}
           </span>
@@ -365,26 +383,66 @@ export default function SessionPage() {
             <p className="text-sm font-medium text-slate-500">Сессия завершена</p>
             <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">Отлично, тренировка засчитана</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Теперь ошибки вернутся по расписанию: часть можно повторить сегодня, часть — позже, чтобы знание закрепилось.
+              Короткий итог по 15 заданиям, чтобы сразу понять, что закрепилось и что отправилось в повтор.
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Сессий всего</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionProgress?.sessionsCompleted ?? 1}</p>
+                <p className="text-sm text-slate-500">Верно</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionCorrectCount}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">На повтор</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{repeatCount}</p>
+                <p className="text-sm text-slate-500">Ошибки</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
+              </div>
+              <div className="rounded-3xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Ушло на повтор</p>
+                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
+              </div>
+              <div className="rounded-3xl bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Фокус</p>
+                <p className="mt-2 text-base font-semibold text-slate-900">{repeatFocusLabel ?? "Следующий навык"}</p>
               </div>
             </div>
 
+            <div className="mt-4 rounded-3xl bg-slate-50 p-4">
+              <p className="text-sm font-medium text-slate-500">Следующий рекомендуемый шаг</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {getNextRecommendedStep(sessionIncorrectCount, repeatFocusLabel)}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Сессий всего: {sessionProgress?.sessionsCompleted ?? 1}. Сейчас на повторе в системе: {repeatCount}.
+              </p>
+            </div>
+
             <div className="mt-5 space-y-3">
-              <Link href="/session" onClick={() => clearSelectedTaskType()} className="primary-cta">
-                <span className="block leading-none text-white">Ещё тренировка</span>
+              <Link
+                href="/session"
+                onClick={() => {
+                  clearSelectedTaskType();
+                  setStoredReviewMode(subject, "session");
+                }}
+                className="primary-cta"
+              >
+                <span className="block leading-none text-white">Разобрать ошибки</span>
               </Link>
-              <Link href="/mini-variant" className="secondary-cta">Мини-вариант ЕГЭ</Link>
-              <Link href="/progress" className="secondary-cta">Посмотреть прогресс</Link>
+              <Link
+                href="/session"
+                onClick={() => {
+                  clearSelectedTaskType();
+                  clearStoredReviewMode();
+                }}
+                className="secondary-cta"
+              >
+                Ещё тренировка
+              </Link>
+              <Link
+                href="/mini-variant"
+                onClick={() => clearStoredReviewMode()}
+                className="secondary-cta"
+              >
+                Мини-вариант ЕГЭ
+              </Link>
             </div>
           </div>
         )}

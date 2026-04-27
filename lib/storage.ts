@@ -109,6 +109,12 @@ export type ParentWeeklyReport = {
   nextWeek: string[];
 };
 
+export type ReviewModeState = {
+  subject?: SubjectKey;
+  enabled?: boolean;
+  source?: "session" | "progress" | "home";
+};
+
 export type FreeGateStatus = {
   isPro: boolean;
   isBlocked: boolean;
@@ -167,6 +173,7 @@ const STORAGE_KEYS = {
   selectedTaskType: "ege-trainer:selected-task-type",
   reviewSchedule: "ege-trainer:review-schedule",
   lessonHistory: "ege-trainer:lesson-history",
+  reviewMode: "ege-trainer:review-mode",
 } as const;
 
 function isBrowser() {
@@ -386,6 +393,28 @@ export function clearSelectedTaskType() {
   if (!isBrowser()) return;
   try {
     window.localStorage.removeItem(STORAGE_KEYS.selectedTaskType);
+  } catch {
+    // noop
+  }
+}
+
+export function getReviewMode(subject?: SubjectKey) {
+  const stored = safeRead<ReviewModeState>(STORAGE_KEYS.reviewMode);
+  if (!stored?.enabled) return null;
+  if (subject && stored.subject && stored.subject !== subject) return null;
+  return stored;
+}
+
+export function setReviewMode(subject: SubjectKey, source: ReviewModeState["source"] = "session") {
+  const next: ReviewModeState = { subject, enabled: true, source };
+  safeWrite(STORAGE_KEYS.reviewMode, next);
+  return next;
+}
+
+export function clearReviewMode() {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.removeItem(STORAGE_KEYS.reviewMode);
   } catch {
     // noop
   }

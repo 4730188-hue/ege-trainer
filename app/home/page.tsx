@@ -17,6 +17,7 @@ import {
   getTaskTypeMastery,
   normalizeSubjectKey,
   setSelectedTaskType,
+  setReviewMode,
   updateStudentSubject,
   type DiagnosisResult,
   type MiniVariantProgress,
@@ -134,13 +135,18 @@ export default function HomePage() {
           </div>
 
           <div className="mt-7 space-y-3">
-            <Link href="/session" onClick={handleWeakTraining} className="block rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)]">
-              Начать 15 заданий →
-            </Link>
-            <Link href="/mini-variant" className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-lg font-semibold text-slate-950">
-              Мини-вариант на 20 заданий →
-            </Link>
-          </div>
+  {repeatCount > 0 && (
+    <Link href="/session" onClick={() => setReviewMode(subject, "home")} className="block rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-center text-base font-semibold text-amber-800">
+      Разобрать ошибки · {repeatCount} →
+    </Link>
+  )}
+  <Link href="/session" onClick={handleWeakTraining} className="block rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)]">
+    Начать 15 заданий →
+  </Link>
+  <Link href="/mini-variant" className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-lg font-semibold text-slate-950">
+    Мини-вариант на 20 заданий →
+  </Link>
+</div>
         </section>
 
         <section className="space-y-4">

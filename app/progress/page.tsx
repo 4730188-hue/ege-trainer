@@ -10,6 +10,7 @@ import {
   getDueReviewEntries,
   getMiniVariantProgress,
   getRepeatInsight,
+  setReviewMode,
   getSessionProgress,
   getStudentProfile,
   getSubjectLabel,
@@ -107,13 +108,19 @@ export default function ProgressPage() {
             {dueCount > 0 ? `Сначала закрыть повтор: ${dueCount}.` : "Сделать тренировку и проверить себя мини-вариантом."}
           </p>
           <div className="mt-5 space-y-3">
-            <Link href="/session" onClick={() => clearSelectedTaskType()} className="block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">
-              Тренировать слабые места
-            </Link>
-            <Link href="/mini-variant" className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-semibold text-slate-950">
-              Мини-вариант ЕГЭ
-            </Link>
-          </div>
+  <Link href="/session" onClick={() => clearSelectedTaskType()} className="block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">
+    Тренировать слабые места
+  </Link>
+  <Link href="/session" onClick={() => setReviewMode(subject, "progress")} className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-semibold text-slate-950">
+    Разобрать ошибки{repeatCount > 0 ? ` · ${repeatCount}` : ""}
+  </Link>
+  <Link href="/mini-variant" className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-semibold text-slate-950">
+    Мини-вариант ЕГЭ
+  </Link>
+</div>
+<div className="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+  Pro: безлимитные тренировки, разбор ошибок и мини-варианты без остановки.
+</div>
         </section>
 
         <section className="rounded-[2rem] border border-blue-100 bg-blue-50/75 p-6">
