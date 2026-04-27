@@ -178,13 +178,26 @@ export default function MiniVariantPage() {
             </div>
 
             {showResult && (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-slate-900">
-                <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
-                <p className="mt-1.5 text-sm font-medium">{isCorrect ? "Верно" : "Неверно"}</p>
-                <p className="mt-1.5 text-sm font-medium text-slate-900">
-                  Правильный ответ: {currentQuestion.correctAnswer}
+              <div
+                className={`mt-4 rounded-2xl border p-3.5 text-slate-900 ${
+                  isCorrect ? "border-emerald-100 bg-emerald-50" : "border-rose-100 bg-rose-50"
+                }`}
+              >
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+                  {isCorrect ? "Ответ засчитан" : "Разбор ошибки"}
                 </p>
-                <p className="mt-1.5 text-sm leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                <p className="mt-1.5 text-sm font-semibold">
+                  {isCorrect ? "Верно" : "Правильный ответ: " + currentQuestion.correctAnswer}
+                </p>
+                <div className="mt-2 rounded-xl bg-white/75 p-3">
+                  <p className="text-sm font-semibold text-slate-900">Решение</p>
+                  <p className="mt-1 text-sm leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                </div>
+                {!isCorrect && (
+                  <p className="mt-2 text-sm leading-5 text-slate-600">
+                    Это задание попадёт в повтор, чтобы ошибка вернулась в работу после варианта.
+                  </p>
+                )}
               </div>
             )}
           </div>

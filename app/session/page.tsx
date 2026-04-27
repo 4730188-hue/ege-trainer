@@ -263,12 +263,29 @@ export default function SessionPage() {
               </div>
 
               {showResult && (
-                <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-base font-semibold text-slate-600">{feedbackLabel}</p>
-                  <p className="mt-2 text-base font-semibold text-slate-900">
+                <div
+                  className={`mt-5 rounded-3xl border p-4 ${
+                    isCorrect ? "border-emerald-100 bg-emerald-50" : "border-rose-100 bg-rose-50"
+                  }`}
+                >
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                    {isCorrect ? "Ответ засчитан" : "Разбор ошибки"}
+                  </p>
+                  <p className="mt-2 text-base font-semibold text-slate-950">
                     {isCorrect ? "Верно" : "Правильный ответ: " + currentQuestion.correctAnswer}
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
+                  <div className="mt-3 rounded-2xl bg-white/75 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
+                  </div>
+                  {!isCorrect && (
+                    <div className="mt-3 rounded-2xl bg-white/75 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Что будет дальше</p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-600">
+                        Ошибка уйдёт на повтор. Похожее задание вернётся позже, чтобы закрепить навык, а не просто увидеть правильный ответ.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
