@@ -77,28 +77,14 @@ function buildNextStepHint(isCorrect: boolean) {
     : "Это задание уйдёт на повтор, так что ты ещё вернёшься к нему и закрепишь решение спокойнее.";
 }
 
-function getSessionResultTitle(correctCount: number, isReviewSession: boolean) {
-  if (isReviewSession) return "Ошибки разобраны";
-  if (correctCount >= 13) return "Отлично, навык закрепляется";
-  if (correctCount >= 9) return "Хорошая тренировка";
-  return "Есть что разобрать";
-}
-
 function getNextRecommendedStep(errorsCount: number, repeatFocusLabel?: string | null) {
   if (errorsCount > 0) {
     return repeatFocusLabel
-      ? `Разбери ${errorsCount} ${errorsCount === 1 ? "ошибку" : "ошибок"} — начнём с темы «${repeatFocusLabel}».`
-      : `Разбери ${errorsCount} ${errorsCount === 1 ? "ошибку" : "ошибок"} и верни их в повтор.`;
+      ? `Сначала разобрать ошибки по фокусу ${repeatFocusLabel.toLowerCase()}.`
+      : "Сначала разобрать ошибки и вернуть их в повтор.";
   }
 
-  return "Ошибок нет — можно закрепить результат мини-вариантом ЕГЭ.";
-}
-
-function getPrimaryResultAction(correctCount: number, errorsCount: number, isReviewSession: boolean) {
-  if (isReviewSession) return "review";
-  if (errorsCount > 0 && correctCount <= 8) return "review";
-  if (correctCount >= 13) return "mini";
-  return "training";
+  return "Можно идти дальше: ещё тренировка или мини-вариант ЕГЭ.";
 }
 
 export default function SessionPage() {
@@ -185,7 +171,6 @@ export default function SessionPage() {
   const feedbackLabel = isCorrect
     ? positiveFeedback[currentIndex % positiveFeedback.length]
     : gentleFeedback[currentIndex % gentleFeedback.length];
-  const primaryResultAction = getPrimaryResultAction(sessionCorrectCount, sessionIncorrectCount, isReviewSession);
 
   function handlePrimaryAction() {
     if (!currentQuestion) return;
@@ -447,7 +432,7 @@ export default function SessionPage() {
         ) : (
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Разбор завершён" : "Сессия завершена"}</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{getSessionResultTitle(sessionCorrectCount, isReviewSession)}</h1>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{isReviewSession ? "Ошибки разобраны" : "Отлично, тренировка засчитана"}</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {isReviewSession
                 ? "Короткий итог по вопросам из очереди ошибок: что закрепилось и что осталось на повторе."
@@ -464,7 +449,7 @@ export default function SessionPage() {
                 <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">В очереди повтора</p>
+                <p className="text-sm text-slate-500">Ушло на повтор</p>
                 <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4">
@@ -488,63 +473,36 @@ export default function SessionPage() {
                 type="button"
                 onClick={() => {
                   clearSelectedTaskType();
-
-                  if (primaryResultAction === "review") {
-                    setStoredReviewMode(subject, "session");
-                    window.location.href = "/session";
-                    return;
-                  }
-
-                  clearStoredReviewMode();
-                  window.location.href = primaryResultAction === "mini" ? "/mini-variant" : "/session";
+                  setStoredReviewMode(subject, "session");
+                  window.location.href = "/session";
                 }}
                 className="primary-cta w-full"
               >
-                <span className="block leading-none text-white">
-                  {primaryResultAction === "review" ? (isReviewSession ? "Разобрать ещё" : "Разобрать ошибки") : primaryResultAction === "mini" ? "Мини-вариант ЕГЭ" : "Ещё тренировка"}
-                </span>
+                <span className="block leading-none text-white">{isReviewSession ? "Разобрать ещё" : "Разобрать ошибки"}</span>
               </button>
 
-              {primaryResultAction !== "review" && sessionIncorrectCount > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearSelectedTaskType();
-                    setStoredReviewMode(subject, "session");
-                    window.location.href = "/session";
-                  }}
-                  className="secondary-cta w-full"
-                >
-                  Разобрать ошибки
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  clearSelectedTaskType();
+                  clearStoredReviewMode();
+                  window.location.href = "/session";
+                }}
+                className="secondary-cta w-full"
+              >
+                {isReviewSession ? "Обычная тренировка" : "Ещё тренировка"}
+              </button>
 
-              {primaryResultAction !== "training" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearSelectedTaskType();
-                    clearStoredReviewMode();
-                    window.location.href = "/session";
-                  }}
-                  className="secondary-cta w-full"
-                >
-                  Обычная тренировка
-                </button>
-              )}
-
-              {primaryResultAction !== "mini" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearStoredReviewMode();
-                    window.location.href = "/mini-variant";
-                  }}
-                  className="secondary-cta w-full"
-                >
-                  Мини-вариант ЕГЭ
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  clearStoredReviewMode();
+                  window.location.href = "/mini-variant";
+                }}
+                className="secondary-cta w-full"
+              >
+                Мини-вариант ЕГЭ
+              </button>
 
               <button
                 type="button"
