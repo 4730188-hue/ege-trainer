@@ -87,6 +87,22 @@ function getNextRecommendedStep(errorsCount: number, repeatFocusLabel?: string |
   return "Можно идти дальше: ещё тренировка или мини-вариант ЕГЭ.";
 }
 
+
+function getSessionResultTitle(correctCount: number) {
+  if (correctCount >= 13) return "Отлично, навык закрепляется";
+  if (correctCount >= 9) return "Хорошая тренировка";
+  return "Есть что разобрать";
+}
+
+function getPreciseNextStep(errorCount: number, focusLabel: string | null) {
+  if (errorCount > 0) {
+    const focus = focusLabel ? `«${focusLabel}»` : "слабых мест";
+    return `Разбери ${errorCount} ошибок — начнём с темы ${focus}.`;
+  }
+
+  return "Ошибок нет — можно перейти к мини-варианту ЕГЭ.";
+}
+
 export default function SessionPage() {
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
@@ -432,7 +448,7 @@ export default function SessionPage() {
         ) : (
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Разбор завершён" : "Сессия завершена"}</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{isReviewSession ? "Ошибки разобраны" : "Отлично, тренировка засчитана"}</h1>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{isReviewSession ? "Ошибки разобраны" : getSessionResultTitle(sessionCorrectCount)}</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {isReviewSession
                 ? "Короткий итог по вопросам из очереди ошибок: что закрепилось и что осталось на повторе."
@@ -449,7 +465,7 @@ export default function SessionPage() {
                 <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Ушло на повтор</p>
+                <p className="text-sm text-slate-500">В очереди повтора</p>
                 <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4">
@@ -461,7 +477,7 @@ export default function SessionPage() {
             <div className="mt-4 rounded-3xl bg-slate-50 p-4">
               <p className="text-sm font-medium text-slate-500">Следующий рекомендуемый шаг</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
-                {getNextRecommendedStep(sessionIncorrectCount, repeatFocusLabel)}
+                {getPreciseNextStep(sessionIncorrectCount, repeatFocusLabel)}
               </p>
               <p className="mt-2 text-xs leading-5 text-slate-500">
                 Сессий всего: {sessionProgress?.sessionsCompleted ?? 1}. Сейчас на повторе в системе: {repeatCount}.
