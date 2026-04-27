@@ -256,8 +256,15 @@ export default function OnboardingPage() {
 
               <button
                 type="button"
-                onClick={handleBack}
-                className={`secondary-cta ${step === 1 ? "text-slate-300" : "text-slate-600 hover:bg-slate-50"}`}
+                onClick={() => {
+                  if (step === 1) {
+                    window.location.href = "/";
+                    return;
+                  }
+
+                  handleBack();
+                }}
+                className="secondary-cta text-slate-600 hover:bg-slate-50"
               >
                 Назад
               </button>
