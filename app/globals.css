@@ -194,3 +194,17 @@ nextjs-portal {
     min-height: calc(100% - env(safe-area-inset-bottom));
   }
 }
+
+/* Minimal navigation rework */
+body {
+  background: #fbfaf7;
+}
+
+body::before {
+  display: none;
+}
+
+.bottom-nav,
+.bottom-nav-grid {
+  display: none !important;
+}
