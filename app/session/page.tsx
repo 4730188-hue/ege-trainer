@@ -476,6 +476,17 @@ export default function SessionPage() {
               >
                 Мини-вариант ЕГЭ
               </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  clearStoredReviewMode();
+                  window.location.href = "/home";
+                }}
+                className="secondary-cta w-full"
+              >
+                На главную
+              </button>
             </div>
           </div>
         )}
