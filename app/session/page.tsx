@@ -37,10 +37,11 @@ function getQuestionMeta(question?: BankQuestion | null) {
 }
 
 function buildRepeatHint(question: BankQuestion) {
-  return `${question.skillLabel ?? question.topic}: повтори правило, реши похожее задание и проверь, почему остальные варианты не подходят.`;
+  return question.repeatHint ?? `${question.skillLabel ?? question.topic}: повтори правило, реши похожее задание и проверь, почему остальные варианты не подходят.`;
 }
 
 function buildReasoningHint(question: BankQuestion) {
+  if (question.solutionSteps) return question.solutionSteps;
   if (question.taskType?.includes("пунктуа") || question.topic.toLowerCase().includes("пунктуа")) {
     return "Сначала найди грамматические основы или оборот, потом проверь, нужна ли здесь запятая по правилу.";
   }
@@ -57,6 +58,8 @@ function buildReasoningHint(question: BankQuestion) {
 }
 
 function buildTrapHint(question: BankQuestion) {
+  if (question.commonMistake) return question.commonMistake;
+
   if (question.taskType?.includes("орф") || question.topic.toLowerCase().includes("орф")) {
     return "Ловушка в том, что знакомое слово хочется выбрать по звучанию, а не по правилу написания.";
   }
@@ -371,6 +374,13 @@ export default function SessionPage() {
                       <p className="text-sm font-semibold text-slate-900">{isCorrect ? "Почему это верно" : "Почему так"}</p>
                       <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
                     </div>
+
+                    {currentQuestion.rule && (
+                      <div className="rounded-2xl bg-white/80 p-3">
+                        <p className="text-sm font-semibold text-slate-900">Правило</p>
+                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.rule}</p>
+                      </div>
+                    )}
 
                     <div className="rounded-2xl bg-white/80 p-3">
                       <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>

@@ -36,6 +36,10 @@ export type BankQuestion = {
   taskType: TaskType;
   examLabel?: "Формат ЕГЭ" | "Типовое задание" | "По структуре экзамена";
   skillLabel?: string;
+  rule?: string;
+  solutionSteps?: string;
+  commonMistake?: string;
+  repeatHint?: string;
   topic: string;
   difficulty: "easy" | "medium" | "hard";
   prompt: string;
@@ -130,6 +134,19 @@ function inferExamLabel(mode: QuestionMode, index: number): BankQuestion["examLa
   return index % 3 === 0 ? "Формат ЕГЭ" : "Типовое задание";
 }
 
+function buildDefaultSolutionSteps(subject: SubjectKey, taskType: TaskType, topic: string) {
+  if (subject === "math") return "Выпиши данные из условия, выбери формулу или преобразование, затем проверь вычисление и ответ.";
+  if (subject === "social") return "Выдели ключевой термин в ситуации, сравни признаки вариантов и выбери тот, который точно подходит по смыслу.";
+  if (taskType === "пунктуация") return "Найди грамматические основы, определи конструкцию и только затем ставь знак по правилу.";
+  if (taskType === "орфография") return "Определи часть слова и орфограмму, вспомни правило или исключение, затем выбирай букву.";
+  return "Определи, какой навык проверяется, вспомни правило и проверь каждый вариант по смыслу.";
+}
+
+function buildDefaultRepeatHint(taskType: TaskType, skillLabel: string) {
+  const guide = getTaskTypeGuide(taskType);
+  return guide ? `${guide.title}: повтори правило, пример и типичную ловушку перед следующей тренировкой.` : `${skillLabel}: повтори правило и реши похожее задание.`;
+}
+
 function createQuestions(subject: SubjectKey, mode: QuestionMode, entries: QuestionInput[]) {
   return entries.map((entry, index) => {
     const taskType = inferTaskType(subject, entry.topic);
@@ -141,6 +158,10 @@ function createQuestions(subject: SubjectKey, mode: QuestionMode, entries: Quest
       taskType,
       examLabel: entry.examLabel ?? inferExamLabel(mode, index),
       skillLabel: entry.skillLabel ?? formatSkillLabel(taskType, entry.topic),
+      rule: entry.rule ?? getTaskTypeGuide(taskType)?.rule,
+      solutionSteps: entry.solutionSteps ?? buildDefaultSolutionSteps(subject, taskType, entry.topic),
+      commonMistake: entry.commonMistake ?? getTaskTypeGuide(taskType)?.trap,
+      repeatHint: entry.repeatHint ?? buildDefaultRepeatHint(taskType, entry.skillLabel ?? formatSkillLabel(taskType, entry.topic)),
       ...entry,
     };
   });
@@ -197,7 +218,6 @@ const mathExtendedSession: QuestionInput[] = [
   { topic: "Уравнения", difficulty: "hard", prompt: "Решите уравнение 2ˣ = 16.", options: ["2", "3", "4", "8"], correctAnswer: "4", explanation: "16 = 2⁴, значит показатель x равен 4." },
   { topic: "Неравенства", difficulty: "medium", prompt: "Решите неравенство 2x + 1 ≤ 7.", options: ["x ≤ 3", "x ≥ 3", "x ≤ 4", "x ≥ 4"], correctAnswer: "x ≤ 3", explanation: "Вычитаем 1 и делим на 2: 2x ≤ 6, x ≤ 3." },
   { topic: "Функции", difficulty: "easy", prompt: "Найдите f(3), если f(x) = x² + 1.", options: ["7", "9", "10", "11"], correctAnswer: "10", explanation: "Подставляем x = 3: 3² + 1 = 10." },
-  { topic: "Функции", difficulty: "medium", prompt: "Какая точка принадлежит графику y = 3x - 2?", options: ["(1; 1)", "(2; 5)", "(0; 2)", "(3; 6)"], correctAnswer: "(2; 5)", explanation: "Проверяем подстановкой: при x = 2 получаем y = 4? Нет, 3·2 - 2 = 4. Подходит точка (1; 1)." },
   { topic: "Функции", difficulty: "medium", prompt: "Какая точка принадлежит графику y = 3x - 2?", options: ["(1; 1)", "(2; 5)", "(0; 2)", "(3; 6)"], correctAnswer: "(1; 1)", explanation: "Подставляем x = 1: 3·1 - 2 = 1, значит точка (1; 1) лежит на графике." },
   { topic: "Функции", difficulty: "hard", prompt: "Если f(x)=2x², то f(-2) равно", options: ["-8", "4", "8", "16"], correctAnswer: "8", explanation: "Подставляем -2: 2·(-2)² = 2·4 = 8." },
   { topic: "Геометрия", difficulty: "easy", prompt: "Найдите периметр квадрата со стороной 7.", options: ["14", "21", "28", "49"], correctAnswer: "28", explanation: "Периметр квадрата равен 4a: 4·7 = 28." },

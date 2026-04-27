@@ -20,10 +20,11 @@ function getQuestionMeta(question: NonNullable<MiniVariant["questions"][number]>
 }
 
 function buildRepeatHint(question: NonNullable<MiniVariant["questions"][number]>) {
-  return `${question.skillLabel ?? question.topic}: повтори правило, затем проверь похожее задание в обычной тренировке.`;
+  return question.repeatHint ?? `${question.skillLabel ?? question.topic}: повтори правило, затем проверь похожее задание в обычной тренировке.`;
 }
 
 function buildReasoningHint(question: NonNullable<MiniVariant["questions"][number]>) {
+  if (question.solutionSteps) return question.solutionSteps;
   if (question.topic.toLowerCase().includes("эконом")) {
     return "Сначала выдели ключевое общественное явление или термин, затем сравни его с признаками в вариантах ответа.";
   }
@@ -40,6 +41,8 @@ function buildReasoningHint(question: NonNullable<MiniVariant["questions"][numbe
 }
 
 function buildTrapHint(question: NonNullable<MiniVariant["questions"][number]>) {
+  if (question.commonMistake) return question.commonMistake;
+
   if (question.topic.toLowerCase().includes("право") || question.topic.toLowerCase().includes("полит")) {
     return "Ловушка в похожих терминах: ответ кажется знакомым, но не совпадает по точному признаку.";
   }
