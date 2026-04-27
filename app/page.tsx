@@ -23,10 +23,10 @@ export default function LandingPage() {
               подготовка без хаоса
             </p>
             <h1 className="mt-4 text-[2.7rem] font-black leading-[1.02] tracking-[-0.06em] text-slate-950">
-              ЕГЭ-тренажёр, который ведёт к следующему шагу
+              Подготовка к ЕГЭ по плану
             </h1>
             <p className="mt-4 text-base leading-7 text-slate-500">
-              Тренировки по предметам и типам заданий, моментальная проверка, решения и повтор ошибок.
+              Тренировки по предметам, проверка, решения и повтор ошибок.
             </p>
 
             <div className="mt-7 grid grid-cols-3 gap-2">
