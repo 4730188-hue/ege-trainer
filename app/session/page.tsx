@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { buildSessionQuestions, getTaskTypeGuide, type BankQuestion } from "@/lib/questionBank";
+import { buildSessionQuestions, getTaskTypeGuide, QUESTION_BANK, type BankQuestion } from "@/lib/questionBank";
 import {
   addSeenSessionQuestionIds,
   clearQuestionIncorrect,
@@ -90,6 +90,7 @@ export default function SessionPage() {
   const [gateStatus, setGateStatus] = useState<FreeGateStatus | null>(null);
   const [sessionCorrectCount, setSessionCorrectCount] = useState(0);
   const [sessionIncorrectCount, setSessionIncorrectCount] = useState(0);
+  const [isReviewSession, setIsReviewSession] = useState(false);
 
   useEffect(() => {
     const gate = consumeFreeGateAccess("session");
@@ -100,32 +101,45 @@ export default function SessionPage() {
     const selectedTask = getSelectedTaskType(nextSubject);
     const seenIds = getSeenSessionQuestionIds(nextSubject);
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
+    const isReviewMode = Boolean(getReviewMode(nextSubject));
     const dueReviewIds = getDueReviewEntries(nextSubject).map((entry) => entry.questionId);
-    const prioritizedIncorrectIds = Array.from(new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject)]));
-    const candidateQuestions = buildSessionQuestions(nextSubject, {
-      count: 15,
-      seenIds,
-      incorrectIds: prioritizedIncorrectIds,
-      taskType: selectedTask?.taskType,
-    });
-    const nextQuestions = [...candidateQuestions]
-      .sort((left, right) => {
-        const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
-        const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
-        const leftRank = leftPriority === -1 ? 999 : leftPriority;
-        const rightRank = rightPriority === -1 ? 999 : rightPriority;
-        return leftRank - rightRank;
-      })
+    const prioritizedIncorrectIds = Array.from(new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject), ...incorrectIds]));
+
+    const reviewQuestions = prioritizedIncorrectIds
+      .map((questionId) => QUESTION_BANK.find((question) => question.subject === nextSubject && question.id === questionId))
+      .filter((question): question is BankQuestion => Boolean(question))
       .slice(0, 15);
+
+    const candidateQuestions = isReviewMode && reviewQuestions.length > 0
+      ? reviewQuestions
+      : buildSessionQuestions(nextSubject, {
+          count: 15,
+          seenIds,
+          incorrectIds: prioritizedIncorrectIds,
+          taskType: selectedTask?.taskType,
+        });
+
+    const nextQuestions = isReviewMode && reviewQuestions.length > 0
+      ? reviewQuestions
+      : [...candidateQuestions]
+          .sort((left, right) => {
+            const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
+            const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
+            const leftRank = leftPriority === -1 ? 999 : leftPriority;
+            const rightRank = rightPriority === -1 ? 999 : rightPriority;
+            return leftRank - rightRank;
+          })
+          .slice(0, 15);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
     setRepeatCount(incorrectIds.length);
     setRepeatFocusLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
-    const isReviewMode = getReviewMode();
-    setSelectedModeLabel(isReviewMode ? "Разбор ошибок" : selectedTask?.label ?? null);
+    setIsReviewSession(isReviewMode && reviewQuestions.length > 0);
+    setShowLesson(!(isReviewMode && reviewQuestions.length > 0));
+    setSelectedModeLabel(isReviewMode && reviewQuestions.length > 0 ? "Разбор ошибок" : selectedTask?.label ?? null);
 
-    if (nextQuestions.length > 0) {
+    if (nextQuestions.length > 0 && !(isReviewMode && reviewQuestions.length > 0)) {
       addSeenSessionQuestionIds(
         nextSubject,
         nextQuestions.map((question) => question.id),
@@ -255,9 +269,9 @@ export default function SessionPage() {
     <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
       <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
-          <span>{selectedModeLabel ? selectedModeLabel : "Учебная сессия"}</span>
+          <span>{isReviewSession ? "Разбор ошибок" : selectedModeLabel ? selectedModeLabel : "Учебная сессия"}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            {isFinished ? "Готово" : `${currentIndex + 1} из ${questions.length}`}
+            {isFinished ? "Готово" : isReviewSession ? `Ошибка ${currentIndex + 1} из ${questions.length}` : `${currentIndex + 1} из ${questions.length}`}
           </span>
         </div>
 
@@ -265,7 +279,7 @@ export default function SessionPage() {
           <>
             <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-slate-500">Сессия на сегодня</p>
+                <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Работаем с ошибками" : "Сессия на сегодня"}</p>
                 <p className="text-sm text-slate-400">{subjectLabel}</p>
               </div>
 
@@ -273,6 +287,16 @@ export default function SessionPage() {
                 <div className="h-2 rounded-full bg-slate-900 transition-all" style={{ width: `${progress}%` }} />
               </div>
             </div>
+
+            {isReviewSession && currentIndex === 0 && !showResult && (
+              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Разбор ошибок</p>
+                <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight">Разберём ошибки по одной</h1>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  В этой сессии только вопросы из очереди повтора. Сначала отвечаешь, затем смотришь разбор и закрепляешь ход решения.
+                </p>
+              </section>
+            )}
 
             <div className="flex flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-3">
@@ -380,10 +404,12 @@ export default function SessionPage() {
           </>
         ) : (
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <p className="text-sm font-medium text-slate-500">Сессия завершена</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">Отлично, тренировка засчитана</h1>
+            <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Разбор завершён" : "Сессия завершена"}</p>
+            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{isReviewSession ? "Ошибки разобраны" : "Отлично, тренировка засчитана"}</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Короткий итог по 15 заданиям, чтобы сразу понять, что закрепилось и что отправилось в повтор.
+              {isReviewSession
+                ? "Короткий итог по вопросам из очереди ошибок: что закрепилось и что осталось на повторе."
+                : "Короткий итог по 15 заданиям, чтобы сразу понять, что закрепилось и что отправилось в повтор."}
             </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -425,7 +451,7 @@ export default function SessionPage() {
                 }}
                 className="primary-cta w-full"
               >
-                <span className="block leading-none text-white">Разобрать ошибки</span>
+                <span className="block leading-none text-white">{isReviewSession ? "Разобрать ещё" : "Разобрать ошибки"}</span>
               </button>
 
               <button
@@ -437,7 +463,7 @@ export default function SessionPage() {
                 }}
                 className="secondary-cta w-full"
               >
-                Ещё тренировка
+                {isReviewSession ? "Обычная тренировка" : "Ещё тренировка"}
               </button>
 
               <button
