@@ -19,6 +19,22 @@ function getLevelLabel(correctAnswers: number) {
 const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
 const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
 
+function buildReasoningHint(question: BankQuestion) {
+  if (question.topic.toLowerCase().includes("текст")) {
+    return "Сначала пойми, что именно спрашивают о тексте, затем ищи ответ в функции фрагмента или главной мысли.";
+  }
+
+  if (question.topic.toLowerCase().includes("функ") || question.topic.toLowerCase().includes("уравн") || question.topic.toLowerCase().includes("геометр")) {
+    return "Сначала выпиши правило или формулу, потом проверь каждый шаг вычисления без спешки.";
+  }
+
+  return "Сначала определи правило или признак, который проверяется, а затем сравни варианты ответа с этим правилом.";
+}
+
+function buildTrapHint() {
+  return "Типичная ловушка, выбрать ответ по знакомому слову или ощущению и не проверить его по правилу.";
+}
+
 export default function DiagnosisPage() {
   const router = useRouter();
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
@@ -175,15 +191,42 @@ export default function DiagnosisPage() {
             </div>
 
             {showResult && (
-              <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-3.5">
-                <p className="text-sm font-medium text-slate-700">{feedbackLabel}</p>
-                <p className="mt-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {isCorrect ? "Верно" : "Неверно"}
-                </p>
-                <p className="mt-1.5 text-sm font-medium text-slate-900">
-                  Правильный ответ: {currentQuestion.correctAnswer}
-                </p>
-                <p className="mt-1.5 text-sm leading-5 text-slate-700">{currentQuestion.explanation}</p>
+              <div className={`mt-4 rounded-3xl border p-3.5 ${isCorrect ? "border-emerald-100 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
+                <p className="text-sm font-medium text-slate-700">{isCorrect ? "Сильный ход" : "Разбор ответа"}</p>
+                <p className="mt-1.5 text-sm text-slate-600">{feedbackLabel}</p>
+
+                <div className="mt-3 space-y-2.5">
+                  <div className="rounded-2xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Правильный ответ</p>
+                    <p className="mt-1.5 text-sm leading-5 text-slate-700">{currentQuestion.correctAnswer}</p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">{isCorrect ? "Почему это верно" : "Почему так"}</p>
+                    <p className="mt-1.5 text-sm leading-5 text-slate-700">{currentQuestion.explanation}</p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
+                    <p className="mt-1.5 text-sm leading-5 text-slate-600">{buildReasoningHint(currentQuestion)}</p>
+                  </div>
+
+                  {!isCorrect && (
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Типичная ловушка</p>
+                      <p className="mt-1.5 text-sm leading-5 text-slate-600">{buildTrapHint()}</p>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Что дальше</p>
+                    <p className="mt-1.5 text-sm leading-5 text-slate-600">
+                      {isCorrect
+                        ? "Сохрани этот ход мысли, он пригодится в тренировке после стартового среза."
+                        : "Запомни правило и тип ошибки, чтобы потом быстрее войти в тренировочный ритм по этой теме."}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

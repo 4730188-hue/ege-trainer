@@ -15,6 +15,30 @@ import {
 const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
 const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
 
+function buildReasoningHint(question: NonNullable<MiniVariant["questions"][number]>) {
+  if (question.topic.toLowerCase().includes("эконом")) {
+    return "Сначала выдели ключевое общественное явление или термин, затем сравни его с признаками в вариантах ответа.";
+  }
+
+  if (question.topic.toLowerCase().includes("функ") || question.topic.toLowerCase().includes("уравн")) {
+    return "Сначала выпиши формулу или связь между величинами, затем считай шаг за шагом без устных прыжков.";
+  }
+
+  if (question.topic.toLowerCase().includes("пунктуа") || question.topic.toLowerCase().includes("орф")) {
+    return "Сначала определи правило, которое проверяется, и только потом выбирай ответ, а не наоборот.";
+  }
+
+  return "Сначала пойми, что именно проверяется в задании, затем убери явно слабые варианты и проверь лучший ответ по правилу.";
+}
+
+function buildTrapHint(question: NonNullable<MiniVariant["questions"][number]>) {
+  if (question.topic.toLowerCase().includes("право") || question.topic.toLowerCase().includes("полит")) {
+    return "Ловушка в похожих терминах: ответ кажется знакомым, но не совпадает по точному признаку.";
+  }
+
+  return "Типичная ловушка, выбрать вариант по ощущению и не сверить его с формулировкой задания.";
+}
+
 function getNextVariant(subject: ReturnType<typeof normalizeSubjectKey>) {
   const variants = getMiniVariantsBySubject(subject);
 
@@ -184,20 +208,42 @@ export default function MiniVariantPage() {
                 }`}
               >
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
-                  {isCorrect ? "Ответ засчитан" : "Разбор ошибки"}
+                  {isCorrect ? "Сильный ход" : "Разбор ответа"}
                 </p>
-                <p className="mt-1.5 text-sm font-semibold">
-                  {isCorrect ? "Верно" : "Правильный ответ: " + currentQuestion.correctAnswer}
-                </p>
-                <div className="mt-2 rounded-xl bg-white/75 p-3">
-                  <p className="text-sm font-semibold text-slate-900">Решение</p>
-                  <p className="mt-1 text-sm leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                <p className="mt-1.5 text-sm font-medium text-slate-700">{feedbackLabel}</p>
+
+                <div className="mt-3 space-y-2.5">
+                  <div className="rounded-xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Правильный ответ</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-700">{currentQuestion.correctAnswer}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">{isCorrect ? "Почему это верно" : "Почему так"}</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">{currentQuestion.explanation}</p>
+                  </div>
+
+                  <div className="rounded-xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">{buildReasoningHint(currentQuestion)}</p>
+                  </div>
+
+                  {!isCorrect && (
+                    <div className="rounded-xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Типичная ловушка</p>
+                      <p className="mt-1 text-sm leading-5 text-slate-600">{buildTrapHint(currentQuestion)}</p>
+                    </div>
+                  )}
+
+                  <div className="rounded-xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Что дальше</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">
+                      {isCorrect
+                        ? "Коротко закрепи ход решения и попробуй сохранить ту же логику на следующем задании."
+                        : "Это задание попадёт в повтор, чтобы ошибка вернулась в работу после варианта."}
+                    </p>
+                  </div>
                 </div>
-                {!isCorrect && (
-                  <p className="mt-2 text-sm leading-5 text-slate-600">
-                    Это задание попадёт в повтор, чтобы ошибка вернулась в работу после варианта.
-                  </p>
-                )}
               </div>
             )}
           </div>

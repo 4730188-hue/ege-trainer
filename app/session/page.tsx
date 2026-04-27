@@ -28,6 +28,40 @@ import {
 const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
 const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
 
+function buildReasoningHint(question: BankQuestion) {
+  if (question.taskType?.includes("пунктуа") || question.topic.toLowerCase().includes("пунктуа")) {
+    return "Сначала найди грамматические основы или оборот, потом проверь, нужна ли здесь запятая по правилу.";
+  }
+
+  if (question.taskType?.includes("лекс") || question.topic.toLowerCase().includes("лекс")) {
+    return "Сравни значения вариантов и отбрось слова, которые похожи по форме, но не подходят по смыслу.";
+  }
+
+  if (question.taskType?.includes("грам") || question.topic.toLowerCase().includes("грам")) {
+    return "Проверь, как связаны слова в предложении: согласование, управление и кто выполняет действие.";
+  }
+
+  return "Сначала определи тип задания, затем вспомни правило и только после этого сверяй варианты ответа.";
+}
+
+function buildTrapHint(question: BankQuestion) {
+  if (question.taskType?.includes("орф") || question.topic.toLowerCase().includes("орф")) {
+    return "Ловушка в том, что знакомое слово хочется выбрать по звучанию, а не по правилу написания.";
+  }
+
+  if (question.taskType?.includes("текст") || question.topic.toLowerCase().includes("текст")) {
+    return "Ловушка в поверхностном чтении: ответ часто прячется не в отдельных словах, а в функции фрагмента или главной мысли.";
+  }
+
+  return "Типичная ловушка, отвечать слишком быстро и не проверить, какое именно правило здесь работает.";
+}
+
+function buildNextStepHint(isCorrect: boolean) {
+  return isCorrect
+    ? "Запомни ход решения и попробуй так же разобрать следующее задание без спешки."
+    : "Это задание уйдёт на повтор, так что ты ещё вернёшься к нему и закрепишь решение спокойнее.";
+}
+
 export default function SessionPage() {
   const [subject, setSubject] = useState(normalizeSubjectKey(undefined));
   const [questions, setQuestions] = useState<BankQuestion[]>([]);
@@ -269,23 +303,42 @@ export default function SessionPage() {
                   }`}
                 >
                   <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-                    {isCorrect ? "Ответ засчитан" : "Разбор ошибки"}
+                    {isCorrect ? "Сильный ход" : "Разбор ответа"}
                   </p>
-                  <p className="mt-2 text-base font-semibold text-slate-950">
-                    {isCorrect ? "Верно" : "Правильный ответ: " + currentQuestion.correctAnswer}
-                  </p>
-                  <div className="mt-3 rounded-2xl bg-white/75 p-3">
-                    <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
-                    <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
-                  </div>
-                  {!isCorrect && (
-                    <div className="mt-3 rounded-2xl bg-white/75 p-3">
-                      <p className="text-sm font-semibold text-slate-900">Что будет дальше</p>
+                  <p className="mt-2 text-sm font-medium text-slate-700">{feedbackLabel}</p>
+
+                  <div className="mt-3 space-y-3">
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Правильный ответ</p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-700">{currentQuestion.correctAnswer}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">{isCorrect ? "Почему это верно" : "Почему так"}</p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
+                    </div>
+
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildReasoningHint(currentQuestion)}</p>
+                    </div>
+
+                    {!isCorrect && (
+                      <div className="rounded-2xl bg-white/80 p-3">
+                        <p className="text-sm font-semibold text-slate-900">Типичная ловушка</p>
+                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildTrapHint(currentQuestion)}</p>
+                      </div>
+                    )}
+
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Что дальше</p>
                       <p className="mt-1.5 text-sm leading-6 text-slate-600">
-                        Ошибка уйдёт на повтор. Похожее задание вернётся позже, чтобы закрепить навык, а не просто увидеть правильный ответ.
+                        {isCorrect
+                          ? buildNextStepHint(true)
+                          : "Ошибка уйдёт на повтор. Похожее задание вернётся позже, чтобы закрепить навык, а не просто увидеть правильный ответ."}
                       </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 
