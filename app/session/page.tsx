@@ -54,7 +54,7 @@ export default function SessionPage() {
     const dueReviewIds = getDueReviewEntries(nextSubject).map((entry) => entry.questionId);
     const prioritizedIncorrectIds = Array.from(new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject)]));
     const candidateQuestions = buildSessionQuestions(nextSubject, {
-      count: 9,
+      count: 15,
       seenIds,
       incorrectIds: prioritizedIncorrectIds,
       taskType: selectedTask?.taskType,
@@ -67,7 +67,7 @@ export default function SessionPage() {
         const rightRank = rightPriority === -1 ? 999 : rightPriority;
         return leftRank - rightRank;
       })
-      .slice(0, 9);
+      .slice(0, 15);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
@@ -151,7 +151,7 @@ export default function SessionPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <h1 className="text-2xl font-bold leading-tight tracking-tight">Подбираем задания</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Собираем сессию по выбранному предмету и темам на повторение.
+              Собираем 15 заданий из большого банка: слабые места, повтор ошибок и формат ЕГЭ.
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function SessionPage() {
             </p>
             <h1 className="mt-3 text-3xl font-black leading-tight">{guide?.title ?? repeatFocusLabel ?? "Рабочая сессия"}</h1>
             <p className="mt-3 text-sm leading-6 text-white/82">
-              Перед задачами быстро вспоминаем правило. Так тренировка работает не как тест, а как обучение.
+              Перед задачами быстро вспоминаем правило. Это короткая учебная сессия: 15 заданий из большого банка по формату ЕГЭ.
             </p>
           </section>
 
@@ -192,7 +192,7 @@ export default function SessionPage() {
           </section>
 
           <button type="button" onClick={() => setShowLesson(false)} className="primary-cta">
-            <span className="block leading-none text-white">Начать 9 заданий</span>
+            <span className="block leading-none text-white">Начать 15 заданий</span>
           </button>
         </div>
       </main>
@@ -205,7 +205,7 @@ export default function SessionPage() {
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
           <span>{selectedModeLabel ? `Навык: ${selectedModeLabel}` : "Учебная сессия"}</span>
           <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            {isFinished ? "Готово" : `${currentIndex + 1}/${questions.length}`}
+            {isFinished ? "Готово" : `${currentIndex + 1} из ${questions.length}`}
           </span>
         </div>
 

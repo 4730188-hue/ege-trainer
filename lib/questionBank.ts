@@ -424,7 +424,7 @@ const socialSession = createQuestions("social", "session", [
 ]);
 
 function createMiniVariants(subject: SubjectKey, questions: BankQuestion[]) {
-  const questionsPerVariant = 12;
+  const questionsPerVariant = 20;
 
   return [0, 1, 2].map((index) => ({
     id: `${subject}-mini-variant-${index + 1}`,
@@ -471,7 +471,7 @@ export function buildSessionQuestions(
   subject: SubjectKey,
   options: { count?: number; seenIds?: string[]; incorrectIds?: string[]; taskType?: TaskType | null } = {},
 ) {
-  const count = options.count ?? 9;
+  const count = options.count ?? 15;
   const seenIds = new Set(options.seenIds ?? []);
   const incorrectIds = new Set(options.incorrectIds ?? []);
   const allQuestions = shuffle(getQuestionsBySubject(subject, "session"));

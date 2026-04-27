@@ -105,7 +105,7 @@ export default function MiniVariantPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <h1 className="text-2xl font-bold leading-tight tracking-tight">Готовим мини-вариант</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Подбираем вариант по выбранному предмету.
+              Подбираем 20 заданий по предмету: проверка темпа, устойчивости и формата ЕГЭ.
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function MiniVariantPage() {
 
           <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight">Мини-вариант ЕГЭ</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Вариант на 12 вопросов, чтобы проверить темп, выносливость и собранность по предмету.
+            20 заданий по формату ЕГЭ: моментальная проверка, решения и разбор ошибок после ответа.
           </p>
         </div>
 

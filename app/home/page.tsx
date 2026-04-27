@@ -121,7 +121,7 @@ export default function HomePage() {
           <h1 className="text-[2.35rem] font-black leading-[1.03] tracking-[-0.055em] text-slate-950">
             Твой план<br />на сегодня
           </h1>
-          <p className="mt-4 text-lg leading-7 text-slate-500">1 шаг до сильной тренировки</p>
+          <p className="mt-4 text-lg leading-7 text-slate-500">15 заданий из большого банка</p>
 
           <div className="my-6 h-px bg-slate-200" />
 
@@ -135,10 +135,10 @@ export default function HomePage() {
 
           <div className="mt-7 space-y-3">
             <Link href="/session" onClick={handleWeakTraining} className="block rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)]">
-              Продолжить тренировку →
+              Начать 15 заданий →
             </Link>
             <Link href="/mini-variant" className="block rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center text-lg font-semibold text-slate-950">
-              Открыть мини-вариант →
+              Мини-вариант на 20 заданий →
             </Link>
           </div>
         </section>
@@ -150,7 +150,7 @@ export default function HomePage() {
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-blue-600">✦</div>
               <div className="min-w-0">
                 <div className="text-lg font-semibold text-slate-950">Рекомендуем: {nextRecommendation}</div>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{focusLabel} · 9 заданий с коротким мини-уроком</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">{focusLabel} · 15 заданий · мини-урок · моментальная проверка</p>
               </div>
             </div>
             <Link href="/session" onClick={handleWeakTraining} className="mt-5 block rounded-2xl bg-blue-600 px-5 py-4 text-center text-base font-semibold text-white">
@@ -176,7 +176,7 @@ export default function HomePage() {
         <Link href="/paywall" className="flex items-center justify-between rounded-[1.5rem] border border-blue-100 bg-blue-50/80 px-5 py-4 text-blue-800">
           <div>
             <div className="font-semibold">{isPro ? "Pro активен" : "Pro: безлимитные тренировки"}</div>
-            <div className="mt-1 text-sm text-blue-700/70">полный маршрут, повторы и разборы</div>
+            <div className="mt-1 text-sm text-blue-700/70">безлимит, разбор ошибок и полный маршрут</div>
           </div>
           <span className="text-2xl">→</span>
         </Link>
