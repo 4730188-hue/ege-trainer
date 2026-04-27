@@ -34,6 +34,8 @@ export type BankQuestion = {
   subject: SubjectKey;
   mode: QuestionMode;
   taskType: TaskType;
+  examLabel?: "Формат ЕГЭ" | "Типовое задание" | "По структуре экзамена";
+  skillLabel?: string;
   topic: string;
   difficulty: "easy" | "medium" | "hard";
   prompt: string;
@@ -116,14 +118,32 @@ function inferTaskType(subject: SubjectKey, topic: string): TaskType {
   return inferRussianTaskType(topic);
 }
 
+
+function formatSkillLabel(taskType: TaskType, topic: string) {
+  const fromTask = taskType.replaceAll("_", " ");
+  if (fromTask.length > 0) return fromTask.charAt(0).toUpperCase() + fromTask.slice(1);
+  return topic;
+}
+
+function inferExamLabel(mode: QuestionMode, index: number): BankQuestion["examLabel"] {
+  if (mode === "diagnosis") return "По структуре экзамена";
+  return index % 3 === 0 ? "Формат ЕГЭ" : "Типовое задание";
+}
+
 function createQuestions(subject: SubjectKey, mode: QuestionMode, entries: QuestionInput[]) {
-  return entries.map((entry, index) => ({
-    id: `${subject}-${mode}-${index + 1}`,
-    subject,
-    mode,
-    taskType: inferTaskType(subject, entry.topic),
-    ...entry,
-  }));
+  return entries.map((entry, index) => {
+    const taskType = inferTaskType(subject, entry.topic);
+
+    return {
+      id: `${subject}-${mode}-${index + 1}`,
+      subject,
+      mode,
+      taskType,
+      examLabel: entry.examLabel ?? inferExamLabel(mode, index),
+      skillLabel: entry.skillLabel ?? formatSkillLabel(taskType, entry.topic),
+      ...entry,
+    };
+  });
 }
 
 function shuffle<T>(items: T[]) {

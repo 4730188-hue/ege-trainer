@@ -15,6 +15,14 @@ import {
 const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
 const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
 
+function getQuestionMeta(question: NonNullable<MiniVariant["questions"][number]>) {
+  return `${question.examLabel ?? "Формат ЕГЭ"} · ${question.skillLabel ?? question.topic}`;
+}
+
+function buildRepeatHint(question: NonNullable<MiniVariant["questions"][number]>) {
+  return `${question.skillLabel ?? question.topic}: повтори правило, затем проверь похожее задание в обычной тренировке.`;
+}
+
 function buildReasoningHint(question: NonNullable<MiniVariant["questions"][number]>) {
   if (question.topic.toLowerCase().includes("эконом")) {
     return "Сначала выдели ключевое общественное явление или термин, затем сравни его с признаками в вариантах ответа.";
@@ -170,9 +178,9 @@ export default function MiniVariantPage() {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/40">
-          <div className="flex items-center justify-between gap-3">
-            <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-              {currentQuestion.topic}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+              {getQuestionMeta(currentQuestion)}
             </div>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
               {currentQuestion.difficulty}
@@ -234,6 +242,11 @@ export default function MiniVariantPage() {
                       <p className="mt-1 text-sm leading-5 text-slate-600">{buildTrapHint(currentQuestion)}</p>
                     </div>
                   )}
+
+                  <div className="rounded-xl bg-white/80 p-3">
+                    <p className="text-sm font-semibold text-slate-900">Что повторить</p>
+                    <p className="mt-1 text-sm leading-5 text-slate-600">{buildRepeatHint(currentQuestion)}</p>
+                  </div>
 
                   <div className="rounded-xl bg-white/80 p-3">
                     <p className="text-sm font-semibold text-slate-900">Что дальше</p>

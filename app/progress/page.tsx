@@ -67,7 +67,7 @@ export default function ProgressPage() {
 
       <div className="mx-auto w-full max-w-md space-y-8 pt-7">
         <section>
-          <p className="text-sm text-slate-500">Аналитика без перегруза</p>
+          <p className="text-sm text-slate-500">Карта подготовки по формату ЕГЭ</p>
           <h1 className="mt-2 text-[2.35rem] font-black leading-[1.04] tracking-[-0.055em]">Твой прогресс</h1>
         </section>
 
@@ -119,7 +119,7 @@ export default function ProgressPage() {
   </Link>
 </div>
 <div className="mt-4 rounded-2xl bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
-  Pro: безлимитные тренировки, разбор ошибок и мини-варианты без остановки.
+  Pro: безлимитные тренировки, типовые задания по формату ЕГЭ, разбор ошибок и мини-варианты без остановки.
 </div>
         </section>
 

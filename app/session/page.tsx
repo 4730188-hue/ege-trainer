@@ -31,6 +31,15 @@ import {
 const positiveFeedback = ["Супер ✨", "Отлично 🔥", "Точно 💫", "Сильный ход ✅", "Так держать 🚀"];
 const gentleFeedback = ["Почти 👀", "Разберём 📘", "Бывает 🌿", "Спокойно, идём дальше ✍️", "Уже ближе 💡"];
 
+function getQuestionMeta(question?: BankQuestion | null) {
+  if (!question) return "Формат ЕГЭ";
+  return `${question.examLabel ?? "Формат ЕГЭ"} · ${question.skillLabel ?? question.topic}`;
+}
+
+function buildRepeatHint(question: BankQuestion) {
+  return `${question.skillLabel ?? question.topic}: повтори правило, реши похожее задание и проверь, почему остальные варианты не подходят.`;
+}
+
 function buildReasoningHint(question: BankQuestion) {
   if (question.taskType?.includes("пунктуа") || question.topic.toLowerCase().includes("пунктуа")) {
     return "Сначала найди грамматические основы или оборот, потом проверь, нужна ли здесь запятая по правилу.";
@@ -299,16 +308,19 @@ export default function SessionPage() {
             )}
 
             <div className="flex flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
-                  {currentQuestion.topic}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                  {getQuestionMeta(currentQuestion)}
                 </span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
                   {currentQuestion.difficulty}
                 </span>
               </div>
+              <p className="mt-3 text-sm font-medium text-slate-500">
+                {isReviewSession ? `Ошибка ${currentIndex + 1} из ${questions.length}` : `Задание ${currentIndex + 1} из ${questions.length}`} · типовая подготовка
+              </p>
 
-              <h1 className="mt-5 text-3xl font-bold leading-tight tracking-tight">{currentQuestion.prompt}</h1>
+              <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight">{currentQuestion.prompt}</h1>
 
               <div className="mt-6 space-y-3">
                 {currentQuestion.options.map((option) => {
@@ -371,6 +383,11 @@ export default function SessionPage() {
                         <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildTrapHint(currentQuestion)}</p>
                       </div>
                     )}
+
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <p className="text-sm font-semibold text-slate-900">Что повторить</p>
+                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildRepeatHint(currentQuestion)}</p>
+                    </div>
 
                     <div className="rounded-2xl bg-white/80 p-3">
                       <p className="text-sm font-semibold text-slate-900">Что дальше</p>

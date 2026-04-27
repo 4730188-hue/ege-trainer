@@ -122,7 +122,7 @@ export default function HomePage() {
           <h1 className="text-[2.35rem] font-black leading-[1.03] tracking-[-0.055em] text-slate-950">
             Твой план<br />на сегодня
           </h1>
-          <p className="mt-4 text-lg leading-7 text-slate-500">15 заданий из большого банка</p>
+          <p className="mt-4 text-lg leading-7 text-slate-500">15 заданий из большого банка · типовые задания по формату ЕГЭ</p>
 
           <div className="my-6 h-px bg-slate-200" />
 
@@ -182,7 +182,7 @@ export default function HomePage() {
         <Link href="/paywall" className="flex items-center justify-between rounded-[1.5rem] border border-blue-100 bg-blue-50/80 px-5 py-4 text-blue-800">
           <div>
             <div className="font-semibold">{isPro ? "Pro активен" : "Pro: безлимитные тренировки"}</div>
-            <div className="mt-1 text-sm text-blue-700/70">безлимит, разбор ошибок и полный маршрут</div>
+            <div className="mt-1 text-sm text-blue-700/70">безлимит, типовые задания, решения и разбор ошибок</div>
           </div>
           <span className="text-2xl">→</span>
         </Link>

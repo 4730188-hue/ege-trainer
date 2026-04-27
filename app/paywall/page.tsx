@@ -70,7 +70,7 @@ export default function PaywallPage() {
         <section>
           <p className="text-sm text-slate-500">для ученика и родителя</p>
           <h1 className="mt-2 text-[2.35rem] font-black leading-[1.04] tracking-[-0.055em]">Открой полный маршрут подготовки</h1>
-          <p className="mt-4 text-lg leading-7 text-slate-500">Безлимитные тренировки, мини-варианты на 20 заданий, моментальная проверка, решения и разбор ошибок.</p>
+          <p className="mt-4 text-lg leading-7 text-slate-500">Безлимитные тренировки, мини-варианты на 20 заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и разбор ошибок.</p>
         </section>
 
         <section className="grid grid-cols-2 gap-3">
@@ -110,7 +110,7 @@ export default function PaywallPage() {
         <section className="rounded-[2rem] border border-blue-100 bg-blue-50/70 p-6">
           <h2 className="text-xl font-bold tracking-[-0.035em]">Почему это похоже на подготовку, а не тестик</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Предмет: {subjectLabel}. В основе — тренировки по предметам и типам заданий, формат ЕГЭ, моментальная проверка и повтор ошибок. Сейчас на повторе: {repeatCount}. Free-лимиты: session {sessionGate?.count ?? 0}/{sessionGate?.limit ?? 1}, mini {miniGate?.count ?? 0}/{miniGate?.limit ?? 1}.
+            Предмет: {subjectLabel}. В основе — тренировки по предметам и типам заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и повтор ошибок. Сейчас на повторе: {repeatCount}. Free-лимиты: session {sessionGate?.count ?? 0}/{sessionGate?.limit ?? 1}, mini {miniGate?.count ?? 0}/{miniGate?.limit ?? 1}.
           </p>
         </section>
       </div>
