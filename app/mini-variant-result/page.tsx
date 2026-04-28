@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import TopMenu from "@/app/components/TopMenu";
 import {
   getMiniVariantProgress,
   getSubjectLabel,
@@ -41,6 +42,7 @@ export default function MiniVariantResultPage() {
 
   return (
     <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
+      <TopMenu subtitle="результат мини-варианта" />
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
         <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
           <span>Результат мини-варианта</span>

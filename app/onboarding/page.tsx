@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { saveStudentProfile } from "@/lib/storage";
+import TopMenu from "@/app/components/TopMenu";
 
 const subjectOptions = [
   { key: "russian", title: "Русский язык", note: "Текст, орфография, пунктуация" },
@@ -61,6 +62,7 @@ export default function OnboardingPage() {
 
   return (
     <main className="min-h-[100dvh] px-4 py-4 text-slate-900">
+      <TopMenu subtitle="настройка" />
       <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-white/65 bg-white/55 px-4 py-2 text-sm text-slate-500 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur-xl">
           <span>Красивый старт</span>

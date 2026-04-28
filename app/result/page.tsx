@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDiagnosisResult, getSubjectLabel, type DiagnosisResult } from "@/lib/storage";
+import TopMenu from "@/app/components/TopMenu";
 
 function getSubjectAdvice(subjectLabel: string) {
   if (subjectLabel === "Профильная математика") {
@@ -44,6 +45,7 @@ export default function ResultPage() {
 
   return (
     <main className="min-h-[100dvh] px-4 py-4 text-slate-900">
+      <TopMenu subtitle="результат" />
       <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
         <div className="flex items-center justify-between rounded-full border border-white/65 bg-white/55 px-4 py-2 text-sm text-slate-500 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur-xl">
           <span>Стартовый срез</span>

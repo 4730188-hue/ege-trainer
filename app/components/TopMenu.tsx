@@ -16,9 +16,13 @@ const menuItems = [
 type TopMenuProps = {
   title?: string;
   subtitle?: string;
+  showExitToHome?: boolean;
 };
 
-export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle }: TopMenuProps) {
+const feedbackUrl = "https://t.me/ege_trainer_demo_bot?start=feedback";
+const taskErrorUrl = "https://t.me/ege_trainer_demo_bot?start=task_error";
+
+export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, showExitToHome = false }: TopMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -84,6 +88,45 @@ export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle }:
                   <span>{item.label}</span>
                 </Link>
               ))}
+
+              {showExitToHome && (
+                <Link
+                  href="/home"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-4 rounded-3xl border border-amber-100 bg-amber-50 px-4 py-4 text-lg font-semibold text-amber-800 transition hover:bg-amber-100"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-100 bg-white text-xl text-amber-700">
+                    ↩
+                  </span>
+                  <span>Прервать и выйти</span>
+                </Link>
+              )}
+
+              <a
+                href={feedbackUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 rounded-3xl px-4 py-4 text-lg font-medium text-slate-700 transition hover:bg-white"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-600">
+                  ?
+                </span>
+                <span>Обратная связь</span>
+              </a>
+
+              <a
+                href={taskErrorUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 rounded-3xl px-4 py-4 text-lg font-medium text-slate-700 transition hover:bg-white"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-600">
+                  !
+                </span>
+                <span>Сообщить об ошибке</span>
+              </a>
             </nav>
 
             <div className="mt-auto rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
