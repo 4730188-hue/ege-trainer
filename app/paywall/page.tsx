@@ -113,6 +113,12 @@ export default function PaywallPage() {
             Предмет: {subjectLabel}. В основе — тренировки по предметам и типам заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и повтор ошибок. Сейчас на повторе: {repeatCount}. Free-лимиты: session {sessionGate?.count ?? 0}/{sessionGate?.limit ?? 1}, mini {miniGate?.count ?? 0}/{miniGate?.limit ?? 1}.
           </p>
         </section>
+
+        <div className="grid grid-cols-3 gap-2 text-center text-sm">
+          <Link href="/privacy" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Политика</Link>
+          <Link href="/offer" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Оферта</Link>
+          <Link href="/contacts" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Контакты</Link>
+        </div>
       </div>
     </main>
   );

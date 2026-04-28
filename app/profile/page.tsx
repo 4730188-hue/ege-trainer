@@ -96,6 +96,12 @@ export default function ProfilePage() {
           {!isPro && <Link href="/paywall" className="mt-5 block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">Посмотреть Pro</Link>}
         </section>
 
+        <div className="grid grid-cols-3 gap-2 text-center text-sm">
+          <Link href="/privacy" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Политика</Link>
+          <Link href="/offer" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Оферта</Link>
+          <Link href="/contacts" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Контакты</Link>
+        </div>
+
         <button type="button" onClick={handleReset} className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-semibold text-slate-700">
           Сбросить локальные данные
         </button>
