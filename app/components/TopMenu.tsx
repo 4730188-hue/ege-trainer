@@ -56,33 +56,33 @@ export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, s
             className="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px]"
           />
 
-          <aside className="absolute right-0 top-0 flex h-full w-[78%] max-w-xs flex-col rounded-l-[2rem] border-l border-slate-200 bg-[#fbfaf7] p-5 shadow-[-24px_0_60px_rgba(15,23,42,0.14)]">
-            <div className="mb-7 flex items-center justify-between">
+          <aside className="absolute right-0 top-0 flex h-full w-[82%] max-w-[320px] flex-col rounded-l-3xl border-l border-slate-200 bg-[#fbfaf7] p-4 shadow-[-24px_0_60px_rgba(15,23,42,0.14)]">
+            <div className="mb-3 flex items-center justify-between">
               <div>
-                <div className="text-xl font-bold tracking-[-0.035em] text-slate-950">Меню</div>
-                <div className="text-sm text-slate-500">быстрый доступ</div>
+                <div className="text-lg font-bold tracking-[-0.035em] text-slate-950">Меню</div>
+                <div className="text-xs text-slate-500">быстрый доступ</div>
               </div>
               <button
                 type="button"
                 aria-label="Закрыть меню"
                 onClick={() => setIsOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-2xl leading-none text-slate-700"
+                className="flex h-8 w-8 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl leading-none text-slate-700"
               >
                 ×
               </button>
             </div>
 
-            <nav className="space-y-2">
+            <nav className="space-y-1.5">
               {menuItems.map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 rounded-3xl px-4 py-4 text-lg font-medium transition ${
+                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] font-medium transition ${
                     index === 0 ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-white"
                   }`}
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-600">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-600">
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -93,9 +93,9 @@ export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, s
                 <Link
                   href="/home"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 rounded-3xl border border-amber-100 bg-amber-50 px-4 py-4 text-lg font-semibold text-amber-800 transition hover:bg-amber-100"
+                  className="flex items-center gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2.5 text-[15px] font-semibold text-amber-800 transition hover:bg-amber-100"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-100 bg-white text-xl text-amber-700">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-100 bg-white text-base text-amber-700">
                     ↩
                   </span>
                   <span>Прервать и выйти</span>
@@ -107,9 +107,9 @@ export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, s
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 rounded-3xl px-4 py-4 text-lg font-medium text-slate-700 transition hover:bg-white"
+                className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] font-medium text-slate-700 transition hover:bg-white"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-600">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-600">
                   ?
                 </span>
                 <span>Обратная связь</span>
@@ -120,19 +120,15 @@ export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, s
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 rounded-3xl px-4 py-4 text-lg font-medium text-slate-700 transition hover:bg-white"
+                className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[15px] font-medium text-slate-700 transition hover:bg-white"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-600">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-base text-slate-600">
                   !
                 </span>
                 <span>Сообщить об ошибке</span>
               </a>
             </nav>
 
-            <div className="mt-auto rounded-3xl border border-blue-100 bg-blue-50/70 p-4">
-              <div className="text-sm font-semibold text-blue-800">Pro без лишнего шума</div>
-              <p className="mt-1 text-sm leading-5 text-blue-700/80">Больше тренировок, повторов и мини-вариантов.</p>
-            </div>
           </aside>
         </div>
       )}
