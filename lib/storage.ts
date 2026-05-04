@@ -202,6 +202,52 @@ function safeWrite<T>(key: string, value: T) {
   }
 }
 
+
+function getTelegramUserId() {
+  if (!isBrowser()) return null;
+
+  const telegram = (window as typeof window & {
+    Telegram?: { WebApp?: { initDataUnsafe?: { user?: { id?: number | string } } } };
+  }).Telegram;
+
+  const id = telegram?.WebApp?.initDataUnsafe?.user?.id;
+  return id ? `tg:${String(id)}` : null;
+}
+
+export function getPaymentUserId() {
+  if (!isBrowser()) return "server";
+
+  const telegramUserId = getTelegramUserId();
+  if (telegramUserId) return telegramUserId;
+
+  const key = "ege-trainer:payment-user-id";
+  const existing = window.localStorage.getItem(key);
+  if (existing) return existing;
+
+  const next = `web:${crypto.randomUUID()}`;
+  window.localStorage.setItem(key, next);
+  return next;
+}
+
+export async function syncProSubscriptionFromServer() {
+  if (!isBrowser()) return getProSubscription();
+
+  const userId = getPaymentUserId();
+  const response = await fetch(`/api/subscription?userId=${encodeURIComponent(userId)}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) return getProSubscription();
+
+  const data = await response.json();
+
+  if (data.active) {
+    return activatePro((data.subscription?.plan || "monthly") as ProPlanKey);
+  }
+
+  return getProSubscription();
+}
+
 function dedupe(items: string[]) {
   return Array.from(new Set(items));
 }

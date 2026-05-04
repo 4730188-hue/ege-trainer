@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import TopMenu from "@/app/components/TopMenu";
 import {
-  activatePro,
   getFreeGateStatus,
   getProPlanLabel,
+  getPaymentUserId,
   getProSubscription,
   getRepeatInsight,
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
+  syncProSubscriptionFromServer,
   type ProPlanKey,
   type ProSubscription,
 } from "@/lib/storage";
@@ -28,6 +29,8 @@ export default function PaywallPage() {
   const [repeatCount, setRepeatCount] = useState(0);
   const [sessionGate, setSessionGate] = useState<ReturnType<typeof getFreeGateStatus> | null>(null);
   const [miniGate, setMiniGate] = useState<ReturnType<typeof getFreeGateStatus> | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
     const profile = getStudentProfile();
@@ -37,13 +40,48 @@ export default function PaywallPage() {
     setSessionGate(getFreeGateStatus("session"));
     setMiniGate(getFreeGateStatus("miniVariant"));
     setSubscription(getProSubscription());
+
+    syncProSubscriptionFromServer()
+      .then(setSubscription)
+      .catch(() => {
+        // Если сервер недоступен, просто оставляем локальный статус.
+      });
   }, []);
 
   const isPro = Boolean(subscription?.isPro);
 
-  const handleActivate = () => {
-    const next = activatePro(selectedPlan);
-    setSubscription(next);
+  const handleActivate = async () => {
+    try {
+      setIsPaying(true);
+      setPaymentError("");
+
+      const response = await fetch("/api/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          userId: getPaymentUserId(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Не удалось создать оплату");
+      }
+
+      if (!data.confirmationUrl) {
+        throw new Error("ЮKassa не вернула ссылку на оплату");
+      }
+
+      window.location.href = data.confirmationUrl;
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : "Не удалось перейти к оплате");
+    } finally {
+      setIsPaying(false);
+    }
   };
 
   if (isPro) {
@@ -92,10 +130,16 @@ export default function PaywallPage() {
           })}
         </section>
 
-        <button type="button" onClick={handleActivate} className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)]">
-          Оформить Pro
+        <button
+          type="button"
+          onClick={handleActivate}
+          disabled={isPaying}
+          className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] disabled:opacity-60"
+        >
+          {isPaying ? "Создаём оплату..." : "Оплатить Pro через СБП"}
         </button>
-        <p className="-mt-5 text-center text-sm text-slate-500">Pro активируется сразу. Сейчас это mock purchase flow без списания.</p>
+        {paymentError ? <p className="-mt-5 text-center text-sm text-red-600">{paymentError}</p> : null}
+        <p className="-mt-5 text-center text-sm text-slate-500">После оплаты ЮKassa подтвердит платёж, и Pro включится автоматически.</p>
 
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold tracking-[-0.035em]">Free и Pro</h2>
