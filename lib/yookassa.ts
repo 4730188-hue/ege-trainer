@@ -18,7 +18,13 @@ export async function createYooKassaPayment(params: {
   description: string;
   returnUrl: string;
   metadata: Record<string, string>;
+  customerEmail?: string;
 }) {
+  const customerEmail =
+    params.customerEmail && params.customerEmail.includes("@")
+      ? params.customerEmail
+      : "client@example.com";
+
   const response = await fetch(`${YOOKASSA_API_URL}/payments`, {
     method: "POST",
     headers: {
@@ -41,6 +47,24 @@ export async function createYooKassaPayment(params: {
       },
       description: params.description,
       metadata: params.metadata,
+      receipt: {
+        customer: {
+          email: customerEmail,
+        },
+        items: [
+          {
+            description: params.description,
+            quantity: "1.00",
+            amount: {
+              value: params.value,
+              currency: "RUB",
+            },
+            vat_code: 1,
+            payment_mode: "full_payment",
+            payment_subject: "service",
+          },
+        ],
+      },
     }),
   });
 
