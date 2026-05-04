@@ -176,6 +176,8 @@ const STORAGE_KEYS = {
   reviewMode: "ege-trainer:review-mode",
 } as const;
 
+const PAYMENT_USER_ID_KEY = "ege-trainer:payment-user-id";
+
 function isBrowser() {
   return typeof window !== "undefined";
 }
@@ -220,7 +222,7 @@ export function getPaymentUserId() {
   const telegramUserId = getTelegramUserId();
   if (telegramUserId) return telegramUserId;
 
-  const key = "ege-trainer:payment-user-id";
+  const key = PAYMENT_USER_ID_KEY;
   const existing = window.localStorage.getItem(key);
   if (existing) return existing;
 
@@ -874,9 +876,20 @@ export function clearAppState() {
   if (!isBrowser()) return;
 
   try {
+    const preservedProSubscription = window.localStorage.getItem(STORAGE_KEYS.proSubscription);
+    const preservedPaymentUserId = window.localStorage.getItem(PAYMENT_USER_ID_KEY);
+
     Object.values(STORAGE_KEYS).forEach((key) => {
       window.localStorage.removeItem(key);
     });
+
+    if (preservedProSubscription) {
+      window.localStorage.setItem(STORAGE_KEYS.proSubscription, preservedProSubscription);
+    }
+
+    if (preservedPaymentUserId) {
+      window.localStorage.setItem(PAYMENT_USER_ID_KEY, preservedPaymentUserId);
+    }
   } catch {
     // noop
   }

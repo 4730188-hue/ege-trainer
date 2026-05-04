@@ -10,6 +10,7 @@ import {
   getStudentProfile,
   getSubjectLabel,
   normalizeSubjectKey,
+  syncProSubscriptionFromServer,
   updateStudentSubject,
   type ProSubscription,
   type StudentProfile,
@@ -34,6 +35,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     refresh();
+
+    syncProSubscriptionFromServer()
+      .then((serverSubscription) => {
+        setSubscription(serverSubscription);
+      })
+      .catch(() => {
+        // Если сервер недоступен, оставляем локальный статус.
+      });
   }, []);
 
   const subject = normalizeSubjectKey(profile?.subject);
