@@ -1,6 +1,8 @@
+import { randomUUID } from "crypto";
+
 const YOOKASSA_API_URL = "https://api.yookassa.ru/v3";
 
-function getYooKassaAuthHeader() {
+function getAuthHeader() {
   const shopId = process.env.YOOKASSA_SHOP_ID;
   const secretKey = process.env.YOOKASSA_SECRET_KEY;
 
@@ -20,9 +22,9 @@ export async function createYooKassaPayment(params: {
   const response = await fetch(`${YOOKASSA_API_URL}/payments`, {
     method: "POST",
     headers: {
-      Authorization: getYooKassaAuthHeader(),
+      Authorization: getAuthHeader(),
       "Content-Type": "application/json",
-      "Idempotence-Key": crypto.randomUUID(),
+      "Idempotence-Key": randomUUID(),
     },
     body: JSON.stringify({
       amount: {
@@ -45,8 +47,8 @@ export async function createYooKassaPayment(params: {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error("YooKassa create payment error", data);
-    throw new Error("Failed to create YooKassa payment");
+    console.error("YooKassa create payment error:", JSON.stringify(data));
+    throw new Error(`Failed to create YooKassa payment: ${JSON.stringify(data)}`);
   }
 
   return data;
@@ -56,7 +58,7 @@ export async function getYooKassaPayment(paymentId: string) {
   const response = await fetch(`${YOOKASSA_API_URL}/payments/${paymentId}`, {
     method: "GET",
     headers: {
-      Authorization: getYooKassaAuthHeader(),
+      Authorization: getAuthHeader(),
       "Content-Type": "application/json",
     },
   });
@@ -64,8 +66,8 @@ export async function getYooKassaPayment(paymentId: string) {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error("YooKassa get payment error", data);
-    throw new Error("Failed to get YooKassa payment");
+    console.error("YooKassa get payment error:", JSON.stringify(data));
+    throw new Error(`Failed to get YooKassa payment: ${JSON.stringify(data)}`);
   }
 
   return data;
