@@ -23,10 +23,10 @@ export default function LandingPage() {
               подготовка без хаоса
             </p>
             <h1 className="mt-4 text-[2.7rem] font-black leading-[1.02] tracking-[-0.06em] text-slate-950">
-              Подготовка к ЕГЭ по плану
+              ЕГЭ Тренажёр
             </h1>
             <p className="mt-4 text-base leading-7 text-slate-500">
-              Тренировки по предметам, проверка, решения и повтор ошибок.
+              Тренировки по русскому, математике и обществознанию для сдачи ЕГЭ.
             </p>
 
             <div className="mt-7 grid grid-cols-3 gap-2">
@@ -54,6 +54,18 @@ export default function LandingPage() {
               Безлимитные тренировки, мини-варианты на 20 заданий и расширенный разбор прогресса для ученика и родителя.
             </p>
           </section>
+        <section className="mt-6">
+          <a
+            href="/paywall"
+            className="block rounded-[2rem] border border-blue-100 bg-blue-50/80 p-6 shadow-sm shadow-blue-100/60 transition active:scale-[0.99]"
+          >
+            <div className="text-2xl font-bold tracking-[-0.035em] text-slate-950">Pro: безлимитные тренировки</div>
+            <p className="mt-3 text-lg leading-7 text-blue-700">
+              безлимит, типовые задания, решения и разбор ошибок →
+            </p>
+          </a>
+        </section>
+
         </section>
       </div>
     </main>

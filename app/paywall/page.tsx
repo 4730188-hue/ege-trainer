@@ -98,11 +98,11 @@ export default function PaywallPage() {
         <p className="-mt-5 text-center text-sm text-slate-500">Pro активируется сразу. Сейчас это mock purchase flow без списания.</p>
 
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-bold tracking-[-0.035em]">Что открывает Pro</h2>
+          <h2 className="text-xl font-bold tracking-[-0.035em]">Free и Pro</h2>
           <div className="mt-4 space-y-3 text-base text-slate-700">
             <p>• Безлимитные тренировки по предметам</p>
             <p>• Мини-варианты на 20 заданий без лимита</p>
-            <p>• Моментальная проверка, решения и повтор ошибок</p>
+            <p>• Моментальная проверка, решения и повтор ошибок\n• Доступ к закрытому Telegram-чату</p>
             <p>• Прогресс, понятный ученику и родителю</p>
           </div>
         </section>
