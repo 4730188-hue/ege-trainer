@@ -22,6 +22,25 @@ const plans: Array<{ key: ProPlanKey; title: string; price: string; note: string
   { key: "quarterly", title: "3 месяца", price: "1490 ₽", note: "лучший горизонт", badge: "рекомендуем" },
 ];
 
+type TelegramPaymentWindow = Window & {
+  Telegram?: {
+    WebApp?: {
+      openLink?: (url: string, options?: { try_instant_view?: boolean }) => void;
+    };
+  };
+};
+
+function openPaymentLink(url: string) {
+  const telegramWebApp = (window as TelegramPaymentWindow).Telegram?.WebApp;
+
+  if (telegramWebApp?.openLink) {
+    telegramWebApp.openLink(url, { try_instant_view: false });
+    return;
+  }
+
+  window.location.href = url;
+}
+
 export default function PaywallPage() {
   const [selectedPlan, setSelectedPlan] = useState<ProPlanKey>("quarterly");
   const [subscription, setSubscription] = useState<ProSubscription | null>(null);
@@ -41,11 +60,29 @@ export default function PaywallPage() {
     setMiniGate(getFreeGateStatus("miniVariant"));
     setSubscription(getProSubscription());
 
-    syncProSubscriptionFromServer()
-      .then(setSubscription)
-      .catch(() => {
-        // Если сервер недоступен, просто оставляем локальный статус.
-      });
+    const checkServerSubscription = () => {
+      syncProSubscriptionFromServer()
+        .then(setSubscription)
+        .catch(() => {
+          // Если сервер недоступен, просто оставляем локальный статус.
+        });
+    };
+
+    checkServerSubscription();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkServerSubscription();
+      }
+    };
+
+    window.addEventListener("focus", checkServerSubscription);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("focus", checkServerSubscription);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   const isPro = Boolean(subscription?.isPro);
@@ -76,7 +113,7 @@ export default function PaywallPage() {
         throw new Error("ЮKassa не вернула ссылку на оплату");
       }
 
-      window.location.href = data.confirmationUrl;
+      openPaymentLink(data.confirmationUrl);
     } catch (error) {
       setPaymentError(error instanceof Error ? error.message : "Не удалось перейти к оплате");
     } finally {
