@@ -2,28 +2,24 @@ import { Pool } from "pg";
 
 declare global {
   // eslint-disable-next-line no-var
-  var egeTrainerPgPool: Pool | undefined;
+  var pgPool: Pool | undefined;
 }
 
-function getDatabaseUrl() {
-  const url = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 
-  if (!url) {
-    throw new Error("DATABASE_URL is missing");
-  }
-
-  return url;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is missing");
 }
 
 export const db =
-  global.egeTrainerPgPool ??
+  global.pgPool ||
   new Pool({
-    connectionString: getDatabaseUrl(),
+    connectionString: databaseUrl,
     ssl: {
       rejectUnauthorized: false,
     },
   });
 
 if (process.env.NODE_ENV !== "production") {
-  global.egeTrainerPgPool = db;
+  global.pgPool = db;
 }
