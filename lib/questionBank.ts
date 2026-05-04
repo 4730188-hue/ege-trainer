@@ -745,21 +745,40 @@ function buildSocialLearningFields(entry: QuestionInput, taskType: TaskType): Le
 function createQuestions(subject: SubjectKey, mode: QuestionMode, entries: QuestionInput[]) {
   return entries.map((entry, index) => {
     const taskType = inferTaskType(subject, entry.topic);
+    const id = `${subject}-${mode}-${index + 1}`;
 
     return {
-      id: `${subject}-${mode}-${index + 1}`,
+      ...entry,
+      id,
       subject,
       mode,
       taskType,
+      options: seededShuffle(entry.options, id),
       examLabel: entry.examLabel ?? inferExamLabel(mode, index),
       skillLabel: entry.skillLabel ?? formatSkillLabel(taskType, entry.topic),
       rule: entry.rule ?? (subject === "math" ? buildMathLearningFields(entry, taskType)?.rule : subject === "russian" ? buildRussianLearningFields(entry, taskType)?.rule : subject === "social" ? buildSocialLearningFields(entry, taskType)?.rule : undefined) ?? getTaskTypeGuide(taskType)?.rule,
       solutionSteps: entry.solutionSteps ?? (subject === "math" ? buildMathLearningFields(entry, taskType)?.solutionSteps : subject === "russian" ? buildRussianLearningFields(entry, taskType)?.solutionSteps : subject === "social" ? buildSocialLearningFields(entry, taskType)?.solutionSteps : undefined) ?? buildDefaultSolutionSteps(subject, taskType, entry.topic),
       commonMistake: entry.commonMistake ?? (subject === "math" ? buildMathLearningFields(entry, taskType)?.commonMistake : subject === "russian" ? buildRussianLearningFields(entry, taskType)?.commonMistake : subject === "social" ? buildSocialLearningFields(entry, taskType)?.commonMistake : undefined) ?? getTaskTypeGuide(taskType)?.trap,
       repeatHint: entry.repeatHint ?? (subject === "math" ? buildMathLearningFields(entry, taskType)?.repeatHint : subject === "russian" ? buildRussianLearningFields(entry, taskType)?.repeatHint : subject === "social" ? buildSocialLearningFields(entry, taskType)?.repeatHint : undefined) ?? buildDefaultRepeatHint(taskType, entry.skillLabel ?? formatSkillLabel(taskType, entry.topic)),
-      ...entry,
     };
   });
+}
+
+function seededShuffle<T>(items: T[], seed: string) {
+  const copy = [...items];
+  let hash = 0;
+
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    hash = (hash * 1664525 + 1013904223) >>> 0;
+    const randomIndex = hash % (index + 1);
+    [copy[index], copy[randomIndex]] = [copy[randomIndex], copy[index]];
+  }
+
+  return copy;
 }
 
 function shuffle<T>(items: T[]) {
