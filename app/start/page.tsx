@@ -4,16 +4,11 @@ import { useEffect, useMemo } from 'react';
 
 export default function StartPage() {
   const telegramLink = useMemo(() => {
-    // TODO: Replace this with the real Mini App launch link if needed.
-    // Examples:
-    // return 'https://t.me/YOUR_BOT/YOUR_APP';
-    // return 'https://t.me/YOUR_BOT?start=diagnostic';
     return 'https://t.me/ege_trainer_demo_bot';
   }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-
     const utmData = {
       source: params.get('utm_source'),
       medium: params.get('utm_medium'),
@@ -29,13 +24,11 @@ export default function StartPage() {
 
   const handleTelegramClick = () => {
     if (typeof window !== 'undefined') {
-      const win = window as typeof window & {
-        ym?: (...args: unknown[]) => void;
-        YM_COUNTER_ID?: number;
-      };
-
-      if (win.ym && win.YM_COUNTER_ID) {
-        win.ym(win.YM_COUNTER_ID, 'reachGoal', 'click_telegram_start');
+      // Цель для Яндекс Метрики, если позже подключим counter id
+      // @ts-ignore
+      if (window.ym && window.YM_COUNTER_ID) {
+        // @ts-ignore
+        window.ym(window.YM_COUNTER_ID, 'reachGoal', 'click_telegram_start');
       }
     }
 
@@ -50,17 +43,16 @@ export default function StartPage() {
         </div>
 
         <h1 className="max-w-4xl text-4xl font-bold leading-tight md:text-6xl">
-          Бесплатная диагностика ЕГЭ прямо в Telegram
+          Твой личный ЕГЭ-тренер в Telegram
         </h1>
 
         <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-          Узнай слабые места, решай задания и получай понятные разборы ошибок.
-          EGE Trainer помогает готовиться к ЕГЭ без хаоса — каждый день по 10–15 минут.
+          Пройди бесплатную диагностику, узнай слабые места и начни готовиться к ЕГЭ
+          по понятному плану — по русскому, математике и обществознанию.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <button
-            type="button"
             onClick={handleTelegramClick}
             className="rounded-2xl bg-cyan-400 px-8 py-4 text-base font-bold text-slate-950 shadow-lg shadow-cyan-400/20 transition hover:bg-cyan-300"
           >
@@ -78,25 +70,25 @@ export default function StartPage() {
         <div className="mt-10 grid w-full gap-4 text-left md:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="text-2xl">🎯</div>
-            <h3 className="mt-3 text-lg font-bold">Диагностика уровня</h3>
+            <h3 className="mt-3 text-lg font-bold">Найдёшь слабые места</h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Пройди короткий тест и пойми, какие темы проседают прямо сейчас.
+              Пройди короткую диагностику и пойми, какие темы нужно подтянуть в первую очередь.
             </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="text-2xl">🧠</div>
-            <h3 className="mt-3 text-lg font-bold">Разбор ошибок</h3>
+            <h3 className="mt-3 text-lg font-bold">Разберёшь ошибки</h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Не просто “правильно/неправильно”, а объяснение правила и типичной ловушки.
+              Не просто “правильно/неправильно”, а объяснение правила, логики решения и типичной ловушки.
             </p>
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <div className="text-2xl">📈</div>
-            <h3 className="mt-3 text-lg font-bold">Прогресс без хаоса</h3>
+            <h3 className="mt-3 text-lg font-bold">Пойдёшь по плану</h3>
             <p className="mt-2 text-sm leading-6 text-slate-300">
-              Тренируйся регулярно, закрывай слабые места и отслеживай результат.
+              Тренируйся регулярно по 10–15 минут в день и постепенно закрывай слабые темы.
             </p>
           </div>
         </div>
@@ -113,7 +105,7 @@ export default function StartPage() {
               </div>
               <h3 className="font-bold">Открываешь Telegram</h3>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Без сложных платформ, логинов и лишних кабинетов.
+                Без сложных платформ, лишних регистраций и отдельных кабинетов.
               </p>
             </div>
 
@@ -133,7 +125,7 @@ export default function StartPage() {
               </div>
               <h3 className="font-bold">Решаешь задания</h3>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Диагностика, тренировки и мини-варианты.
+                Диагностика, тренировки и мини-варианты для регулярной подготовки.
               </p>
             </div>
 
@@ -141,9 +133,9 @@ export default function StartPage() {
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-cyan-400 font-bold text-slate-950">
                 4
               </div>
-              <h3 className="font-bold">Разбираешь ошибки</h3>
+              <h3 className="font-bold">Получаешь разбор</h3>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Понимаешь правило, ловушку и ход решения.
+                Понимаешь правило, ход решения и что повторить дальше.
               </p>
             </div>
           </div>
@@ -151,15 +143,14 @@ export default function StartPage() {
           <div className="mt-10 rounded-3xl bg-slate-900 p-6">
             <h3 className="text-xl font-bold">Для кого это</h3>
             <p className="mt-3 leading-7 text-slate-300">
-              Для школьников 10–11 классов, которые хотят готовиться к ЕГЭ регулярно,
-              но без хаоса. И для родителей, которым нужен понятный инструмент подготовки:
-              ребёнок занимается прямо в Telegram и видит свой прогресс.
+              Для школьников 10–11 классов, которые хотят готовиться к ЕГЭ спокойно,
+              регулярно и по понятной системе. И для родителей, которым нужен простой
+              инструмент подготовки: ребёнок занимается прямо в Telegram и видит свой прогресс.
             </p>
           </div>
 
           <div className="mt-8 text-center">
             <button
-              type="button"
               onClick={handleTelegramClick}
               className="rounded-2xl bg-cyan-400 px-8 py-4 text-base font-bold text-slate-950 shadow-lg shadow-cyan-400/20 transition hover:bg-cyan-300"
             >
