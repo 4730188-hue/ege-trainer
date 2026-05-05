@@ -19,8 +19,8 @@ type TopMenuProps = {
   showExitToHome?: boolean;
 };
 
-const feedbackUrl = "https://t.me/ege_trainer_demo_bot?start=feedback";
-const taskErrorUrl = "https://t.me/ege_trainer_demo_bot?start=task_error";
+const feedbackUrl = "https://t.me/EGETrainerSupportBot?start=feedback";
+const taskErrorUrl = "https://t.me/EGETrainerSupportBot?start=task_error";
 
 export default function TopMenu({ title = "ЕГЭ Тренажёр", subtitle, showExitToHome = false }: TopMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
