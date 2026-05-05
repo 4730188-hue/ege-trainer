@@ -8,7 +8,7 @@ export default function StartPage() {
     // Examples:
     // return 'https://t.me/YOUR_BOT/YOUR_APP';
     // return 'https://t.me/YOUR_BOT?start=diagnostic';
-    return 'https://t.me/EGETrainerSupportBot';
+    return 'https://t.me/ege_trainer_demo_bot';
   }, []);
 
   useEffect(() => {
