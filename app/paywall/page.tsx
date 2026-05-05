@@ -7,6 +7,7 @@ import {
   getFreeGateStatus,
   getProPlanLabel,
   getPaymentUserId,
+  getTelegramUserProfile,
   getProSubscription,
   getRepeatInsight,
   getStudentProfile,
@@ -100,6 +101,7 @@ export default function PaywallPage() {
         body: JSON.stringify({
           plan: selectedPlan,
           userId: getPaymentUserId(),
+          telegramUser: getTelegramUserProfile(),
         }),
       });
 

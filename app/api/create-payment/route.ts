@@ -22,6 +22,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const plan = String(body.plan || "quarterly") as PlanKey;
     const userId = String(body.userId || "").trim();
+    const telegramUser = body.telegramUser || {};
+    const telegramId = String(telegramUser.id || "").trim() || null;
+    const telegramUsername = String(telegramUser.username || "").trim() || null;
+    const telegramFirstName = String(telegramUser.firstName || "").trim() || null;
+    const telegramLastName = String(telegramUser.lastName || "").trim() || null;
 
     if (!plans[plan]) {
       return NextResponse.json({ error: "Неверный тариф" }, { status: 400 });
@@ -37,6 +42,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "NEXT_PUBLIC_APP_URL не задан" }, { status: 500 });
     }
 
+    await db.query(`
+      alter table payments add column if not exists telegram_id text;
+      alter table payments add column if not exists telegram_username text;
+      alter table payments add column if not exists telegram_first_name text;
+      alter table payments add column if not exists telegram_last_name text;
+      alter table subscriptions add column if not exists telegram_id text;
+      alter table subscriptions add column if not exists telegram_username text;
+      alter table subscriptions add column if not exists telegram_first_name text;
+      alter table subscriptions add column if not exists telegram_last_name text;
+    `);
+
     const selectedPlan = plans[plan];
     const returnUrl = `${appUrl}/payment/success?uid=${encodeURIComponent(userId)}`;
 
@@ -48,17 +64,47 @@ export async function POST(request: NextRequest) {
         userId,
         plan,
         days: String(selectedPlan.days),
+        telegramId: telegramId || "",
+        telegramUsername: telegramUsername || "",
+        telegramFirstName: telegramFirstName || "",
+        telegramLastName: telegramLastName || "",
       },
     });
 
     await db.query(
       `
-        insert into payments (yookassa_payment_id, user_id, plan, amount, currency, status)
-        values ($1, $2, $3, $4, 'RUB', $5)
+        insert into payments (
+          yookassa_payment_id,
+          user_id,
+          plan,
+          amount,
+          currency,
+          status,
+          telegram_id,
+          telegram_username,
+          telegram_first_name,
+          telegram_last_name
+        )
+        values ($1, $2, $3, $4, 'RUB', $5, $6, $7, $8, $9)
         on conflict (yookassa_payment_id)
-        do update set status = excluded.status
+        do update set
+          status = excluded.status,
+          telegram_id = excluded.telegram_id,
+          telegram_username = excluded.telegram_username,
+          telegram_first_name = excluded.telegram_first_name,
+          telegram_last_name = excluded.telegram_last_name
       `,
-      [payment.id, userId, plan, selectedPlan.amount, payment.status || "pending"]
+      [
+        payment.id,
+        userId,
+        plan,
+        selectedPlan.amount,
+        payment.status || "pending",
+        telegramId,
+        telegramUsername,
+        telegramFirstName,
+        telegramLastName,
+      ]
     );
 
     return NextResponse.json({

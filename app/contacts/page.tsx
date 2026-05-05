@@ -16,16 +16,16 @@ export default function ContactsPage() {
           <h2 className="text-xl font-bold tracking-[-0.035em]">Поддержка</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
             <p>Основной канал связи: Telegram-бот поддержки. Напишите туда, если не работает доступ, возникла ошибка оплаты или нужно сообщить об ошибке в задании.</p>
-            <p>Ссылка для обратной связи: https://t.me/ege_trainer_demo_bot?start=feedback</p>
+            <p>Ссылка для обратной связи: https://t.me/EGETrainerSupportBot?start=feedback</p>
           </div>
-          <a href="https://t.me/ege_trainer_demo_bot?start=feedback" target="_blank" rel="noreferrer" className="mt-5 block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">Написать в поддержку</a>
+          <a href="https://t.me/EGETrainerSupportBot?start=feedback" target="_blank" rel="noreferrer" className="mt-5 block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">Написать в поддержку</a>
         </section>
 
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold tracking-[-0.035em]">Сообщить об ошибке</h2>
           <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
             <p>Если вы нашли некорректный вопрос, неправильный вариант ответа или неудачный разбор, используйте пункт меню «Сообщить об ошибке».</p>
-            <p>Ссылка для сообщений об ошибках: https://t.me/ege_trainer_demo_bot?start=task_error</p>
+            <p>Ссылка для сообщений об ошибках: https://t.me/EGETrainerSupportBot?start=task_error</p>
           </div>
         </section>
 

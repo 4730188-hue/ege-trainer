@@ -75,6 +75,14 @@ export type ProSubscription = {
   isPro?: boolean;
   activePlan?: ProPlanKey;
   activatedAt?: string;
+  expiresAt?: string;
+};
+
+export type TelegramUserProfile = {
+  id?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 export type FreeGateFeatureKey = "session" | "miniVariant";
@@ -205,15 +213,37 @@ function safeWrite<T>(key: string, value: T) {
 }
 
 
-function getTelegramUserId() {
-  if (!isBrowser()) return null;
+export function getTelegramUserProfile(): TelegramUserProfile {
+  if (!isBrowser()) return {};
 
   const telegram = (window as typeof window & {
-    Telegram?: { WebApp?: { initDataUnsafe?: { user?: { id?: number | string } } } };
+    Telegram?: {
+      WebApp?: {
+        initDataUnsafe?: {
+          user?: {
+            id?: number | string;
+            username?: string;
+            first_name?: string;
+            last_name?: string;
+          };
+        };
+      };
+    };
   }).Telegram;
 
-  const id = telegram?.WebApp?.initDataUnsafe?.user?.id;
-  return id ? `tg:${String(id)}` : null;
+  const user = telegram?.WebApp?.initDataUnsafe?.user;
+
+  return {
+    id: user?.id ? String(user.id) : undefined,
+    username: user?.username,
+    firstName: user?.first_name,
+    lastName: user?.last_name,
+  };
+}
+
+function getTelegramUserId() {
+  const profile = getTelegramUserProfile();
+  return profile.id ? `tg:${profile.id}` : null;
 }
 
 export function getPaymentUserId() {
@@ -244,10 +274,14 @@ export async function syncProSubscriptionFromServer() {
   const data = await response.json();
 
   if (data.active) {
-    return activatePro((data.subscription?.plan || "monthly") as ProPlanKey);
+    return activatePro(
+      (data.subscription?.plan || "monthly") as ProPlanKey,
+      data.subscription?.expires_at || data.subscription?.expiresAt
+    );
   }
 
-  return getProSubscription();
+  clearProSubscription();
+  return null;
 }
 
 function dedupe(items: string[]) {
@@ -847,25 +881,54 @@ export function saveMiniVariantResult(result: MiniVariantResult) {
   releaseFreeGateAccess("miniVariant");
 }
 
+export function clearProSubscription() {
+  if (!isBrowser()) return;
+
+  try {
+    window.localStorage.removeItem(STORAGE_KEYS.proSubscription);
+  } catch {
+    // noop
+  }
+}
+
 export function getProSubscription() {
-  return (
+  const subscription =
     safeRead<ProSubscription>(STORAGE_KEYS.proSubscription) ?? {
       isPro: false,
       activePlan: undefined,
       activatedAt: undefined,
+      expiresAt: undefined,
+    };
+
+  if (!subscription?.isPro) return subscription;
+
+  if (subscription.expiresAt) {
+    const expiresAt = new Date(subscription.expiresAt).getTime();
+
+    if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+      clearProSubscription();
+      return {
+        isPro: false,
+        activePlan: undefined,
+        activatedAt: undefined,
+        expiresAt: undefined,
+      };
     }
-  );
+  }
+
+  return subscription;
 }
 
 export function saveProSubscription(subscription: ProSubscription) {
   safeWrite(STORAGE_KEYS.proSubscription, subscription);
 }
 
-export function activatePro(plan: ProPlanKey) {
+export function activatePro(plan: ProPlanKey = "quarterly", expiresAt?: string) {
   const next: ProSubscription = {
     isPro: true,
     activePlan: plan,
     activatedAt: new Date().toISOString(),
+    expiresAt,
   };
 
   saveProSubscription(next);

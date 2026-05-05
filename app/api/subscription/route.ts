@@ -12,7 +12,16 @@ export async function GET(request: NextRequest) {
 
     const result = await db.query(
       `
-        select user_id, plan, active, starts_at, expires_at
+        select
+          user_id,
+          plan,
+          active,
+          starts_at,
+          expires_at,
+          telegram_id,
+          telegram_username,
+          telegram_first_name,
+          telegram_last_name
         from subscriptions
         where user_id = $1
           and active = true

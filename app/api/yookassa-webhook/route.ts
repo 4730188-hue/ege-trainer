@@ -25,11 +25,26 @@ export async function POST(request: NextRequest) {
     const userId = String(payment.metadata?.userId || "").trim();
     const plan = String(payment.metadata?.plan || "monthly");
     const days = Number(payment.metadata?.days || 30);
+    const telegramId = String(payment.metadata?.telegramId || "").trim() || null;
+    const telegramUsername = String(payment.metadata?.telegramUsername || "").trim() || null;
+    const telegramFirstName = String(payment.metadata?.telegramFirstName || "").trim() || null;
+    const telegramLastName = String(payment.metadata?.telegramLastName || "").trim() || null;
 
     if (!userId) {
       console.error("YooKassa payment without userId metadata", paymentId);
       return NextResponse.json({ ok: true });
     }
+
+    await db.query(`
+      alter table payments add column if not exists telegram_id text;
+      alter table payments add column if not exists telegram_username text;
+      alter table payments add column if not exists telegram_first_name text;
+      alter table payments add column if not exists telegram_last_name text;
+      alter table subscriptions add column if not exists telegram_id text;
+      alter table subscriptions add column if not exists telegram_username text;
+      alter table subscriptions add column if not exists telegram_first_name text;
+      alter table subscriptions add column if not exists telegram_last_name text;
+    `);
 
     await db.query("begin");
 
@@ -37,16 +52,32 @@ export async function POST(request: NextRequest) {
       await db.query(
         `
           update payments
-          set status = 'succeeded', paid_at = now()
+          set status = 'succeeded',
+              paid_at = now(),
+              telegram_id = coalesce($2, telegram_id),
+              telegram_username = coalesce($3, telegram_username),
+              telegram_first_name = coalesce($4, telegram_first_name),
+              telegram_last_name = coalesce($5, telegram_last_name)
           where yookassa_payment_id = $1
         `,
-        [paymentId]
+        [paymentId, telegramId, telegramUsername, telegramFirstName, telegramLastName]
       );
 
       await db.query(
         `
-          insert into subscriptions (user_id, plan, active, starts_at, expires_at, updated_at)
-          values ($1, $2, true, now(), now() + ($3 || ' days')::interval, now())
+          insert into subscriptions (
+            user_id,
+            plan,
+            active,
+            starts_at,
+            expires_at,
+            updated_at,
+            telegram_id,
+            telegram_username,
+            telegram_first_name,
+            telegram_last_name
+          )
+          values ($1, $2, true, now(), now() + ($3 || ' days')::interval, now(), $4, $5, $6, $7)
           on conflict (user_id)
           do update set
             plan = excluded.plan,
@@ -56,9 +87,13 @@ export async function POST(request: NextRequest) {
               then subscriptions.expires_at + ($3 || ' days')::interval
               else now() + ($3 || ' days')::interval
             end,
-            updated_at = now()
+            updated_at = now(),
+            telegram_id = coalesce(excluded.telegram_id, subscriptions.telegram_id),
+            telegram_username = coalesce(excluded.telegram_username, subscriptions.telegram_username),
+            telegram_first_name = coalesce(excluded.telegram_first_name, subscriptions.telegram_first_name),
+            telegram_last_name = coalesce(excluded.telegram_last_name, subscriptions.telegram_last_name)
         `,
-        [userId, plan, days]
+        [userId, plan, days, telegramId, telegramUsername, telegramFirstName, telegramLastName]
       );
 
       await db.query("commit");

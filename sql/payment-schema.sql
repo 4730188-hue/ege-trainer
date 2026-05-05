@@ -24,3 +24,29 @@ create table if not exists subscriptions (
 
 create index if not exists payments_user_id_idx on payments(user_id);
 create index if not exists subscriptions_user_id_idx on subscriptions(user_id);
+
+
+alter table payments add column if not exists telegram_id text;
+alter table payments add column if not exists telegram_username text;
+alter table payments add column if not exists telegram_first_name text;
+alter table payments add column if not exists telegram_last_name text;
+
+alter table subscriptions add column if not exists telegram_id text;
+alter table subscriptions add column if not exists telegram_username text;
+alter table subscriptions add column if not exists telegram_first_name text;
+alter table subscriptions add column if not exists telegram_last_name text;
+
+create table if not exists support_messages (
+  id bigserial primary key,
+  admin_chat_id text not null,
+  admin_message_id bigint not null,
+  user_chat_id text not null,
+  user_message_id bigint,
+  telegram_username text,
+  telegram_first_name text,
+  telegram_last_name text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists support_messages_admin_reply_idx
+  on support_messages(admin_chat_id, admin_message_id);
