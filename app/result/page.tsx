@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDiagnosisResult, getSubjectLabel, type DiagnosisResult } from "@/lib/storage";
@@ -33,6 +35,7 @@ export default function ResultPage() {
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
 
   useEffect(() => {
+    trackClientEvent("diagnosis_result_view");
     setDiagnosisResult(getDiagnosisResult());
   }, []);
 

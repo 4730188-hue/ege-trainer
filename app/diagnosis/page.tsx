@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getDiagnosisQuestions, type BankQuestion } from "@/lib/questionBank";
@@ -48,6 +50,7 @@ export default function DiagnosisPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    trackClientEvent("diagnosis_open");
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     setSubject(nextSubject);

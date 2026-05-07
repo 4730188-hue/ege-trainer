@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import TopMenu from "@/app/components/TopMenu";
@@ -31,6 +33,7 @@ export default function MiniVariantResultPage() {
   const [result, setResult] = useState<MiniVariantResult | null>(null);
 
   useEffect(() => {
+    trackClientEvent("mini_variant_result_view");
     setResult(getMiniVariantProgress().lastResult ?? null);
   }, []);
 

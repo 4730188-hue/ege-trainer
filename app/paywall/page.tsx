@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import TopMenu from "@/app/components/TopMenu";
@@ -53,6 +55,7 @@ export default function PaywallPage() {
   const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
+    trackClientEvent("paywall_view");
     const profile = getStudentProfile();
     const subject = normalizeSubjectKey(profile?.subject);
     setSubjectLabel(getSubjectLabel(subject));

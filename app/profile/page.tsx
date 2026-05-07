@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import TopMenu from "@/app/components/TopMenu";
@@ -34,6 +36,7 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
+    trackClientEvent("profile_view");
     refresh();
 
     syncProSubscriptionFromServer()

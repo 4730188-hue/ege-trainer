@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import TopMenu from "@/app/components/TopMenu";
@@ -27,6 +29,7 @@ export default function TaskTrainingPage() {
   const [repeatCount, setRepeatCount] = useState(0);
 
   useEffect(() => {
+    trackClientEvent("task_training_open");
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     setSubject(nextSubject);

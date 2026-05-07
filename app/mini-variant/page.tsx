@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getMiniVariantsBySubject, type MiniVariant } from "@/lib/questionBank";
@@ -77,6 +79,7 @@ export default function MiniVariantPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    trackClientEvent("mini_variant_open");
     const profile = getStudentProfile();
     const nextSubject = normalizeSubjectKey(profile?.subject);
     const nextVariant = getNextVariant(nextSubject);
