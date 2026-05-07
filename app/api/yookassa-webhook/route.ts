@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getYooKassaPayment } from "@/lib/yookassa";
+import { trackEvent } from "@/lib/analytics";
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +96,20 @@ export async function POST(request: NextRequest) {
         `,
         [userId, plan, days, telegramId, telegramUsername, telegramFirstName, telegramLastName]
       );
+
+      await trackEvent({
+        eventName: "payment_succeeded",
+        userId,
+        telegramId,
+        telegramUsername,
+        telegramFirstName,
+        telegramLastName,
+        metadata: {
+          plan,
+          days,
+          paymentId,
+        },
+      });
 
       await db.query("commit");
     } catch (error) {

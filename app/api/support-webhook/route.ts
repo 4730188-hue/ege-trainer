@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { trackEvent } from "@/lib/analytics";
 
 const TELEGRAM_API_URL = "https://api.telegram.org";
 
@@ -184,6 +185,19 @@ async function handleUserMessage(message: TelegramMessage) {
   const userChatId = message.chat?.id;
 
   if (!userChatId) return;
+
+  await trackEvent({
+    eventName: "support_message",
+    userId: `tg:${String(userChatId)}`,
+    telegramId: String(userChatId),
+    telegramUsername: message.chat?.username || message.from?.username || null,
+    telegramFirstName: message.chat?.first_name || message.from?.first_name || null,
+    telegramLastName: message.chat?.last_name || message.from?.last_name || null,
+    metadata: {
+      messageId: message.message_id,
+      text: message.text || message.caption || "",
+    },
+  });
 
   const adminIntro = await telegramApi("sendMessage", {
     chat_id: getAdminChatId(),

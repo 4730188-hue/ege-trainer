@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { trackEvent } from "@/lib/analytics";
 
 const TELEGRAM_API_URL = "https://api.telegram.org";
 
@@ -51,6 +52,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (text === "/start" || text.startsWith("/start ")) {
+      await trackEvent({
+        eventName: "main_bot_start",
+        userId: chatId ? `tg:${String(chatId)}` : null,
+        telegramId: message?.from?.id ? String(message.from.id) : String(chatId),
+        telegramUsername: message?.from?.username || null,
+        telegramFirstName: message?.from?.first_name || null,
+        telegramLastName: message?.from?.last_name || null,
+        metadata: {
+          text,
+        },
+      });
+
       await sendMessage(
         chatId,
         `👋 Привет! Это твой личный ЕГЭ-тренер в Telegram.

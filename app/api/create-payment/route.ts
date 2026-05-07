@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createYooKassaPayment } from "@/lib/yookassa";
+import { trackEvent } from "@/lib/analytics";
 
 const plans = {
   monthly: {
@@ -106,6 +107,20 @@ export async function POST(request: NextRequest) {
         telegramLastName,
       ]
     );
+
+    await trackEvent({
+      eventName: "payment_create",
+      userId,
+      telegramId,
+      telegramUsername,
+      telegramFirstName,
+      telegramLastName,
+      metadata: {
+        plan,
+        amount: selectedPlan.amount,
+        paymentId: payment.id,
+      },
+    });
 
     return NextResponse.json({
       paymentId: payment.id,
