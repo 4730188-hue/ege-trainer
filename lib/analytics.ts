@@ -9,6 +9,30 @@ export type AnalyticsEventName =
   | "paywall_view"
   | "paywall_payment_click";
 
+function getExcludedAnalyticsUserIds() {
+  return new Set(
+    String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  );
+}
+
+function isExcludedAnalyticsUser(params: {
+  userId?: string | null;
+  telegramId?: string | null;
+}) {
+  const excludedIds = getExcludedAnalyticsUserIds();
+
+  if (!excludedIds.size) return false;
+
+  return Boolean(
+    (params.userId && excludedIds.has(params.userId)) ||
+      (params.telegramId && excludedIds.has(params.telegramId)) ||
+      (params.telegramId && excludedIds.has(`tg:${params.telegramId}`))
+  );
+}
+
 export async function ensureAnalyticsTable() {
   await db.query(`
     create table if not exists bot_events (
@@ -44,6 +68,8 @@ export async function trackEvent(params: {
   metadata?: Record<string, unknown>;
 }) {
   try {
+    if (isExcludedAnalyticsUser(params)) return;
+
     await ensureAnalyticsTable();
 
     await db.query(

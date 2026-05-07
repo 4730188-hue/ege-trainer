@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureAnalyticsTable } from "@/lib/analytics";
 
+function getExcludedUserIds() {
+  return String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getAnalyticsWhereClause() {
+  const excludedIds = getExcludedUserIds();
+
+  if (!excludedIds.length) {
+    return {
+      where: "",
+      params: [] as unknown[],
+    };
+  }
+
+  return {
+    where: `
+      where coalesce(user_id, '') <> all($1::text[])
+        and coalesce(telegram_id, '') <> all($1::text[])
+        and coalesce('tg:' || telegram_id, '') <> all($1::text[])
+    `,
+    params: [excludedIds] as unknown[],
+  };
+}
+
 function isAuthorized(request: NextRequest) {
   const password = process.env.STATS_ADMIN_PASSWORD;
 
@@ -24,6 +51,8 @@ export async function GET(request: NextRequest) {
 
   await ensureAnalyticsTable();
 
+  const analyticsFilter = getAnalyticsWhereClause();
+
   const [
     eventTotals,
     todayTotals,
@@ -31,20 +60,31 @@ export async function GET(request: NextRequest) {
     activeSubscriptions,
     recentEvents,
   ] = await Promise.all([
-    db.query(`
-      select event_name, count(*)::int as count
-      from bot_events
-      group by event_name
-      order by count desc
-    `),
+    db.query(
+      `
+        select event_name, count(*)::int as count
+        from bot_events
+        ${analyticsFilter.where}
+        group by event_name
+        order by count desc
+      `,
+      analyticsFilter.params
+    ),
 
-    db.query(`
-      select event_name, count(*)::int as count
-      from bot_events
-      where created_at >= date_trunc('day', now())
-      group by event_name
-      order by count desc
-    `),
+    db.query(
+      `
+        select event_name, count(*)::int as count
+        from bot_events
+        ${
+          analyticsFilter.where
+            ? analyticsFilter.where + " and created_at >= date_trunc('day', now())"
+            : "where created_at >= date_trunc('day', now())"
+        }
+        group by event_name
+        order by count desc
+      `,
+      analyticsFilter.params
+    ),
 
     db.query(`
       select
@@ -61,20 +101,24 @@ export async function GET(request: NextRequest) {
         and expires_at > now()
     `),
 
-    db.query(`
-      select
-        event_name,
-        user_id,
-        telegram_id,
-        telegram_username,
-        telegram_first_name,
-        telegram_last_name,
-        metadata,
-        created_at
-      from bot_events
-      order by created_at desc
-      limit 50
-    `),
+    db.query(
+      `
+        select
+          event_name,
+          user_id,
+          telegram_id,
+          telegram_username,
+          telegram_first_name,
+          telegram_last_name,
+          metadata,
+          created_at
+        from bot_events
+        ${analyticsFilter.where}
+        order by created_at desc
+        limit 50
+      `,
+      analyticsFilter.params
+    ),
   ]);
 
   return NextResponse.json({
