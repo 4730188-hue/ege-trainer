@@ -26,7 +26,7 @@ export default function PaymentSuccessPage() {
           if (cancelled) return;
 
           if (data.active) {
-            activatePro((data.subscription?.plan || "monthly") as ProPlanKey);
+            activatePro((data.subscription?.plan || "monthly") as ProPlanKey, data.subscription?.expires_at || data.subscription?.expiresAt);
             setStatus("active");
             return;
           }

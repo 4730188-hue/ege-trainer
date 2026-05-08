@@ -21,6 +21,7 @@ import {
 } from "@/lib/storage";
 
 const plans: Array<{ key: ProPlanKey; title: string; price: string; note: string; badge?: string }> = [
+  { key: "weekly", title: "7 дней", price: "199 ₽", note: "попробовать Pro" },
   { key: "monthly", title: "1 месяц", price: "690 ₽", note: "быстро войти в ритм" },
   { key: "quarterly", title: "3 месяца", price: "1490 ₽", note: "лучший горизонт", badge: "рекомендуем" },
 ];
@@ -153,7 +154,7 @@ export default function PaywallPage() {
           <p className="mt-4 text-lg leading-7 text-slate-500">Безлимитные тренировки, мини-варианты на 20 заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и разбор ошибок.</p>
         </section>
 
-        <section className="grid grid-cols-2 gap-3">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {plans.map((plan) => {
             const active = selectedPlan === plan.key;
             return (

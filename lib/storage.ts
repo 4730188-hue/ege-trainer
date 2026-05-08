@@ -69,7 +69,7 @@ export type MiniVariantProgress = {
   lastVariantIdBySubject?: SubjectVariantIdMap;
 };
 
-export type ProPlanKey = "monthly" | "quarterly";
+export type ProPlanKey = "weekly" | "monthly" | "quarterly";
 
 export type ProSubscription = {
   isPro?: boolean;
@@ -1001,6 +1001,7 @@ export function getSubjectLabel(subject?: string | null) {
 }
 
 export function getProPlanLabel(plan?: ProPlanKey | null) {
+  if (plan === "weekly") return "7 дней Pro";
   if (plan === "quarterly") return "3 месяца Pro";
   if (plan === "monthly") return "1 месяц Pro";
   return "Pro";

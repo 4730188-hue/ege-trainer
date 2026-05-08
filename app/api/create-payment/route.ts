@@ -4,6 +4,11 @@ import { createYooKassaPayment } from "@/lib/yookassa";
 import { trackEvent } from "@/lib/analytics";
 
 const plans = {
+  weekly: {
+    amount: "199.00",
+    title: "EGE Trainer Pro на 7 дней",
+    days: 7,
+  },
   monthly: {
     amount: "690.00",
     title: "EGE Trainer Pro на 1 месяц",
