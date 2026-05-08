@@ -130,7 +130,23 @@ export default function ResultPage() {
             <span className="block leading-none text-white">Перейти к первой сильной сессии</span>
           </Link>
 
-          <p className="mt-2 text-center text-sm text-slate-500">Дальше начнётся персональный маршрут примерно на 7 минут</p>
+          <a
+            href="https://t.me/ege_trainer_demo_bot?start=site_diagnostic_result"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() =>
+              trackClientEvent("telegram_save_result_click", {
+                source: "diagnostic_result",
+              })
+            }
+            className="mt-3 block rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4 text-center text-sm font-black text-blue-700"
+          >
+            Сохранить результат в Telegram
+          </a>
+
+          <p className="mt-2 text-center text-sm text-slate-500">
+            В Telegram можно вернуться к тренировкам, прогрессу и поддержке
+          </p>
         </div>
       </div>
     </main>
