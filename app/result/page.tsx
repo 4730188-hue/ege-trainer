@@ -146,20 +146,22 @@ export default function ResultPage() {
             Сохранить результат в Telegram
           </a>
 
-          <Link
-            href="/paywall"
+          <a
+            href="https://t.me/ege_trainer_demo_bot?start=buy_weekly_after_diagnostic"
+            target="_blank"
+            rel="noreferrer"
             onClick={() =>
-              trackClientEvent("result_pro_click", {
+              trackClientEvent("result_pro_telegram_click", {
                 source: "diagnostic_result",
               })
             }
             className="mt-3 block rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center text-sm font-black text-slate-950"
           >
-            Открыть Pro на 7 дней за 199 ₽
-          </Link>
+            Открыть Pro в Telegram
+          </a>
 
           <p className="mt-2 text-center text-sm text-slate-500">
-            Сначала можно сохранить результат, а Pro подключить позже
+            Лучше подключать Pro через Telegram — так доступ сохранится за твоим аккаунтом
           </p>
         </div>
       </div>
