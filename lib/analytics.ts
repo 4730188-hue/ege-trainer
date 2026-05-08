@@ -9,12 +9,17 @@ export type AnalyticsEventName =
   | "paywall_view"
   | "paywall_payment_click";
 
+const DEFAULT_EXCLUDED_ANALYTICS_USER_IDS = ["254719197", "tg:254719197"];
+
 function getExcludedAnalyticsUserIds() {
   return new Set(
-    String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean)
+    [
+      ...DEFAULT_EXCLUDED_ANALYTICS_USER_IDS,
+      ...String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ]
   );
 }
 

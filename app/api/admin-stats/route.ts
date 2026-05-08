@@ -3,10 +3,14 @@ import { db } from "@/lib/db";
 import { ensureAnalyticsTable } from "@/lib/analytics";
 
 function getExcludedUserIds() {
-  return String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  return [
+    "254719197",
+    "tg:254719197",
+    ...String(process.env.ANALYTICS_EXCLUDED_USER_IDS || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
+  ];
 }
 
 function getAnalyticsWhereClause() {
