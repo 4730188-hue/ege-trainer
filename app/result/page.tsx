@@ -123,28 +123,27 @@ export default function ResultPage() {
 
         <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/80 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
           <p className="mb-2 text-center text-xs font-medium text-slate-500">Следующий шаг переведёт тебя из стартового среза в персональный режим тренировки</p>
-          <div className="mt-5 rounded-3xl border border-blue-100 bg-blue-50 p-4">
+          <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-black text-slate-950">
-              Чтобы не потерять результат, сохрани его в Telegram
+              Твои слабые темы уже найдены
             </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Там будут твой прогресс, слабые темы, тренировки, поддержка и Pro-доступ после оплаты.
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              Теперь важно не просто закрыть результат, а потренировать именно те задания, где теряются баллы.
             </p>
           </div>
 
-          <a
-            href="https://t.me/ege_trainer_demo_bot?start=site_diagnostic_result"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() =>
-              trackClientEvent("telegram_save_result_click", {
-                source: "diagnostic_result",
-              })
-            }
-            className="mt-4 block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
-          >
-            Сохранить результат в Telegram
-          </a>
+          <div className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-4">
+            <p className="text-sm font-black text-slate-950">
+              Что даст Pro на 7 дней:
+            </p>
+            <div className="mt-3 grid gap-2 text-sm leading-relaxed text-slate-700">
+              <div>✅ тренировки по слабым темам;</div>
+              <div>✅ мини-варианты без лимита;</div>
+              <div>✅ разбор ошибок и повторение;</div>
+              <div>✅ прогресс подготовки в одном месте;</div>
+              <div>✅ доступ через Telegram, чтобы не потерять результат.</div>
+            </div>
+          </div>
 
           <a
             href="https://t.me/ege_trainer_demo_bot?start=buy_weekly_after_diagnostic"
@@ -155,13 +154,27 @@ export default function ResultPage() {
                 source: "diagnostic_result",
               })
             }
+            className="mt-4 block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
+          >
+            Попробовать Pro на 7 дней за 199 ₽
+          </a>
+
+          <a
+            href="https://t.me/ege_trainer_demo_bot?start=site_diagnostic_result"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() =>
+              trackClientEvent("telegram_save_result_click", {
+                source: "diagnostic_result",
+              })
+            }
             className="mt-3 block rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center text-sm font-black text-slate-950"
           >
-            Открыть Pro в Telegram
+            Просто сохранить результат в Telegram
           </a>
 
           <p className="mt-2 text-center text-sm text-slate-500">
-            Лучше подключать Pro через Telegram — так доступ сохранится за твоим аккаунтом
+            Pro лучше подключать через Telegram — так доступ сохранится за твоим аккаунтом
           </p>
         </div>
       </div>
