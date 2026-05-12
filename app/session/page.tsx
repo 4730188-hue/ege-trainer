@@ -499,6 +499,17 @@ export default function SessionPage() {
 
               <div className="mt-3 grid gap-2">
                 <Link
+                  href="/register?source=after_free_day"
+                  onClick={() =>
+                    trackClientEvent("after_free_day_register_click", {
+                      source: "session_complete",
+                    })
+                  }
+                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-black text-emerald-700"
+                >
+                  Создать кабинет и сохранить прогресс
+                </Link>
+                <Link
                   href="/paywall?plan=weekly&source=after_free_day"
                   onClick={() =>
                     trackClientEvent("after_free_day_weekly_click", {

@@ -217,6 +217,18 @@ export default function ResultPage() {
 
         <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/88 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
           <a
+            href="/register?source=result"
+            onClick={() =>
+              trackClientEvent("result_register_click", {
+                source: "diagnostic_result",
+              })
+            }
+            className="mb-3 block rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-center text-sm font-black text-emerald-700"
+          >
+            Создать кабинет и сохранить результат
+          </a>
+
+          <a
             href="/task-training?source=result_free_training"
             onClick={() =>
               trackClientEvent("result_free_training_click", {

@@ -194,6 +194,7 @@ const STORAGE_KEYS = {
 } as const;
 
 const PAYMENT_USER_ID_KEY = "ege-trainer:payment-user-id";
+const WEB_ACCOUNT_USER_ID_KEY = "ege-trainer:web-account-user-id";
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -261,6 +262,9 @@ export function getPaymentUserId() {
   const telegramUserId = getTelegramUserId();
   if (telegramUserId) return telegramUserId;
 
+  const webAccountUserId = window.localStorage.getItem(WEB_ACCOUNT_USER_ID_KEY);
+  if (webAccountUserId) return `webuser:${webAccountUserId}`;
+
   const key = PAYMENT_USER_ID_KEY;
   const existing = window.localStorage.getItem(key);
   if (existing) return existing;
@@ -268,6 +272,24 @@ export function getPaymentUserId() {
   const next = `web:${crypto.randomUUID()}`;
   window.localStorage.setItem(key, next);
   return next;
+}
+
+export function saveWebAccountUserId(userId: string) {
+  if (!isBrowser()) return;
+
+  window.localStorage.setItem(WEB_ACCOUNT_USER_ID_KEY, userId);
+}
+
+export function clearWebAccountUserId() {
+  if (!isBrowser()) return;
+
+  window.localStorage.removeItem(WEB_ACCOUNT_USER_ID_KEY);
+}
+
+export function getWebAccountUserId() {
+  if (!isBrowser()) return null;
+
+  return window.localStorage.getItem(WEB_ACCOUNT_USER_ID_KEY);
 }
 
 export async function syncProSubscriptionFromServer() {
