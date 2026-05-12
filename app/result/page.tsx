@@ -207,7 +207,10 @@ export default function ResultPage() {
               <div>✅ прогресс и доступ через Telegram.</div>
             </div>
             <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950">
-              199 ₽ — разовый доступ на 7 дней. Без автосписаний.
+              7 дней — 199 ₽, месяц — 690 ₽. Дешевле одного занятия с репетитором.
+            </p>
+            <p className="mt-2 rounded-2xl bg-white/80 px-4 py-3 text-sm leading-6 text-slate-700">
+              Внутри — тренировки по русскому, математике и обществознанию: задания, мини-варианты, повтор ошибок и прогресс в Telegram.
             </p>
           </div>
         </div>
@@ -251,11 +254,11 @@ export default function ResultPage() {
             }
             className="mt-3 block rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-center text-sm font-black text-blue-700"
           >
-            Открыть ребёнку план на 7 дней — 199 ₽
+            Открыть план на 7 дней — 199 ₽
           </a>
 
           <p className="mt-2 text-center text-xs leading-5 text-slate-500">
-            199 ₽ — разовый доступ на 7 дней. Без подписки и автосписаний.
+            7 дней — 199 ₽, месяц — 690 ₽. Без подписки и автосписаний.
           </p>
         </div>
       </div>
