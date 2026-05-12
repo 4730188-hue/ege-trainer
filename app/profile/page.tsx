@@ -53,7 +53,21 @@ export default function ProfilePage() {
 
   const handleSubject = (next: SubjectKey) => {
     updateStudentSubject(next);
-    refresh(next);
+
+    const nextProfile = getStudentProfile();
+    const nextSubjectLabel = getSubjectLabel(next);
+
+    setProfile({
+      ...nextProfile,
+      subject: nextSubjectLabel,
+    });
+
+    setSubscription(getProSubscription());
+
+    trackClientEvent("profile_subject_change", {
+      subject: next,
+      subjectLabel: nextSubjectLabel,
+    });
   };
 
   const handleReset = () => {
