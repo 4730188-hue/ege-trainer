@@ -1,15 +1,13 @@
 "use client";
 
 import { trackClientEvent } from "@/lib/clientAnalytics";
-
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDiagnosisResult, getSubjectLabel, type DiagnosisResult } from "@/lib/storage";
 import TopMenu from "@/app/components/TopMenu";
 
 function getSubjectAdvice(subjectLabel: string) {
   if (subjectLabel === "Профильная математика") {
-    return "Лучше всего даст прирост короткая ежедневная практика по базовым формулам, графикам и типовым задачам.";
+    return "Лучше всего даст прирост короткая ежедневная практика по формулам, графикам и типовым задачам.";
   }
 
   if (subjectLabel === "Обществознание") {
@@ -31,6 +29,50 @@ function getLevelDescription(levelLabel?: string) {
   return "Сейчас лучше идти короткими шагами и сначала вернуть уверенность в ключевых темах.";
 }
 
+function buildSevenDayPlan(weakTopics: string[]) {
+  const topics = weakTopics.length
+    ? weakTopics.slice(0, 3)
+    : ["главные ошибки диагностики", "типовые задания", "повтор сложных мест"];
+
+  return [
+    {
+      day: "День 1",
+      title: `Разобрать тему: ${topics[0]}`,
+      text: "Понять, где именно теряются баллы, и пройти короткую тренировку.",
+    },
+    {
+      day: "День 2",
+      title: `Закрепить тему: ${topics[0]}`,
+      text: "Сделать задания без спешки и повторить ошибки.",
+    },
+    {
+      day: "День 3",
+      title: `Перейти к теме: ${topics[1] || topics[0]}`,
+      text: "Закрыть вторую слабую зону и собрать первые уверенные ответы.",
+    },
+    {
+      day: "День 4",
+      title: `Повторить тему: ${topics[1] || topics[0]}`,
+      text: "Проверить, что ошибка не повторяется на похожих заданиях.",
+    },
+    {
+      day: "День 5",
+      title: `Прокачать тему: ${topics[2] || topics[0]}`,
+      text: "Добрать третью слабую тему и сделать мини-тренировку.",
+    },
+    {
+      day: "День 6",
+      title: "Мини-вариант",
+      text: "Проверить прогресс на коротком варианте без перегруза.",
+    },
+    {
+      day: "День 7",
+      title: "Контрольный срез",
+      text: "Сравнить результат с первым днём и понять, что тренировать дальше.",
+    },
+  ];
+}
+
 export default function ResultPage() {
   const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
 
@@ -45,6 +87,8 @@ export default function ResultPage() {
   const correctAnswers = diagnosisResult?.correctAnswers ?? 0;
   const totalQuestions = diagnosisResult?.totalQuestions ?? 6;
   const advice = useMemo(() => getSubjectAdvice(subjectLabel), [subjectLabel]);
+  const sevenDayPlan = useMemo(() => buildSevenDayPlan(weakTopics), [weakTopics]);
+  const topWeakTopics = weakTopics.length ? weakTopics.slice(0, 3) : ["ошибки диагностики", "типовые задания", "повтор сложных мест"];
 
   return (
     <main className="min-h-[100dvh] px-4 py-4 text-slate-900">
@@ -60,9 +104,9 @@ export default function ResultPage() {
         <div className="relative overflow-hidden rounded-[2rem] border border-indigo-100/80 bg-[radial-gradient(circle_at_top_left,rgba(129,140,248,0.24),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.92),rgba(238,242,255,0.92))] p-5 shadow-[0_26px_60px_rgba(15,23,42,0.08)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">Твой старт</p>
-              <h1 className="mt-3 text-[2.25rem] font-black leading-[1.03] tracking-tight text-slate-950">
-                Теперь видно, где ты уже силён и куда именно бить дальше.
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">Твой результат</p>
+              <h1 className="mt-3 text-[2.15rem] font-black leading-[1.03] tracking-tight text-slate-950">
+                Вот где теряются баллы и что делать следующие 7 дней
               </h1>
             </div>
             <div className="rounded-[1.4rem] border border-white/80 bg-white/70 px-4 py-3 shadow-[0_12px_30px_rgba(99,102,241,0.1)]">
@@ -72,7 +116,7 @@ export default function ResultPage() {
           </div>
 
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Мы посмотрели 6 вопросов по предмету {subjectLabel.toLowerCase()}. Теперь стартовый срез собран, и дальше можно переходить в понятный режим тренировки.
+            Мы посмотрели 6 вопросов по предмету {subjectLabel.toLowerCase()}. Теперь есть не просто оценка, а понятный маршрут: какие темы подтянуть и с чего начать.
           </p>
 
           <div className="mt-5 rounded-[1.7rem] bg-[linear-gradient(135deg,#312e81_0%,#4338ca_55%,#6366f1_100%)] p-4 text-white shadow-[0_22px_45px_rgba(79,70,229,0.28)]">
@@ -85,30 +129,49 @@ export default function ResultPage() {
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
           <div className="rounded-[1.8rem] border border-white/70 bg-white/78 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Зоны роста</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">3 слабые темы</p>
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                 приоритет
               </span>
             </div>
 
             <div className="mt-4 space-y-3">
-              {weakTopics.length > 0 ? (
-                weakTopics.map((topic, index) => (
-                  <div
-                    key={topic}
-                    className="flex items-start gap-3 rounded-[1.4rem] border border-amber-100 bg-[linear-gradient(135deg,rgba(255,251,235,0.92),rgba(255,247,237,0.92))] px-4 py-3"
-                  >
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
-                      {index + 1}
-                    </span>
-                    <p className="text-sm leading-6 text-slate-700">{topic}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-[1.4rem] border border-emerald-100 bg-[linear-gradient(135deg,rgba(236,253,245,0.92),rgba(220,252,231,0.88))] px-4 py-3 text-sm leading-6 text-slate-700">
-                  Явных провалов не нашли. Можно спокойно наращивать темп и закреплять сильную базу.
+              {topWeakTopics.map((topic, index) => (
+                <div
+                  key={`${topic}-${index}`}
+                  className="flex items-start gap-3 rounded-[1.4rem] border border-amber-100 bg-[linear-gradient(135deg,rgba(255,251,235,0.92),rgba(255,247,237,0.92))] px-4 py-3"
+                >
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm leading-6 text-slate-700">{topic}</p>
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[1.8rem] border border-blue-100 bg-blue-50 p-5 shadow-[0_18px_45px_rgba(37,99,235,0.08)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">План на 7 дней</p>
+            <h2 className="mt-2 text-xl font-black text-slate-950">
+              За неделю подтянем 3 слабые темы
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Не надо думать, что повторять. Каждый день — короткая понятная тренировка на 10–15 минут.
+            </p>
+
+            <div className="mt-4 space-y-2">
+              {sevenDayPlan.map((item) => (
+                <div key={item.day} className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-600">{item.day}</p>
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-[11px] font-bold text-blue-700">
+                      10–15 мин
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm font-black text-slate-950">{item.title}</p>
+                  <p className="mt-1 text-sm leading-5 text-slate-600">{item.text}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -119,32 +182,18 @@ export default function ResultPage() {
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{advice}</p>
           </div>
+
+          <div className="rounded-[1.8rem] border border-emerald-100 bg-emerald-50 p-5 shadow-[0_18px_45px_rgba(16,185,129,0.08)]">
+            <p className="text-sm font-black text-slate-950">
+              Личный кабинет будет в Telegram
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Там сохранятся результат, прогресс, ежедневные задания, доступ к Pro и поддержка.
+            </p>
+          </div>
         </div>
 
-        <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/80 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
-          <p className="mb-2 text-center text-xs font-medium text-slate-500">Следующий шаг переведёт тебя из стартового среза в персональный режим тренировки</p>
-          <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-black text-slate-950">
-              Твои слабые темы уже найдены
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-700">
-              Теперь важно не просто закрыть результат, а потренировать именно те задания, где теряются баллы.
-            </p>
-          </div>
-
-          <div className="mt-3 rounded-3xl border border-blue-100 bg-blue-50 p-4">
-            <p className="text-sm font-black text-slate-950">
-              Что даст Pro на 7 дней:
-            </p>
-            <div className="mt-3 grid gap-2 text-sm leading-relaxed text-slate-700">
-              <div>✅ тренировки по слабым темам;</div>
-              <div>✅ мини-варианты без лимита;</div>
-              <div>✅ разбор ошибок и повторение;</div>
-              <div>✅ прогресс подготовки в одном месте;</div>
-              <div>✅ доступ через Telegram, чтобы не потерять результат.</div>
-            </div>
-          </div>
-
+        <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/88 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
           <a
             href="https://t.me/ege_trainer_demo_bot?start=buy_weekly_after_diagnostic"
             target="_blank"
@@ -152,11 +201,12 @@ export default function ResultPage() {
             onClick={() =>
               trackClientEvent("result_pro_telegram_click", {
                 source: "diagnostic_result",
+                offer: "weekly_199",
               })
             }
-            className="mt-4 block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
+            className="block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
           >
-            Попробовать Pro на 7 дней за 199 ₽
+            Получить план на 7 дней за 199 ₽
           </a>
 
           <a
@@ -173,7 +223,7 @@ export default function ResultPage() {
             Просто сохранить результат в Telegram
           </a>
 
-          <p className="mt-2 text-center text-sm text-slate-500">
+          <p className="mt-2 text-center text-xs leading-5 text-slate-500">
             Pro лучше подключать через Telegram — так доступ сохранится за твоим аккаунтом
           </p>
         </div>
