@@ -24,11 +24,11 @@ export default function EgeDiagnosticLandingPage() {
               <h1 className="text-4xl font-black leading-[0.95] tracking-tight md:text-6xl">
                 ЕГЭ уже скоро.
                 <br />
-                Проверьте слабые места за 5 минут
+                Проверьте 3 предмета за 7 минут
               </h1>
 
               <p className="mt-6 text-xl leading-relaxed text-slate-300">
-                Пройдите бесплатную диагностику за 5 минут и узнай, какие темы
+                Пройдите бесплатную диагностику по 3 предметам за 7 минут и узнай, какие темы
                 проседают по русскому, математике или обществознанию.
               </p>
 
@@ -65,11 +65,11 @@ export default function EgeDiagnosticLandingPage() {
                 }
                 className="mt-8 block rounded-2xl bg-blue-600 px-6 py-5 text-center text-lg font-black text-white shadow-xl shadow-blue-600/30 transition hover:bg-blue-500"
               >
-                Пройти диагностику бесплатно
+                Пройти диагностику по 3 предметам
               </Link>
 
               <p className="mt-4 text-center text-sm text-slate-400">
-                Без регистрации · прямо в браузере · около 5 минут
+                Без регистрации · прямо в браузере · около 7 минут
               </p>
             </div>
 

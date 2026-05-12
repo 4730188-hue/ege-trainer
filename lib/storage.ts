@@ -10,6 +10,14 @@ export type StudentProfile = {
   examTimeline?: string;
 };
 
+export type DiagnosisSubjectScore = {
+  subject: SubjectKey;
+  label: string;
+  correctAnswers: number;
+  totalQuestions: number;
+  weakTopics: string[];
+};
+
 export type DiagnosisResult = {
   subject?: SubjectKey;
   levelLabel?: string;
@@ -17,6 +25,7 @@ export type DiagnosisResult = {
   completedDiagnosis?: boolean;
   correctAnswers?: number;
   totalQuestions?: number;
+  subjectScores?: DiagnosisSubjectScore[];
 };
 
 export type WeakTaskTypeEntry = {

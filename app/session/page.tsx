@@ -1,5 +1,7 @@
 "use client";
 
+import { trackClientEvent } from "@/lib/clientAnalytics";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { buildSessionQuestions, getTaskTypeGuide, QUESTION_BANK, type BankQuestion } from "@/lib/questionBank";
@@ -486,6 +488,43 @@ export default function SessionPage() {
               </p>
               <p className="mt-2 text-xs leading-5 text-slate-500">
                 Сессий всего: {sessionProgress?.sessionsCompleted ?? 1}. Сейчас на повторе в системе: {repeatCount}.
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-3xl border border-blue-100 bg-blue-50 p-4">
+              <p className="text-sm font-black text-slate-950">День 1 готов ✅</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Первый шаг сделан. Чтобы открыть дни 2–7, мини-варианты и повтор ошибок, выбери доступ:
+              </p>
+
+              <div className="mt-3 grid gap-2">
+                <Link
+                  href="/paywall?plan=weekly&source=after_free_day"
+                  onClick={() =>
+                    trackClientEvent("after_free_day_weekly_click", {
+                      source: "session_complete",
+                    })
+                  }
+                  className="rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-black text-white"
+                >
+                  Продолжить 7-дневный план — 199 ₽
+                </Link>
+
+                <Link
+                  href="/paywall?plan=monthly&source=after_free_day"
+                  onClick={() =>
+                    trackClientEvent("after_free_day_monthly_click", {
+                      source: "session_complete",
+                    })
+                  }
+                  className="rounded-2xl border border-blue-200 bg-white px-4 py-3 text-center text-sm font-black text-blue-700"
+                >
+                  Открыть месяц подготовки — 690 ₽
+                </Link>
+              </div>
+
+              <p className="mt-3 text-center text-xs leading-5 text-slate-500">
+                Без автосписаний. Доступ сохранится в Telegram.
               </p>
             </div>
 
