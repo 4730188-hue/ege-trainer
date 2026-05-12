@@ -28,10 +28,14 @@ const subjects: Array<{ key: SubjectKey; label: string; short: string }> = [
 export default function ProfilePage() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [subscription, setSubscription] = useState<ProSubscription | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectKey>("russian");
 
   function refresh(nextSubject?: SubjectKey) {
     const nextProfile = getStudentProfile();
-    setProfile(nextSubject ? { ...nextProfile, subject: getSubjectLabel(nextSubject) } : nextProfile);
+    const normalizedSubject = nextSubject ?? normalizeSubjectKey(nextProfile?.subject);
+
+    setSelectedSubject(normalizedSubject);
+    setProfile({ ...nextProfile, subject: getSubjectLabel(normalizedSubject) });
     setSubscription(getProSubscription());
   }
 
@@ -48,19 +52,19 @@ export default function ProfilePage() {
       });
   }, []);
 
-  const subject = normalizeSubjectKey(profile?.subject);
+  const subject = selectedSubject;
   const isPro = Boolean(subscription?.isPro);
 
   const handleSubject = (next: SubjectKey) => {
-    updateStudentSubject(next);
-
-    const nextProfile = getStudentProfile();
     const nextSubjectLabel = getSubjectLabel(next);
 
-    setProfile({
-      ...nextProfile,
+    setSelectedSubject(next);
+    updateStudentSubject(next);
+
+    setProfile((currentProfile) => ({
+      ...(currentProfile ?? getStudentProfile()),
       subject: nextSubjectLabel,
-    });
+    }));
 
     setSubscription(getProSubscription());
 
