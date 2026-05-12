@@ -44,6 +44,18 @@ export default function EgeDiagnosticLandingPage() {
                 </div>
               </div>
 
+              <div className="mt-5 rounded-3xl border border-amber-300/30 bg-amber-300/10 p-4">
+                <p className="text-sm font-black uppercase tracking-[0.16em] text-amber-200">
+                  Для ученика и родителя
+                </p>
+                <p className="mt-2 text-base leading-relaxed text-slate-200">
+                  Диагностика покажет, какие темы проседают, а план на 7 дней поможет заниматься без хаоса.
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  После результата можно сохранить прогресс в Telegram и открыть короткий план подготовки за 199 ₽.
+                </p>
+              </div>
+
               <Link
                 href="/diagnosis?source=yandex_site_diagnostic"
                 onClick={() =>
@@ -53,7 +65,7 @@ export default function EgeDiagnosticLandingPage() {
                 }
                 className="mt-8 block rounded-2xl bg-blue-600 px-6 py-5 text-center text-lg font-black text-white shadow-xl shadow-blue-600/30 transition hover:bg-blue-500"
               >
-                Начать диагностику бесплатно
+                Пройти диагностику бесплатно
               </Link>
 
               <p className="mt-4 text-center text-sm text-slate-400">

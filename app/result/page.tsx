@@ -153,10 +153,10 @@ export default function ResultPage() {
           <div className="rounded-[1.8rem] border border-blue-100 bg-blue-50 p-5 shadow-[0_18px_45px_rgba(37,99,235,0.08)]">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">План на 7 дней</p>
             <h2 className="mt-2 text-xl font-black text-slate-950">
-              За неделю подтянем 3 слабые темы
+              Открой ребёнку план на 7 дней
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              Не надо думать, что повторять. Каждый день — короткая понятная тренировка на 10–15 минут.
+              Мы уже нашли слабые темы. Дальше ребёнку нужен не хаос из случайных заданий, а короткий маршрут: каждый день — тренировка на 10–15 минут.
             </p>
 
             <div className="mt-4 space-y-2">
@@ -183,12 +183,31 @@ export default function ResultPage() {
             <p className="mt-2 text-sm leading-6 text-slate-600">{advice}</p>
           </div>
 
+          <div className="rounded-[1.8rem] border border-rose-100 bg-rose-50 p-5 shadow-[0_18px_45px_rgba(244,63,94,0.08)]">
+            <p className="text-sm font-black text-slate-950">
+              Что будет, если не закрепить результат?
+            </p>
+            <div className="mt-3 grid gap-2 text-sm leading-6 text-slate-700">
+              <div>— ребёнок снова будет выбирать задания наугад;</div>
+              <div>— ошибки быстро забудутся;</div>
+              <div>— слабые темы останутся без тренировки;</div>
+              <div>— прогресс будет непонятен.</div>
+            </div>
+          </div>
+
           <div className="rounded-[1.8rem] border border-emerald-100 bg-emerald-50 p-5 shadow-[0_18px_45px_rgba(16,185,129,0.08)]">
             <p className="text-sm font-black text-slate-950">
-              Личный кабинет будет в Telegram
+              Что откроется за 199 ₽
             </p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">
-              Там сохранятся результат, прогресс, ежедневные задания, доступ к Pro и поддержка.
+            <div className="mt-3 grid gap-2 text-sm leading-6 text-slate-700">
+              <div>✅ задания по 3 слабым темам;</div>
+              <div>✅ ежедневный план на 10–15 минут;</div>
+              <div>✅ мини-варианты;</div>
+              <div>✅ повтор ошибок;</div>
+              <div>✅ прогресс и доступ через Telegram.</div>
+            </div>
+            <p className="mt-3 rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-950">
+              199 ₽ — разовый доступ на 7 дней. Без автосписаний.
             </p>
           </div>
         </div>
@@ -203,7 +222,7 @@ export default function ResultPage() {
             }
             className="block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
           >
-            Начать бесплатную тренировку по слабой теме
+            Начать бесплатную тренировку
           </a>
 
           <a
@@ -232,11 +251,11 @@ export default function ResultPage() {
             }
             className="mt-3 block rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-center text-sm font-black text-blue-700"
           >
-            Или открыть полный 7-дневный план за 199 ₽
+            Открыть ребёнку план на 7 дней — 199 ₽
           </a>
 
           <p className="mt-2 text-center text-xs leading-5 text-slate-500">
-            Сначала можно пройти бесплатную тренировку, а Pro подключить позже
+            199 ₽ — разовый доступ на 7 дней. Без подписки и автосписаний.
           </p>
         </div>
       </div>
