@@ -24,7 +24,7 @@ export default function EgeDiagnosticLandingPage() {
               <h1 className="text-4xl font-black leading-[0.95] tracking-tight md:text-6xl">
                 ЕГЭ уже скоро.
                 <br />
-                Проверь, где теряешь баллы
+                Проверьте слабые места за 5 минут
               </h1>
 
               <p className="mt-6 text-xl leading-relaxed text-slate-300">
@@ -52,7 +52,7 @@ export default function EgeDiagnosticLandingPage() {
                   Диагностика покажет, какие темы проседают, а план на 7 дней поможет заниматься без хаоса.
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  После результата можно сохранить прогресс в Telegram и открыть короткий план подготовки за 199 ₽.
+                  После результата можно сохранить прогресс в Telegram и открыть короткий план подготовки на 7 дней.
                 </p>
               </div>
 
