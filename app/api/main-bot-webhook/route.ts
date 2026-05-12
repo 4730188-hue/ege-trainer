@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 import { trackEvent } from "@/lib/analytics";
 
 const TELEGRAM_API_URL = "https://api.telegram.org";
@@ -24,22 +25,137 @@ type ButtonRow = Array<{
     url: string;
   };
   url?: string;
+  callback_data?: string;
 }>;
 
-async function sendMessage(chatId: number, text: string, inlineKeyboard: ButtonRow[]) {
-  await fetch(`${TELEGRAM_API_URL}/bot${getMainBotToken()}/sendMessage`, {
+async function telegramApi(method: string, body: Record<string, unknown>) {
+  const response = await fetch(`${TELEGRAM_API_URL}/bot${getMainBotToken()}/${method}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      reply_markup: {
-        inline_keyboard: inlineKeyboard,
-      },
-    }),
+    body: JSON.stringify(body),
   });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    console.error(`Telegram ${method} error`, data);
+    throw new Error(`Telegram ${method} failed`);
+  }
+
+  return data.result;
+}
+
+async function sendMessage(chatId: number, text: string, inlineKeyboard: ButtonRow[]) {
+  await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text,
+    reply_markup: {
+      inline_keyboard: inlineKeyboard,
+    },
+  });
+}
+
+async function ensureReminderTable() {
+  await db.query(`
+    create table if not exists reminder_subscribers (
+      id bigserial primary key,
+      chat_id text not null unique,
+      telegram_id text,
+      telegram_username text,
+      telegram_first_name text,
+      telegram_last_name text,
+      enabled boolean not null default false,
+      reminder_day int not null default 0,
+      start_payload text,
+      last_reminder_sent_at timestamptz,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    );
+
+    create index if not exists reminder_subscribers_enabled_idx
+      on reminder_subscribers(enabled);
+  `);
+}
+
+async function upsertReminderSubscriber(params: {
+  chatId: number;
+  telegramId?: string | null;
+  telegramUsername?: string | null;
+  telegramFirstName?: string | null;
+  telegramLastName?: string | null;
+  startPayload?: string | null;
+}) {
+  await ensureReminderTable();
+
+  await db.query(
+    `
+      insert into reminder_subscribers (
+        chat_id,
+        telegram_id,
+        telegram_username,
+        telegram_first_name,
+        telegram_last_name,
+        start_payload,
+        updated_at
+      )
+      values ($1, $2, $3, $4, $5, $6, now())
+      on conflict (chat_id)
+      do update set
+        telegram_id = coalesce(excluded.telegram_id, reminder_subscribers.telegram_id),
+        telegram_username = coalesce(excluded.telegram_username, reminder_subscribers.telegram_username),
+        telegram_first_name = coalesce(excluded.telegram_first_name, reminder_subscribers.telegram_first_name),
+        telegram_last_name = coalesce(excluded.telegram_last_name, reminder_subscribers.telegram_last_name),
+        start_payload = coalesce(excluded.start_payload, reminder_subscribers.start_payload),
+        updated_at = now()
+    `,
+    [
+      String(params.chatId),
+      params.telegramId || null,
+      params.telegramUsername || null,
+      params.telegramFirstName || null,
+      params.telegramLastName || null,
+      params.startPayload || null,
+    ]
+  );
+}
+
+async function setReminderStatus(chatId: number, enabled: boolean) {
+  await ensureReminderTable();
+
+  await db.query(
+    `
+      insert into reminder_subscribers (chat_id, enabled, reminder_day, updated_at)
+      values ($1, $2, 0, now())
+      on conflict (chat_id)
+      do update set
+        enabled = excluded.enabled,
+        reminder_day = case
+          when excluded.enabled = false then reminder_subscribers.reminder_day
+          else reminder_subscribers.reminder_day
+        end,
+        updated_at = now()
+    `,
+    [String(chatId), enabled]
+  );
+}
+
+function reminderChoiceButtons(): ButtonRow[] {
+  return [
+    [
+      {
+        text: "Да, напоминать каждый день",
+        callback_data: "reminders_on",
+      },
+    ],
+    [
+      {
+        text: "Нет, спасибо",
+        callback_data: "reminders_off",
+      },
+    ],
+  ];
 }
 
 function getStartPayload(text: string) {
@@ -61,7 +177,7 @@ function buildStartScenario(payload: string) {
 ✅ прогресс в личном кабинете;
 ✅ поддержка через бота.
 
-Нажми «Открыть Pro на 7 дней» 👇`,
+Хочешь, я буду напоминать о тренировке каждый день?`,
       keyboard: [
         [
           {
@@ -73,20 +189,13 @@ function buildStartScenario(payload: string) {
         ],
         [
           {
-            text: "Личный кабинет",
-            web_app: {
-              url: getAppUrl("/profile?source=tg_cabinet"),
-            },
-          },
-        ],
-        [
-          {
             text: "Тренировка на сегодня",
             web_app: {
               url: getAppUrl("/task-training?source=tg_today_task"),
             },
           },
         ],
+        ...reminderChoiceButtons(),
       ],
     };
   }
@@ -95,14 +204,14 @@ function buildStartScenario(payload: string) {
     return {
       text: `✅ Результат диагностики можно сохранить здесь.
 
-Telegram будет твоим личным кабинетом EGE Trainer:
+Telegram будет личным кабинетом EGE Trainer:
 📌 слабые темы;
 📈 прогресс;
 🧠 ежедневные задания;
 🚀 тренировки;
 💬 поддержка.
 
-Начни с тренировки на сегодня или открой личный кабинет 👇`,
+Хочешь, я буду напоминать о тренировке каждый день?`,
       keyboard: [
         [
           {
@@ -128,6 +237,7 @@ Telegram будет твоим личным кабинетом EGE Trainer:
             },
           },
         ],
+        ...reminderChoiceButtons(),
       ],
     };
   }
@@ -143,9 +253,9 @@ Telegram будет твоим личным кабинетом EGE Trainer:
 📈 видеть прогресс;
 🚀 заниматься каждый день по 10–15 минут.
 
-Начни с бесплатной диагностики — это займёт около 5 минут.
+Начни с бесплатной диагностики — это займёт около 7 минут.
 
-Нажми кнопку ниже 👇`,
+Хочешь, я буду напоминать о короткой тренировке каждый день?`,
     keyboard: [
       [
         {
@@ -163,13 +273,91 @@ Telegram будет твоим личным кабинетом EGE Trainer:
           },
         },
       ],
+      ...reminderChoiceButtons(),
     ],
   };
+}
+
+async function handleCallbackQuery(update: any) {
+  const callbackQuery = update.callback_query;
+  const callbackId = callbackQuery?.id;
+  const data = String(callbackQuery?.data || "");
+  const chatId = callbackQuery?.message?.chat?.id || callbackQuery?.from?.id;
+
+  if (!callbackId || !chatId) return;
+
+  if (data === "reminders_on") {
+    await setReminderStatus(chatId, true);
+
+    await telegramApi("answerCallbackQuery", {
+      callback_query_id: callbackId,
+      text: "Напоминания включены ✅",
+    });
+
+    await sendMessage(
+      chatId,
+      `Готово ✅
+
+Я буду напоминать о короткой тренировке каждый день.
+
+Если захочешь отключить — нажми кнопку в любом напоминании.`,
+      [
+        [
+          {
+            text: "Тренировка на сегодня",
+            web_app: {
+              url: getAppUrl("/task-training?source=reminder_enabled"),
+            },
+          },
+        ],
+        [
+          {
+            text: "Отключить напоминания",
+            callback_data: "reminders_off",
+          },
+        ],
+      ]
+    );
+
+    return;
+  }
+
+  if (data === "reminders_off") {
+    await setReminderStatus(chatId, false);
+
+    await telegramApi("answerCallbackQuery", {
+      callback_query_id: callbackId,
+      text: "Напоминания отключены",
+    });
+
+    await sendMessage(
+      chatId,
+      `Ок, напоминания отключены.
+
+Ты всё равно можешь вернуться к тренировке в любой момент 👇`,
+      [
+        [
+          {
+            text: "Открыть EGE Trainer",
+            web_app: {
+              url: getAppUrl("/home?source=reminders_off"),
+            },
+          },
+        ],
+      ]
+    );
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const update = await request.json();
+
+    if (update.callback_query) {
+      await handleCallbackQuery(update);
+      return NextResponse.json({ ok: true });
+    }
+
     const message = update.message;
     const chatId = message?.chat?.id;
     const text = String(message?.text || "");
@@ -180,6 +368,15 @@ export async function POST(request: NextRequest) {
 
     if (text === "/start" || text.startsWith("/start ")) {
       const payload = getStartPayload(text);
+
+      await upsertReminderSubscriber({
+        chatId,
+        telegramId: message?.from?.id ? String(message.from.id) : String(chatId),
+        telegramUsername: message?.from?.username || null,
+        telegramFirstName: message?.from?.first_name || null,
+        telegramLastName: message?.from?.last_name || null,
+        startPayload: payload,
+      });
 
       await trackEvent({
         eventName: "main_bot_start",
