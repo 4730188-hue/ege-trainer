@@ -195,18 +195,15 @@ export default function ResultPage() {
 
         <div className="sticky bottom-0 mt-auto rounded-[1.8rem] border border-indigo-100/80 bg-white/88 p-3 shadow-[0_18px_40px_rgba(99,102,241,0.14)] backdrop-blur-xl">
           <a
-            href="https://t.me/ege_trainer_demo_bot?start=buy_weekly_after_diagnostic"
-            target="_blank"
-            rel="noreferrer"
+            href="/task-training?source=result_free_training"
             onClick={() =>
-              trackClientEvent("result_pro_telegram_click", {
+              trackClientEvent("result_free_training_click", {
                 source: "diagnostic_result",
-                offer: "weekly_199",
               })
             }
             className="block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
           >
-            Начать 7-дневный план за 199 ₽
+            Начать бесплатную тренировку по слабой теме
           </a>
 
           <a
@@ -220,11 +217,26 @@ export default function ResultPage() {
             }
             className="mt-3 block rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center text-sm font-black text-slate-950"
           >
-            Просто сохранить результат в Telegram
+            Сохранить результат в Telegram
+          </a>
+
+          <a
+            href="https://t.me/ege_trainer_demo_bot?start=buy_weekly_after_diagnostic"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() =>
+              trackClientEvent("result_pro_telegram_click", {
+                source: "diagnostic_result",
+                offer: "weekly_199_after_free_training",
+              })
+            }
+            className="mt-3 block rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-center text-sm font-black text-blue-700"
+          >
+            Или открыть полный 7-дневный план за 199 ₽
           </a>
 
           <p className="mt-2 text-center text-xs leading-5 text-slate-500">
-            Доступ сохранится в Telegram. Можно заниматься с телефона каждый день.
+            Сначала можно пройти бесплатную тренировку, а Pro подключить позже
           </p>
         </div>
       </div>
