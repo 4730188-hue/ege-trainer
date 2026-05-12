@@ -206,7 +206,7 @@ export default function ResultPage() {
             }
             className="block rounded-2xl bg-blue-600 px-4 py-4 text-center text-sm font-black text-white shadow-lg shadow-blue-600/20"
           >
-            Получить план на 7 дней за 199 ₽
+            Начать 7-дневный план за 199 ₽
           </a>
 
           <a
@@ -224,7 +224,7 @@ export default function ResultPage() {
           </a>
 
           <p className="mt-2 text-center text-xs leading-5 text-slate-500">
-            Pro лучше подключать через Telegram — так доступ сохранится за твоим аккаунтом
+            Доступ сохранится в Telegram. Можно заниматься с телефона каждый день.
           </p>
         </div>
       </div>
