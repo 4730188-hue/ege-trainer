@@ -86,11 +86,11 @@ export default function LandingPage() {
 
         <div className="relative mx-auto max-w-6xl">
           <header className="sticky top-4 z-50 flex items-center justify-between rounded-full border border-white/10 bg-[#050816]/85 px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-xl">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="rounded-full bg-blue-600 px-3 py-1 text-lg font-black leading-none text-white">
+            <Link href="/" className="flex items-center gap-3">
+              <span className="rounded-full bg-blue-600 px-4 py-2 text-2xl font-black leading-none text-white shadow-lg shadow-blue-600/30">
                 ЕГЭ
               </span>
-              <span className="text-lg font-black tracking-tight text-white">
+              <span className="text-2xl font-black tracking-tight text-white">
                 Plan
               </span>
             </Link>
@@ -140,18 +140,19 @@ export default function LandingPage() {
           <div className="grid min-h-[calc(100vh-96px)] gap-10 py-14 md:grid-cols-[1.08fr_0.92fr] md:items-center md:py-20">
             <div>
               <div className="inline-flex items-center gap-3 rounded-full border border-blue-300/20 bg-blue-300/10 px-4 py-2 text-sm font-bold text-blue-200">
-                <span className="rounded-full bg-white px-3 py-1 text-base font-black text-blue-700">
-                  ЕГЭ 2026
-                </span>
                 <span>Русский · математика · обществознание</span>
               </div>
 
-              <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
-                Поднять баллы проще, когда понятно, что тренировать
+              <div className="mt-7 text-[4.5rem] font-black leading-none tracking-[-0.08em] text-blue-400 md:text-[7.5rem]">
+                ЕГЭ 2026
+              </div>
+
+              <h1 className="mt-4 max-w-3xl text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
+                Подготовка, где понятно, что тренировать
               </h1>
 
               <p className="mt-6 max-w-2xl text-xl leading-8 text-slate-300">
-                EGE Plan помогает ребёнку готовиться к ЕГЭ спокойнее: сначала
+                EGE Plan помогает ребёнку готовиться спокойнее: сначала
                 короткая диагностика по 3 предметам, потом темы для повторения
                 и задания на каждый день.
               </p>
