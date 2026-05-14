@@ -85,7 +85,7 @@ export default function LandingPage() {
         <div className="absolute right-0 top-32 h-[360px] w-[360px] rounded-full bg-violet-500/15 blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl">
-          <header className="sticky top-4 z-50 flex items-center justify-between rounded-full border border-white/10 bg-[#050816]/85 px-4 py-3 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <header className="fixed left-1/2 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-6xl -translate-x-1/2 items-center justify-between rounded-full border border-white/10 bg-[#050816]/90 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl">
             <Link href="/" className="flex items-center gap-3">
               <span className="rounded-full bg-blue-600 px-4 py-2 text-2xl font-black leading-none text-white shadow-lg shadow-blue-600/30">
                 ЕГЭ
@@ -95,7 +95,7 @@ export default function LandingPage() {
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-300 md:flex">
+            <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-300 lg:flex">
               <a href="#how" className="hover:text-white">
                 Как работает
               </a>
@@ -107,37 +107,40 @@ export default function LandingPage() {
               </a>
             </nav>
 
-            <div className="hidden md:block">
+            <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10"
+                className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10 sm:block"
               >
                 Войти
               </Link>
-            </div>
 
-            <details className="relative md:hidden">
-              <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full border border-white/15 bg-white/5 text-2xl font-black text-white">
-                ≡
-              </summary>
-              <div className="absolute right-0 mt-3 w-56 rounded-3xl border border-white/10 bg-[#0b1020] p-3 shadow-2xl">
-                <a href="#how" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
-                  Как работает
-                </a>
-                <a href="#inside" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
-                  Что внутри
-                </a>
-                <a href="#price" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
-                  Тарифы
-                </a>
-                <Link href="/login" className="mt-2 block rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-black text-white">
-                  Войти
-                </Link>
-              </div>
-            </details>
+              <details className="relative">
+                <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/15 bg-white/5 text-2xl font-black text-white hover:bg-white/10">
+                  ☰
+                </summary>
+                <div className="absolute right-0 mt-3 w-64 rounded-3xl border border-white/10 bg-[#0b1020] p-3 shadow-2xl">
+                  <a href="#how" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
+                    Как работает
+                  </a>
+                  <a href="#inside" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
+                    Что внутри
+                  </a>
+                  <a href="#price" className="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10">
+                    Тарифы
+                  </a>
+                  <Link href="/ege-diagnostic" className="mt-2 block rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-black text-white">
+                    Пройти диагностику
+                  </Link>
+                  <Link href="/login" className="mt-2 block rounded-2xl border border-white/10 px-4 py-3 text-center text-sm font-black text-white">
+                    Войти в кабинет
+                  </Link>
+                </div>
+              </details>
+            </div>
           </header>
 
-          <div className="grid min-h-[calc(100vh-96px)] gap-10 py-14 md:grid-cols-[1.08fr_0.92fr] md:items-center md:py-20">
+          <div className="grid min-h-screen gap-10 pb-14 pt-32 md:grid-cols-[1.08fr_0.92fr] md:items-center md:pb-20 md:pt-40">
             <div>
               <div className="inline-flex items-center gap-3 rounded-full border border-blue-300/20 bg-blue-300/10 px-4 py-2 text-sm font-bold text-blue-200">
                 <span>Русский · математика · обществознание</span>
