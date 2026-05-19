@@ -164,7 +164,7 @@ export default function PaywallPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Не удалось создать оплату");
+        throw new Error(data.details || data.error || "Не удалось создать оплату");
       }
 
       if (!data.confirmationUrl) {
