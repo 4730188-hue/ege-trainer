@@ -64,12 +64,18 @@ type TelegramPaymentWindow = Window & {
 function openPaymentLink(url: string) {
   const telegramWebApp = (window as TelegramPaymentWindow).Telegram?.WebApp;
 
-  if (telegramWebApp?.openLink) {
+  // В обычном браузере Telegram-скрипт иногда есть, но openLink может не открыть страницу.
+  // Поэтому Telegram-способ используем только внутри настоящего Telegram WebApp.
+  const isInsideTelegram =
+    typeof window !== "undefined" &&
+    Boolean((telegramWebApp as { initData?: string } | undefined)?.initData);
+
+  if (isInsideTelegram && telegramWebApp?.openLink) {
     telegramWebApp.openLink(url, { try_instant_view: false });
     return;
   }
 
-  window.location.href = url;
+  window.location.assign(url);
 }
 
 function getInitialPlan(): ProPlanKey {
