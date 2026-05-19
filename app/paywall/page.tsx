@@ -1,29 +1,56 @@
 "use client";
 
 import { trackClientEvent } from "@/lib/clientAnalytics";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import TopMenu from "@/app/components/TopMenu";
 import {
   getFreeGateStatus,
-  getProPlanLabel,
   getPaymentUserId,
-  getTelegramUserProfile,
+  getProPlanLabel,
   getProSubscription,
   getRepeatInsight,
   getStudentProfile,
   getSubjectLabel,
+  getTelegramUserProfile,
   normalizeSubjectKey,
   syncProSubscriptionFromServer,
   type ProPlanKey,
   type ProSubscription,
 } from "@/lib/storage";
 
-const plans: Array<{ key: ProPlanKey; title: string; price: string; note: string; badge?: string }> = [
-  { key: "weekly", title: "7 дней", price: "199 ₽", note: "попробовать Pro" },
-  { key: "monthly", title: "1 месяц", price: "690 ₽", note: "быстро войти в ритм" },
-  { key: "quarterly", title: "3 месяца", price: "1490 ₽", note: "лучший горизонт", badge: "рекомендуем" },
+const plans: Array<{
+  key: ProPlanKey;
+  title: string;
+  price: string;
+  oldPrice?: string;
+  note: string;
+  badge?: string;
+  description: string;
+}> = [
+  {
+    key: "weekly",
+    title: "7 дней",
+    price: "199 ₽",
+    note: "попробовать",
+    badge: "лучший старт",
+    description: "Открыть недельный план, тренировки и повтор ошибок.",
+  },
+  {
+    key: "monthly",
+    title: "1 месяц",
+    price: "690 ₽",
+    note: "заниматься регулярно",
+    badge: "частый выбор",
+    description: "Подходит, если нужно спокойно заниматься несколько недель.",
+  },
+  {
+    key: "quarterly",
+    title: "3 месяца",
+    price: "1490 ₽",
+    note: "на длинную подготовку",
+    description: "Для тех, кто хочет готовиться до экзамена без перерывов.",
+  },
 ];
 
 type TelegramPaymentWindow = Window & {
@@ -45,8 +72,20 @@ function openPaymentLink(url: string) {
   window.location.href = url;
 }
 
+function getInitialPlan(): ProPlanKey {
+  if (typeof window === "undefined") return "weekly";
+
+  const plan = new URLSearchParams(window.location.search).get("plan");
+
+  if (plan === "weekly" || plan === "monthly" || plan === "quarterly") {
+    return plan;
+  }
+
+  return "weekly";
+}
+
 export default function PaywallPage() {
-  const [selectedPlan, setSelectedPlan] = useState<ProPlanKey>("quarterly");
+  const [selectedPlan, setSelectedPlan] = useState<ProPlanKey>("weekly");
   const [subscription, setSubscription] = useState<ProSubscription | null>(null);
   const [subjectLabel, setSubjectLabel] = useState("предмет");
   const [repeatCount, setRepeatCount] = useState(0);
@@ -57,8 +96,12 @@ export default function PaywallPage() {
 
   useEffect(() => {
     trackClientEvent("paywall_view");
+
+    setSelectedPlan(getInitialPlan());
+
     const profile = getStudentProfile();
     const subject = normalizeSubjectKey(profile?.subject);
+
     setSubjectLabel(getSubjectLabel(subject));
     setRepeatCount(getRepeatInsight(subject).repeatCount);
     setSessionGate(getFreeGateStatus("session"));
@@ -69,7 +112,7 @@ export default function PaywallPage() {
       syncProSubscriptionFromServer()
         .then(setSubscription)
         .catch(() => {
-          // Если сервер недоступен, просто оставляем локальный статус.
+          // Если сервер недоступен, оставляем локальный статус.
         });
     };
 
@@ -91,11 +134,20 @@ export default function PaywallPage() {
   }, []);
 
   const isPro = Boolean(subscription?.isPro);
+  const selectedPlanData = useMemo(
+    () => plans.find((plan) => plan.key === selectedPlan) ?? plans[0],
+    [selectedPlan]
+  );
 
   const handleActivate = async () => {
     try {
       setIsPaying(true);
       setPaymentError("");
+
+      trackClientEvent("paywall_payment_click", {
+        plan: selectedPlan,
+        source: "web_paywall",
+      });
 
       const response = await fetch("/api/create-payment", {
         method: "POST",
@@ -134,9 +186,18 @@ export default function PaywallPage() {
         <div className="mx-auto w-full max-w-md pt-7">
           <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50 p-7">
             <p className="text-sm font-semibold text-emerald-700">Pro активирован</p>
-            <h1 className="mt-2 text-[2.1rem] font-black leading-tight tracking-[-0.055em]">Ты в полном режиме подготовки</h1>
-            <p className="mt-4 text-base leading-7 text-slate-600">Безлимитные тренировки, мини-варианты, повторы и расширенный прогресс уже включены.</p>
-            <Link href="/home" className="mt-7 block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white">Вернуться к тренировке</Link>
+            <h1 className="mt-2 text-[2.1rem] font-black leading-tight tracking-[-0.055em]">
+              Полный режим подготовки уже включён
+            </h1>
+            <p className="mt-4 text-base leading-7 text-slate-600">
+              Безлимитные тренировки, мини-варианты, повторы и расширенный прогресс доступны.
+            </p>
+            <Link
+              href="/account"
+              className="mt-7 block rounded-2xl bg-blue-600 px-5 py-4 text-center font-semibold text-white"
+            >
+              Вернуться в кабинет
+            </Link>
           </section>
         </div>
       </main>
@@ -144,69 +205,157 @@ export default function PaywallPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] px-4 pb-10 text-slate-950">
-      <TopMenu subtitle="Pro" />
+    <main className="min-h-screen bg-[#050816] text-white">
+      <section className="px-5 py-6">
+        <div className="mx-auto max-w-6xl">
+          <header className="flex items-center justify-between rounded-full border border-white/10 bg-white/[0.06] px-4 py-3 backdrop-blur">
+            <Link href="/" className="flex items-center gap-2">
+              <span className="rounded-full bg-blue-600 px-3 py-1 text-lg font-black leading-none text-white">
+                ЕГЭ
+              </span>
+              <span className="text-lg font-black">Plan</span>
+            </Link>
 
-      <div className="mx-auto w-full max-w-md space-y-8 pt-7">
-        <section>
-          <p className="text-sm text-slate-500">для ученика и родителя</p>
-          <h1 className="mt-2 text-[2.35rem] font-black leading-[1.04] tracking-[-0.055em]">Открой полный маршрут подготовки</h1>
-          <p className="mt-4 text-lg leading-7 text-slate-500">Безлимитные тренировки, мини-варианты на 20 заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и разбор ошибок.</p>
-        </section>
+            <Link
+              href="/account"
+              className="rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white"
+            >
+              Кабинет
+            </Link>
+          </header>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {plans.map((plan) => {
-            const active = selectedPlan === plan.key;
-            return (
+          <div className="grid gap-10 py-12 md:grid-cols-[0.95fr_1.05fr] md:items-start md:py-16">
+            <div>
+              <p className="inline-flex rounded-full border border-blue-300/20 bg-blue-300/10 px-4 py-2 text-sm font-bold text-blue-200">
+                Полный режим подготовки
+              </p>
+
+              <h1 className="mt-6 max-w-2xl text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
+                Откройте план подготовки
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-xl leading-8 text-slate-300">
+                После бесплатного старта можно продолжить: тренировки по слабым темам, мини-варианты, повтор ошибок и прогресс в кабинете.
+              </p>
+
+              <div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.06] p-5">
+                <p className="text-sm font-bold text-blue-200">Что входит</p>
+                <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-200">
+                  <div className="rounded-2xl bg-white/10 px-4 py-3">
+                    ✅ тренировки по русскому, математике и обществознанию
+                  </div>
+                  <div className="rounded-2xl bg-white/10 px-4 py-3">
+                    ✅ повтор ошибок, чтобы темы закреплялись
+                  </div>
+                  <div className="rounded-2xl bg-white/10 px-4 py-3">
+                    ✅ мини-варианты и проверка прогресса
+                  </div>
+                  <div className="rounded-2xl bg-white/10 px-4 py-3">
+                    ✅ доступ с сайта и через Telegram
+                  </div>
+                </div>
+              </div>
+
+              <p className="mt-5 text-sm leading-6 text-slate-400">
+                Без автосписаний. Оплата разовая. Доступ сохраняется за аккаунтом или Telegram-профилем.
+              </p>
+            </div>
+
+            <section className="rounded-[2.2rem] border border-white/10 bg-white p-5 text-slate-950 shadow-2xl">
+              <div className="rounded-[1.8rem] bg-slate-50 p-5">
+                <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">
+                  Выберите доступ
+                </p>
+                <h2 className="mt-2 text-3xl font-black tracking-tight">
+                  {selectedPlanData.title} — {selectedPlanData.price}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  {selectedPlanData.description}
+                </p>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                {plans.map((plan) => {
+                  const active = selectedPlan === plan.key;
+
+                  return (
+                    <button
+                      key={plan.key}
+                      type="button"
+                      onClick={() => setSelectedPlan(plan.key)}
+                      className={`relative rounded-[1.5rem] border p-5 text-left transition ${
+                        active
+                          ? "border-blue-600 bg-blue-50 shadow-lg shadow-blue-100"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      {plan.badge ? (
+                        <span className="absolute right-4 top-4 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">
+                          {plan.badge}
+                        </span>
+                      ) : null}
+
+                      <div className="text-lg font-black">{plan.title}</div>
+                      <div className="mt-3 text-3xl font-black">{plan.price}</div>
+                      <div className="mt-1 text-sm font-bold text-slate-500">{plan.note}</div>
+                      <p className="mt-3 max-w-xs text-sm leading-6 text-slate-600">
+                        {plan.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-5 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 p-4">
+                <p className="text-sm font-black text-emerald-700">
+                  Дешевле одного занятия с репетитором
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Внутри — сразу 3 предмета, тренировки, повтор ошибок и прогресс.
+                </p>
+              </div>
+
               <button
-                key={plan.key}
                 type="button"
-                onClick={() => setSelectedPlan(plan.key)}
-                className={`relative rounded-[1.5rem] border p-5 text-left transition ${active ? "border-blue-600 bg-white shadow-lg shadow-blue-100" : "border-slate-200 bg-white/80"}`}
+                onClick={handleActivate}
+                disabled={isPaying}
+                className="mt-5 w-full rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-black text-white shadow-xl shadow-blue-600/20 disabled:opacity-60"
               >
-                {plan.badge && <span className="absolute right-3 top-3 rounded-full bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700">{plan.badge}</span>}
-                <div className="text-lg font-bold">{plan.title}</div>
-                <div className="mt-3 text-2xl font-black">{plan.price}</div>
-                <div className="mt-1 text-sm leading-5 text-slate-500">{plan.note}</div>
+                {isPaying ? "Открываем оплату..." : `Оплатить ${selectedPlanData.price}`}
               </button>
-            );
-          })}
-        </section>
 
-        <button
-          type="button"
-          onClick={handleActivate}
-          disabled={isPaying}
-          className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-center text-lg font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] disabled:opacity-60"
-        >
-          {isPaying ? "Создаём оплату..." : "Оплатить Pro через СБП"}
-        </button>
-        {paymentError ? <p className="-mt-5 text-center text-sm text-red-600">{paymentError}</p> : null}
-        <p className="-mt-5 text-center text-sm text-slate-500">После оплаты ЮKassa подтвердит платёж, и Pro включится автоматически.</p>
+              {paymentError ? (
+                <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-600">
+                  {paymentError}
+                </p>
+              ) : null}
 
-        <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-bold tracking-[-0.035em]">Free и Pro</h2>
-          <div className="mt-4 space-y-3 text-base text-slate-700">
-            <p>• Безлимитные тренировки по предметам</p>
-            <p>• Мини-варианты на 20 заданий без лимита</p>
-            <p>• Моментальная проверка, решения и повтор ошибок\n• Доступ к закрытому Telegram-чату</p>
-            <p>• Прогресс, понятный ученику и родителю</p>
+              <p className="mt-4 text-center text-xs leading-5 text-slate-500">
+                Оплата проходит через ЮKassa. После оплаты доступ включится автоматически.
+              </p>
+            </section>
           </div>
-        </section>
 
-        <section className="rounded-[2rem] border border-blue-100 bg-blue-50/70 p-6">
-          <h2 className="text-xl font-bold tracking-[-0.035em]">Почему это похоже на подготовку, а не тестик</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            Предмет: {subjectLabel}. В основе — тренировки по предметам и типам заданий, типовые задания по формату ЕГЭ, моментальная проверка, решения и повтор ошибок. Сейчас на повторе: {repeatCount}. Free-лимиты: session {sessionGate?.count ?? 0}/{sessionGate?.limit ?? 1}, mini {miniGate?.count ?? 0}/{miniGate?.limit ?? 1}.
-          </p>
-        </section>
+          <section className="grid gap-4 pb-12 md:grid-cols-3">
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5">
+              <p className="text-sm text-slate-400">Предмет в профиле</p>
+              <p className="mt-2 text-xl font-black">{subjectLabel}</p>
+            </div>
 
-        <div className="grid grid-cols-3 gap-2 text-center text-sm">
-          <Link href="/privacy" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Политика</Link>
-          <Link href="/offer" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Оферта</Link>
-          <Link href="/contacts" className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-slate-600">Контакты</Link>
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5">
+              <p className="text-sm text-slate-400">Ошибок на повторе</p>
+              <p className="mt-2 text-xl font-black">{repeatCount}</p>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5">
+              <p className="text-sm text-slate-400">Free-лимит</p>
+              <p className="mt-2 text-xl font-black">
+                {sessionGate?.count ?? 0} тренировок · {miniGate?.count ?? 0} мини-вариантов
+              </p>
+            </div>
+          </section>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
