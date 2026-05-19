@@ -15,13 +15,19 @@ if (!databaseUrl) {
 // Для serverless API на Vercel отключаем строгую проверку цепочки сертификата.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-export const db =
-  global.pgPool ??
+const createPool = () =>
   new Pool({
     connectionString: databaseUrl,
     ssl: false,
+
+    // Важно для Vercel + Timeweb PostgreSQL:
+    // не даём serverless-функциям открыть слишком много подключений.
+    max: 1,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
+    maxUses: 100,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  global.pgPool = db;
-}
+export const db = global.pgPool ?? createPool();
+
+global.pgPool = db;
