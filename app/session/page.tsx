@@ -1,18 +1,21 @@
 "use client";
 
 import { trackClientEvent } from "@/lib/clientAnalytics";
-
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { buildSessionQuestions, getTaskTypeGuide, QUESTION_BANK, type BankQuestion } from "@/lib/questionBank";
-import TopMenu from "@/app/components/TopMenu";
+import {
+  buildSessionQuestions,
+  getTaskTypeGuide,
+  QUESTION_BANK,
+  type BankQuestion,
+} from "@/lib/questionBank";
 import {
   addSeenSessionQuestionIds,
   clearQuestionIncorrect,
   clearSelectedTaskType,
+  clearReviewMode as clearStoredReviewMode,
   consumeFreeGateAccess,
   getDueReviewEntries,
-  getFreeGateStatus,
   getIncorrectQuestionCount,
   getIncorrectQuestionIds,
   getPrioritizedIncorrectQuestionIds,
@@ -22,11 +25,10 @@ import {
   getStudentProfile,
   getSubjectLabel,
   getSeenSessionQuestionIds,
-  setReviewMode as setStoredReviewMode,
-  clearReviewMode as clearStoredReviewMode,
   incrementSessionsCompleted,
   markQuestionIncorrect,
   normalizeSubjectKey,
+  setReviewMode as setStoredReviewMode,
   type FreeGateStatus,
   type SessionProgress,
 } from "@/lib/storage";
@@ -40,11 +42,15 @@ function getQuestionMeta(question?: BankQuestion | null) {
 }
 
 function buildRepeatHint(question: BankQuestion) {
-  return question.repeatHint ?? `${question.skillLabel ?? question.topic}: повтори правило, реши похожее задание и проверь, почему остальные варианты не подходят.`;
+  return (
+    question.repeatHint ??
+    `${question.skillLabel ?? question.topic}: повтори правило, реши похожее задание и проверь, почему остальные варианты не подходят.`
+  );
 }
 
 function buildReasoningHint(question: BankQuestion) {
   if (question.solutionSteps) return question.solutionSteps;
+
   if (question.taskType?.includes("пунктуа") || question.topic.toLowerCase().includes("пунктуа")) {
     return "Сначала найди грамматические основы или оборот, потом проверь, нужна ли здесь запятая по правилу.";
   }
@@ -71,7 +77,7 @@ function buildTrapHint(question: BankQuestion) {
     return "Ловушка в поверхностном чтении: ответ часто прячется не в отдельных словах, а в функции фрагмента или главной мысли.";
   }
 
-  return "Типичная ловушка, отвечать слишком быстро и не проверить, какое именно правило здесь работает.";
+  return "Типичная ловушка — отвечать слишком быстро и не проверить, какое именно правило здесь работает.";
 }
 
 function buildNextStepHint(isCorrect: boolean) {
@@ -79,17 +85,6 @@ function buildNextStepHint(isCorrect: boolean) {
     ? "Запомни ход решения и попробуй так же разобрать следующее задание без спешки."
     : "Это задание уйдёт на повтор, так что ты ещё вернёшься к нему и закрепишь решение спокойнее.";
 }
-
-function getNextRecommendedStep(errorsCount: number, repeatFocusLabel?: string | null) {
-  if (errorsCount > 0) {
-    return repeatFocusLabel
-      ? `Сначала разобрать ошибки по фокусу ${repeatFocusLabel.toLowerCase()}.`
-      : "Сначала разобрать ошибки и вернуть их в повтор.";
-  }
-
-  return "Можно идти дальше: ещё тренировка или мини-вариант ЕГЭ.";
-}
-
 
 function getSessionResultTitle(correctCount: number) {
   if (correctCount >= 13) return "Отлично, навык закрепляется";
@@ -104,6 +99,36 @@ function getPreciseNextStep(errorCount: number, focusLabel: string | null) {
   }
 
   return "Ошибок нет — можно перейти к мини-варианту ЕГЭ.";
+}
+
+function AppHeader({ subtitle }: { subtitle: string }) {
+  return (
+    <header className="flex items-center justify-between rounded-full border border-white/10 bg-white/[0.06] px-4 py-3 backdrop-blur">
+      <Link href="/" className="flex items-center gap-2">
+        <span className="rounded-full bg-blue-600 px-3 py-1 text-lg font-black leading-none text-white">
+          ЕГЭ
+        </span>
+        <span className="text-lg font-black text-white">Plan</span>
+      </Link>
+
+      <div className="hidden text-sm font-bold text-slate-300 sm:block">{subtitle}</div>
+
+      <div className="flex items-center gap-2">
+        <Link
+          href="/home"
+          className="rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white"
+        >
+          План
+        </Link>
+        <Link
+          href="/account"
+          className="hidden rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white sm:block"
+        >
+          Кабинет
+        </Link>
+      </div>
+    </header>
+  );
 }
 
 export default function SessionPage() {
@@ -124,6 +149,8 @@ export default function SessionPage() {
   const [isReviewSession, setIsReviewSession] = useState(false);
 
   useEffect(() => {
+    trackClientEvent("session_open");
+
     const gate = consumeFreeGateAccess("session");
     setGateStatus(gate);
 
@@ -134,33 +161,39 @@ export default function SessionPage() {
     const incorrectIds = getIncorrectQuestionIds(nextSubject);
     const isReviewMode = Boolean(getReviewMode(nextSubject));
     const dueReviewIds = getDueReviewEntries(nextSubject).map((entry) => entry.questionId);
-    const prioritizedIncorrectIds = Array.from(new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject), ...incorrectIds]));
+    const prioritizedIncorrectIds = Array.from(
+      new Set([...dueReviewIds, ...getPrioritizedIncorrectQuestionIds(nextSubject), ...incorrectIds])
+    );
 
     const reviewQuestions = prioritizedIncorrectIds
-      .map((questionId) => QUESTION_BANK.find((question) => question.subject === nextSubject && question.id === questionId))
+      .map((questionId) =>
+        QUESTION_BANK.find((question) => question.subject === nextSubject && question.id === questionId)
+      )
       .filter((question): question is BankQuestion => Boolean(question))
       .slice(0, 15);
 
-    const candidateQuestions = isReviewMode && reviewQuestions.length > 0
-      ? reviewQuestions
-      : buildSessionQuestions(nextSubject, {
-          count: 15,
-          seenIds,
-          incorrectIds: prioritizedIncorrectIds,
-          taskType: selectedTask?.taskType,
-        });
+    const candidateQuestions =
+      isReviewMode && reviewQuestions.length > 0
+        ? reviewQuestions
+        : buildSessionQuestions(nextSubject, {
+            count: 15,
+            seenIds,
+            incorrectIds: prioritizedIncorrectIds,
+            taskType: selectedTask?.taskType,
+          });
 
-    const nextQuestions = isReviewMode && reviewQuestions.length > 0
-      ? reviewQuestions
-      : [...candidateQuestions]
-          .sort((left, right) => {
-            const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
-            const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
-            const leftRank = leftPriority === -1 ? 999 : leftPriority;
-            const rightRank = rightPriority === -1 ? 999 : rightPriority;
-            return leftRank - rightRank;
-          })
-          .slice(0, 15);
+    const nextQuestions =
+      isReviewMode && reviewQuestions.length > 0
+        ? reviewQuestions
+        : [...candidateQuestions]
+            .sort((left, right) => {
+              const leftPriority = prioritizedIncorrectIds.indexOf(left.id);
+              const rightPriority = prioritizedIncorrectIds.indexOf(right.id);
+              const leftRank = leftPriority === -1 ? 999 : leftPriority;
+              const rightRank = rightPriority === -1 ? 999 : rightPriority;
+              return leftRank - rightRank;
+            })
+            .slice(0, 15);
 
     setSubject(nextSubject);
     setQuestions(nextQuestions);
@@ -168,12 +201,14 @@ export default function SessionPage() {
     setRepeatFocusLabel(getRepeatInsight(nextSubject).priorityTaskTypeLabel ?? null);
     setIsReviewSession(isReviewMode && reviewQuestions.length > 0);
     setShowLesson(!(isReviewMode && reviewQuestions.length > 0));
-    setSelectedModeLabel(isReviewMode && reviewQuestions.length > 0 ? "Разбор ошибок" : selectedTask?.label ?? null);
+    setSelectedModeLabel(
+      isReviewMode && reviewQuestions.length > 0 ? "Разбор ошибок" : selectedTask?.label ?? null
+    );
 
     if (nextQuestions.length > 0 && !(isReviewMode && reviewQuestions.length > 0)) {
       addSeenSessionQuestionIds(
         nextSubject,
-        nextQuestions.map((question) => question.id),
+        nextQuestions.map((question) => question.id)
       );
     }
   }, []);
@@ -183,10 +218,12 @@ export default function SessionPage() {
   const isLastQuestion = currentIndex === questions.length - 1;
   const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
   const subjectLabel = getSubjectLabel(subject);
+
   const guide = useMemo(() => {
     const selectedTask = getSelectedTaskType(subject);
     return getTaskTypeGuide(selectedTask?.taskType ?? currentQuestion?.taskType ?? null);
   }, [subject, currentQuestion?.taskType]);
+
   const feedbackLabel = isCorrect
     ? positiveFeedback[currentIndex % positiveFeedback.length]
     : gentleFeedback[currentIndex % gentleFeedback.length];
@@ -223,20 +260,41 @@ export default function SessionPage() {
 
   if (gateStatus?.isBlocked && !gateStatus.inProgress && !gateStatus.isPro) {
     return (
-      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
-      <TopMenu subtitle="тренировка" showExitToHome />
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
-          <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-indigo-900 to-violet-700 p-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/65">Free-лимит</p>
-            <h1 className="mt-3 text-3xl font-black leading-tight">Сегодняшняя бесплатная тренировка уже использована</h1>
-            <p className="mt-3 text-sm leading-6 text-white/80">
-              Pro открывает безлимитные сессии, интервальный повтор ошибок, тренировку по типам заданий и мини-варианты без паузы.
-            </p>
+      <main className="min-h-screen bg-[#050816] px-5 py-6 text-white">
+        <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl flex-col">
+          <AppHeader subtitle="тренировка" />
+
+          <section className="flex flex-1 items-center justify-center py-12">
+            <div className="w-full max-w-xl rounded-[2.2rem] border border-white/10 bg-white p-7 text-slate-950 shadow-2xl">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-3xl">
+                🔒
+              </div>
+              <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-amber-600">
+                Free-лимит
+              </p>
+              <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight">
+                Бесплатная тренировка на сегодня уже использована
+              </h1>
+              <p className="mt-4 text-base leading-7 text-slate-600">
+                Pro открывает безлимитные тренировки, мини-варианты, повтор ошибок и прогресс.
+              </p>
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                <Link
+                  href="/paywall?source=session_limit"
+                  className="rounded-2xl bg-blue-600 px-5 py-4 text-center font-black text-white shadow-xl shadow-blue-600/20"
+                >
+                  Открыть Pro
+                </Link>
+                <Link
+                  href="/home"
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-black text-slate-800"
+                >
+                  На главную
+                </Link>
+              </div>
+            </div>
           </section>
-          <Link href="/paywall" className="primary-cta">
-            <span className="block leading-none text-white">Открыть Pro и продолжить</span>
-          </Link>
-          <Link href="/home" className="secondary-cta">На главную</Link>
         </div>
       </main>
     );
@@ -244,15 +302,26 @@ export default function SessionPage() {
 
   if (!currentQuestion && !isFinished) {
     return (
-      <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
-      <TopMenu subtitle="тренировка" showExitToHome />
-        <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <h1 className="text-2xl font-bold leading-tight tracking-tight">Подбираем задания</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Собираем 15 заданий из большого банка: слабые места, повтор ошибок и формат ЕГЭ.
-            </p>
-          </div>
+      <main className="min-h-screen bg-[#050816] px-5 py-6 text-white">
+        <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-5xl flex-col">
+          <AppHeader subtitle="подбираем задания" />
+
+          <section className="flex flex-1 items-center justify-center py-12">
+            <div className="w-full max-w-xl rounded-[2.2rem] border border-white/10 bg-white p-7 text-slate-950 shadow-2xl">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-3xl">
+                ⏳
+              </div>
+              <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-blue-600">
+                Подбираем задания
+              </p>
+              <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight">
+                Собираем тренировку
+              </h1>
+              <p className="mt-4 text-base leading-7 text-slate-600">
+                Берём задания из банка: слабые места, повтор ошибок и формат ЕГЭ.
+              </p>
+            </div>
+          </section>
         </div>
       </main>
     );
@@ -260,335 +329,369 @@ export default function SessionPage() {
 
   if (showLesson && !isFinished) {
     return (
-      <main className="min-h-screen bg-slate-100/80 px-4 py-5 text-slate-900">
-      <TopMenu subtitle="тренировка" showExitToHome />
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4">
-          <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
-            <span>Мини-урок перед практикой</span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{subjectLabel}</span>
-          </div>
+      <main className="min-h-screen bg-[#050816] px-5 py-6 text-white">
+        <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl flex-col">
+          <AppHeader subtitle={`${subjectLabel} · мини-урок`} />
 
-          <section className="rounded-[32px] bg-gradient-to-br from-slate-950 via-indigo-900 to-violet-700 p-6 text-white shadow-[0_24px_60px_rgba(30,41,59,0.22)]">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/65">
-              {selectedModeLabel ? "Тренировка по типу задания" : "Тренировка по слабым местам"}
-            </p>
-            <h1 className="mt-3 text-3xl font-black leading-tight">{guide?.title ?? repeatFocusLabel ?? "Рабочая сессия"}</h1>
-            <p className="mt-3 text-sm leading-6 text-white/82">
-              Перед задачами быстро вспоминаем правило. Это короткая учебная сессия: 15 заданий из большого банка по формату ЕГЭ.
-            </p>
-          </section>
+          <section className="grid flex-1 gap-8 py-10 md:grid-cols-[1fr_0.9fr] md:items-center">
+            <div>
+              <p className="inline-flex rounded-full border border-blue-300/20 bg-blue-300/10 px-4 py-2 text-sm font-bold text-blue-200">
+                {selectedModeLabel ? "Тренировка по теме" : "Тренировка по слабым местам"}
+              </p>
+              <h1 className="mt-6 max-w-2xl text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
+                {guide?.title ?? repeatFocusLabel ?? "Рабочая сессия"}
+              </h1>
+              <p className="mt-6 max-w-2xl text-xl leading-8 text-slate-300">
+                Сначала коротко вспоминаем правило, потом решаем 15 заданий и разбираем ошибки.
+              </p>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/50">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Правило</p>
-            <p className="mt-2 text-base leading-7 text-slate-800">{guide?.rule ?? "Сначала внимательно определи тип задания, затем выбери стратегию решения."}</p>
-            <div className="mt-4 rounded-2xl bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-900">Пример</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{guide?.example ?? "Смотри не только на ответ, но и на ход рассуждения."}</p>
+              <button
+                type="button"
+                onClick={() => setShowLesson(false)}
+                className="mt-8 rounded-2xl bg-blue-600 px-7 py-5 text-lg font-black text-white shadow-xl shadow-blue-600/20"
+              >
+                Начать 15 заданий
+              </button>
             </div>
-            <div className="mt-3 rounded-2xl bg-amber-50 p-4 text-amber-800">
-              <p className="text-sm font-semibold">Типичная ловушка</p>
-              <p className="mt-2 text-sm leading-6">{guide?.trap ?? "Не отвечай на автомате: проверь условие и правило."}</p>
-            </div>
-          </section>
 
-          <button type="button" onClick={() => setShowLesson(false)} className="primary-cta">
-            <span className="block leading-none text-white">Начать 15 заданий</span>
-          </button>
+            <section className="rounded-[2.2rem] border border-white/10 bg-white p-6 text-slate-950 shadow-2xl">
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-blue-600">
+                Мини-урок
+              </p>
+
+              <div className="mt-5 rounded-3xl bg-slate-50 p-5">
+                <p className="text-sm font-black text-slate-900">Правило</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {guide?.rule ?? "Сначала внимательно определи тип задания, затем выбери стратегию решения."}
+                </p>
+              </div>
+
+              <div className="mt-3 rounded-3xl bg-blue-50 p-5">
+                <p className="text-sm font-black text-slate-900">Пример</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {guide?.example ?? "Смотри не только на ответ, но и на ход рассуждения."}
+                </p>
+              </div>
+
+              <div className="mt-3 rounded-3xl bg-amber-50 p-5">
+                <p className="text-sm font-black text-amber-800">Типичная ловушка</p>
+                <p className="mt-2 text-sm leading-6 text-amber-800">
+                  {guide?.trap ?? "Не отвечай на автомате: проверь условие и правило."}
+                </p>
+              </div>
+            </section>
+          </section>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-[100dvh] bg-slate-100/80 px-4 py-4 text-slate-900">
-      <TopMenu subtitle="тренировка" showExitToHome />
-      <div className="mx-auto flex min-h-[calc(100dvh-2rem)] w-full max-w-md flex-col gap-3">
-        <div className="flex items-center justify-between rounded-full border border-slate-200 bg-white/85 px-4 py-2 text-sm text-slate-500 shadow-sm shadow-slate-200/40 backdrop-blur">
-          <span>{isReviewSession ? "Разбор ошибок" : selectedModeLabel ? selectedModeLabel : "Учебная сессия"}</span>
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            {isFinished ? "Готово" : isReviewSession ? `Ошибка ${currentIndex + 1} из ${questions.length}` : `${currentIndex + 1} из ${questions.length}`}
-          </span>
-        </div>
+    <main className="min-h-screen bg-[#f8fafc] text-slate-950">
+      <section className="bg-[#050816] px-5 pb-8 pt-6 text-white">
+        <div className="mx-auto max-w-6xl">
+          <AppHeader subtitle={isReviewSession ? "разбор ошибок" : "тренировка"} />
 
-        {!isFinished ? (
-          <>
-            <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Работаем с ошибками" : "Сессия на сегодня"}</p>
-                <p className="text-sm text-slate-400">{subjectLabel}</p>
-              </div>
-
-              <div className="mt-3 h-2 w-full rounded-full bg-slate-100">
-                <div className="h-2 rounded-full bg-slate-900 transition-all" style={{ width: `${progress}%` }} />
-              </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-end">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.24em] text-blue-300">
+                {isFinished ? "Итог тренировки" : isReviewSession ? "Разбор ошибок" : "Учебная сессия"}
+              </p>
+              <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                {isFinished
+                  ? isReviewSession
+                    ? "Ошибки разобраны"
+                    : getSessionResultTitle(sessionCorrectCount)
+                  : currentQuestion?.topic ?? "Задание"}
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-300">
+                {isFinished
+                  ? "Посмотрите итог и выберите следующий шаг."
+                  : `${subjectLabel}. ${getQuestionMeta(currentQuestion)}.`}
+              </p>
             </div>
 
-            {isReviewSession && currentIndex === 0 && !showResult && (
-              <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Разбор ошибок</p>
-                <h1 className="mt-2 text-2xl font-bold leading-tight tracking-tight">Разберём ошибки по одной</h1>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  В этой сессии только вопросы из очереди повтора. Сначала отвечаешь, затем смотришь разбор и закрепляешь ход решения.
-                </p>
-              </section>
-            )}
-
-            <div className="flex flex-1 flex-col rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
-                  {getQuestionMeta(currentQuestion)}
-                </span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-500">
-                  {currentQuestion.difficulty}
-                </span>
-              </div>
-              <p className="mt-3 text-sm font-medium text-slate-500">
-                {isReviewSession ? `Ошибка ${currentIndex + 1} из ${questions.length}` : `Задание ${currentIndex + 1} из ${questions.length}`} · типовая подготовка
-              </p>
-
-              <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight">{currentQuestion.prompt}</h1>
-
-              <div className="mt-6 space-y-3">
-                {currentQuestion.options.map((option) => {
-                  const isSelected = selectedAnswer === option;
-                  const shouldHighlightCorrect = showResult && option === currentQuestion.correctAnswer;
-                  const shouldHighlightWrong = showResult && isSelected && option !== currentQuestion.correctAnswer;
-
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      disabled={showResult}
-                      onClick={() => setSelectedAnswer(option)}
-                      className={`w-full rounded-3xl border px-4 py-4 text-left text-base transition ${
-                        shouldHighlightCorrect
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : shouldHighlightWrong
-                            ? "border-rose-200 bg-rose-50 text-rose-800"
-                            : isSelected
-                              ? "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-300/40"
-                              : "border-slate-200 bg-slate-50 text-slate-900"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {showResult && (
-                <div
-                  className={`mt-5 rounded-3xl border p-4 ${
-                    isCorrect ? "border-emerald-100 bg-emerald-50" : "border-rose-100 bg-rose-50"
-                  }`}
-                >
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-                    {isCorrect ? "Сильный ход" : "Разбор ответа"}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-700">{feedbackLabel}</p>
-
-                  <div className="mt-3 space-y-3">
-                    <div className="rounded-2xl bg-white/80 p-3">
-                      <p className="text-sm font-semibold text-slate-900">Правильный ответ</p>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-700">{currentQuestion.correctAnswer}</p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white/80 p-3">
-                      <p className="text-sm font-semibold text-slate-900">{isCorrect ? "Почему это верно" : "Почему так"}</p>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.explanation}</p>
-                    </div>
-
-                    {currentQuestion.rule && (
-                      <div className="rounded-2xl bg-white/80 p-3">
-                        <p className="text-sm font-semibold text-slate-900">Правило</p>
-                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{currentQuestion.rule}</p>
-                      </div>
-                    )}
-
-                    <div className="rounded-2xl bg-white/80 p-3">
-                      <p className="text-sm font-semibold text-slate-900">Как рассуждать</p>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildReasoningHint(currentQuestion)}</p>
-                    </div>
-
-                    {!isCorrect && (
-                      <div className="rounded-2xl bg-white/80 p-3">
-                        <p className="text-sm font-semibold text-slate-900">Типичная ловушка</p>
-                        <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildTrapHint(currentQuestion)}</p>
-                      </div>
-                    )}
-
-                    <div className="rounded-2xl bg-white/80 p-3">
-                      <p className="text-sm font-semibold text-slate-900">Что повторить</p>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">{buildRepeatHint(currentQuestion)}</p>
-                    </div>
-
-                    <div className="rounded-2xl bg-white/80 p-3">
-                      <p className="text-sm font-semibold text-slate-900">Что дальше</p>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">
-                        {isCorrect
-                          ? buildNextStepHint(true)
-                          : "Ошибка уйдёт на повтор. Похожее задание вернётся позже, чтобы закрепить навык, а не просто увидеть правильный ответ."}
-                      </p>
-                    </div>
-                  </div>
+            {!isFinished ? (
+              <div className="rounded-[2rem] border border-white/10 bg-white/[0.06] p-5">
+                <div className="flex items-center justify-between text-sm text-slate-300">
+                  <span>{currentIndex + 1} из {questions.length}</span>
+                  <span>{Math.round(progress)}%</span>
                 </div>
-              )}
+                <div className="mt-3 h-3 rounded-full bg-white/10">
+                  <div
+                    className="h-3 rounded-full bg-blue-500 transition-all"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </section>
 
-              <div className="sticky bottom-4 mt-auto pt-5">
+      <section className="px-5 py-8">
+        <div className="mx-auto max-w-6xl">
+          {!isFinished ? (
+            <div className="grid gap-5 md:grid-cols-[1.05fr_0.95fr]">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">
+                    {currentQuestion.difficulty}
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-500">
+                    {isReviewSession ? `Ошибка ${currentIndex + 1}` : `Задание ${currentIndex + 1}`}
+                  </span>
+                </div>
+
+                <h2 className="mt-5 text-3xl font-black leading-tight tracking-tight">
+                  {currentQuestion.prompt}
+                </h2>
+
+                <div className="mt-6 grid gap-3">
+                  {currentQuestion.options.map((option) => {
+                    const isSelected = selectedAnswer === option;
+                    const shouldHighlightCorrect = showResult && option === currentQuestion.correctAnswer;
+                    const shouldHighlightWrong =
+                      showResult && isSelected && option !== currentQuestion.correctAnswer;
+
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        disabled={showResult}
+                        onClick={() => setSelectedAnswer(option)}
+                        className={`rounded-[1.5rem] border px-5 py-4 text-left text-base font-bold transition ${
+                          shouldHighlightCorrect
+                            ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                            : shouldHighlightWrong
+                              ? "border-rose-300 bg-rose-50 text-rose-800"
+                              : isSelected
+                                ? "border-blue-600 bg-blue-50 text-blue-700"
+                                : "border-slate-200 bg-white hover:bg-slate-50"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <button
                   type="button"
                   onClick={handlePrimaryAction}
                   disabled={!selectedAnswer && !showResult}
-                  className={`w-full rounded-full px-5 py-4 text-base font-semibold shadow-sm transition ${
+                  className={`mt-6 w-full rounded-2xl px-5 py-4 text-lg font-black transition ${
                     selectedAnswer || showResult
-                      ? "bg-gradient-to-r from-indigo-700 via-violet-600 to-purple-600 text-white shadow-indigo-200/50"
+                      ? "bg-blue-600 text-white shadow-xl shadow-blue-600/20"
                       : "bg-slate-200 text-slate-400"
                   }`}
                 >
-                  <span className="block leading-none text-white">
-                    {showResult ? (isLastQuestion ? "Завершить сессию" : "Следующее задание") : "Проверить ответ"}
-                  </span>
+                  {showResult
+                    ? isLastQuestion
+                      ? "Завершить тренировку"
+                      : "Следующее задание"
+                    : "Проверить ответ"}
                 </button>
-              </div>
+              </section>
+
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+                {!showResult ? (
+                  <>
+                    <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+                      Подсказка
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black">
+                      Сначала подумайте по правилу
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">
+                      Не спешите выбирать ответ. Определите тип задания, вспомните правило и только потом сравните варианты.
+                    </p>
+
+                    <div className="mt-5 rounded-3xl bg-blue-50 p-5">
+                      <p className="text-sm font-black text-blue-700">Тема</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        {currentQuestion.skillLabel ?? currentQuestion.topic}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">
+                      {isCorrect ? "Ответ верный" : "Разбор ответа"}
+                    </p>
+                    <h2 className="mt-2 text-3xl font-black">
+                      {feedbackLabel}
+                    </h2>
+
+                    <div className="mt-5 grid gap-3">
+                      <div className="rounded-3xl bg-slate-50 p-4">
+                        <p className="text-sm font-black text-slate-900">Правильный ответ</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">
+                          {currentQuestion.correctAnswer}
+                        </p>
+                      </div>
+
+                      <div className="rounded-3xl bg-slate-50 p-4">
+                        <p className="text-sm font-black text-slate-900">
+                          {isCorrect ? "Почему это верно" : "Почему так"}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          {currentQuestion.explanation}
+                        </p>
+                      </div>
+
+                      {currentQuestion.rule ? (
+                        <div className="rounded-3xl bg-blue-50 p-4">
+                          <p className="text-sm font-black text-blue-700">Правило</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">
+                            {currentQuestion.rule}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-3xl bg-slate-50 p-4">
+                        <p className="text-sm font-black text-slate-900">Как рассуждать</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          {buildReasoningHint(currentQuestion)}
+                        </p>
+                      </div>
+
+                      {!isCorrect ? (
+                        <div className="rounded-3xl bg-rose-50 p-4">
+                          <p className="text-sm font-black text-rose-700">Типичная ловушка</p>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">
+                            {buildTrapHint(currentQuestion)}
+                          </p>
+                        </div>
+                      ) : null}
+
+                      <div className="rounded-3xl bg-amber-50 p-4">
+                        <p className="text-sm font-black text-amber-700">Что повторить</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">
+                          {buildRepeatHint(currentQuestion)}
+                        </p>
+                      </div>
+
+                      <div className="rounded-3xl bg-emerald-50 p-4">
+                        <p className="text-sm font-black text-emerald-700">Что дальше</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">
+                          {isCorrect
+                            ? buildNextStepHint(true)
+                            : "Ошибка уйдёт на повтор. Похожее задание вернётся позже, чтобы закрепить навык."}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </section>
             </div>
-          </>
-        ) : (
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
-            <p className="text-sm font-medium text-slate-500">{isReviewSession ? "Разбор завершён" : "Сессия завершена"}</p>
-            <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight">{isReviewSession ? "Ошибки разобраны" : getSessionResultTitle(sessionCorrectCount)}</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              {isReviewSession
-                ? "Короткий итог по вопросам из очереди ошибок: что закрепилось и что осталось на повторе."
-                : "Короткий итог по 15 заданиям, чтобы сразу понять, что закрепилось и что отправилось в повтор."}
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Верно</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionCorrectCount}</p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Ошибки</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">В очереди повтора</p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">{sessionIncorrectCount}</p>
-              </div>
-              <div className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Фокус</p>
-                <p className="mt-2 text-base font-semibold text-slate-900">{repeatFocusLabel ?? "Следующий навык"}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-3xl bg-slate-50 p-4">
-              <p className="text-sm font-medium text-slate-500">Следующий рекомендуемый шаг</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                {getPreciseNextStep(sessionIncorrectCount, repeatFocusLabel)}
+          ) : (
+            <section className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">
+                {isReviewSession ? "Разбор завершён" : "Сессия завершена"}
               </p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
-                Сессий всего: {sessionProgress?.sessionsCompleted ?? 1}. Сейчас на повторе в системе: {repeatCount}.
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-3xl border border-blue-100 bg-blue-50 p-4">
-              <p className="text-sm font-black text-slate-950">День 1 готов ✅</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                Первый шаг сделан. Чтобы открыть дни 2–7, мини-варианты и повтор ошибок, выбери доступ:
+              <h2 className="mt-2 text-4xl font-black leading-tight tracking-tight">
+                {isReviewSession ? "Ошибки разобраны" : getSessionResultTitle(sessionCorrectCount)}
+              </h2>
+              <p className="mt-4 text-base leading-7 text-slate-600">
+                Короткий итог по заданиям: что закрепилось и что отправилось в повтор.
               </p>
 
-              <div className="mt-3 grid gap-2">
-                <Link
-                  href="/register?source=after_free_day"
-                  onClick={() =>
-                    trackClientEvent("after_free_day_register_click", {
-                      source: "session_complete",
-                    })
-                  }
-                  className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-black text-emerald-700"
+              <div className="mt-6 grid gap-3 sm:grid-cols-4">
+                <div className="rounded-3xl bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">Верно</p>
+                  <p className="mt-2 text-3xl font-black">{sessionCorrectCount}</p>
+                </div>
+                <div className="rounded-3xl bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">Ошибки</p>
+                  <p className="mt-2 text-3xl font-black">{sessionIncorrectCount}</p>
+                </div>
+                <div className="rounded-3xl bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">Повтор</p>
+                  <p className="mt-2 text-3xl font-black">{repeatCount}</p>
+                </div>
+                <div className="rounded-3xl bg-slate-50 p-4">
+                  <p className="text-sm text-slate-500">Сессий</p>
+                  <p className="mt-2 text-3xl font-black">
+                    {sessionProgress?.sessionsCompleted ?? 1}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-3xl bg-blue-50 p-5">
+                <p className="text-sm font-black text-blue-700">Следующий шаг</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {getPreciseNextStep(sessionIncorrectCount, repeatFocusLabel)}
+                </p>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSelectedTaskType();
+                    setStoredReviewMode(subject, "session");
+                    window.location.href = "/session";
+                  }}
+                  className="rounded-2xl bg-blue-600 px-5 py-4 text-center font-black text-white"
                 >
-                  Создать кабинет и сохранить прогресс
-                </Link>
-                <Link
-                  href="/paywall?plan=weekly&source=after_free_day"
-                  onClick={() =>
-                    trackClientEvent("after_free_day_weekly_click", {
-                      source: "session_complete",
-                    })
-                  }
-                  className="rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-black text-white"
+                  {isReviewSession ? "Разобрать ещё" : "Разобрать ошибки"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSelectedTaskType();
+                    clearStoredReviewMode();
+                    window.location.href = "/session";
+                  }}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-black text-slate-800"
                 >
-                  Продолжить 7-дневный план — 199 ₽
+                  {isReviewSession ? "Обычная тренировка" : "Ещё тренировка"}
+                </button>
+
+                <Link
+                  href="/mini-variant"
+                  onClick={() => clearStoredReviewMode()}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-black text-slate-800"
+                >
+                  Мини-вариант
                 </Link>
 
                 <Link
-                  href="/paywall?plan=monthly&source=after_free_day"
-                  onClick={() =>
-                    trackClientEvent("after_free_day_monthly_click", {
-                      source: "session_complete",
-                    })
-                  }
-                  className="rounded-2xl border border-blue-200 bg-white px-4 py-3 text-center text-sm font-black text-blue-700"
+                  href="/home"
+                  onClick={() => clearStoredReviewMode()}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-center font-black text-slate-800"
                 >
-                  Открыть месяц подготовки — 690 ₽
+                  На главную
                 </Link>
               </div>
 
-              <p className="mt-3 text-center text-xs leading-5 text-slate-500">
-                Без автосписаний. Доступ сохранится в Telegram.
-              </p>
-            </div>
+              <div className="mt-6 rounded-3xl border border-blue-100 bg-blue-50 p-5">
+                <p className="text-sm font-black text-slate-950">Хотите сохранить прогресс?</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Создайте кабинет или откройте Pro, чтобы продолжить план подготовки.
+                </p>
 
-            <div className="mt-5 space-y-3">
-              <button
-                type="button"
-                onClick={() => {
-                  clearSelectedTaskType();
-                  setStoredReviewMode(subject, "session");
-                  window.location.href = "/session";
-                }}
-                className="primary-cta w-full"
-              >
-                <span className="block leading-none text-white">{isReviewSession ? "Разобрать ещё" : "Разобрать ошибки"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  clearSelectedTaskType();
-                  clearStoredReviewMode();
-                  window.location.href = "/session";
-                }}
-                className="secondary-cta w-full"
-              >
-                {isReviewSession ? "Обычная тренировка" : "Ещё тренировка"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  clearStoredReviewMode();
-                  window.location.href = "/mini-variant";
-                }}
-                className="secondary-cta w-full"
-              >
-                Мини-вариант ЕГЭ
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  clearStoredReviewMode();
-                  window.location.href = "/home";
-                }}
-                className="secondary-cta w-full"
-              >
-                На главную
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <Link
+                    href="/register?source=session_complete"
+                    className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-black text-emerald-700"
+                  >
+                    Создать кабинет
+                  </Link>
+                  <Link
+                    href="/paywall?plan=weekly&source=session_complete"
+                    className="rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-black text-white"
+                  >
+                    7 дней Pro — 199 ₽
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
