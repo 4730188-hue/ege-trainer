@@ -133,17 +133,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Create payment error", error);
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Неизвестная ошибка создания оплаты";
-
     return NextResponse.json(
-      {
-        error: "Не удалось создать оплату",
-        details: message,
-      },
+      { error: "Не удалось создать оплату. Попробуйте ещё раз или напишите в поддержку." },
       { status: 500 }
     );
   }
